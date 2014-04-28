@@ -6,8 +6,8 @@ require 'sinatra'
 require 'sinatra/base'
 
 class Sample < Sinatra::Base
-  use Rack::Logster::Reporter
-  use Rack::Logster::Viewer
+  use Logster::Middleware::Reporter
+  use Logster::Middleware::Viewer
 
   get '/' do
 
@@ -24,5 +24,11 @@ class Sample < Sinatra::Base
 </body>
 </html>
 HTML
+
   end
+
+  get '/report_error' do
+    boom
+  end
+
 end

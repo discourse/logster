@@ -1,3 +1,3 @@
-module Rack::Logster
+module Logster
   VERSION = "0.0.1"
 end
