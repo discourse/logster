@@ -1,0 +1,34 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/bin/nodejs',
+1 verbose cli   '/usr/bin/npm',
+1 verbose cli   'search',
+1 verbose cli   'yeoman-generator' ]
+2 info using npm@1.2.18
+3 info using node@v0.10.15
+4 warn Building the local index for the first time, please be patient
+5 verbose url raw /-/all
+6 verbose url resolving [ 'https://registry.npmjs.org/', './-/all' ]
+7 verbose url resolved https://registry.npmjs.org/-/all
+8 info trying registry request attempt 1 at 16:06:29
+9 http GET https://registry.npmjs.org/-/all
+10 http 200 https://registry.npmjs.org/-/all
+11 error TypeError: Object.keys called on non-object
+11 error     at Function.keys (native)
+11 error     at stripData (/usr/share/npm/lib/search.js:89:28)
+11 error     at Array.map (native)
+11 error     at filter (/usr/share/npm/lib/search.js:73:6)
+11 error     at /usr/share/npm/lib/search.js:63:21
+11 error     at /usr/share/npm/node_modules/npm-registry-client/lib/get.js:89:14
+11 error     at /usr/lib/nodejs/graceful-fs/graceful-fs.js:103:5
+11 error     at Object.oncomplete (fs.js:107:15)
+12 error If you need help, you may report this log at:
+12 error     <http://bugs.debian.org/npm>
+12 error or use
+12 error     reportbug --attach /home/sam/Source/logster/npm-debug.log npm
+13 error System Linux 3.11.0-19-generic
+14 error command "/usr/bin/nodejs" "/usr/bin/npm" "search" "yeoman-generator"
+15 error cwd /home/sam/Source/logster
+16 error node -v v0.10.15
+17 error npm -v 1.2.18
+18 error type called_on_non_object
+19 verbose exit [ 1, true ]
