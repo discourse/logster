@@ -4,13 +4,14 @@ module Logster
   class RedisStore
 
     class Row
-      attr_accessor :timestamp, :severity, :progname, :message
+      attr_accessor :timestamp, :severity, :progname, :message, :key
 
-      def initialize(severity, progname, message, timestamp = nil)
+      def initialize(severity, progname, message, timestamp = nil, key = nil)
         @timestamp = timestamp || get_timestamp
         @severity = severity
         @progname = progname
         @message = message
+        @key = key || SecureRandom.hex
       end
 
       def to_json
@@ -18,13 +19,18 @@ module Logster
           message: @message,
           progname: @progname,
           severity: @severity,
-          timestamp: @timestamp
+          timestamp: @timestamp,
+          key: @key
         })
       end
 
       def self.from_json(json)
         parsed = ::JSON.parse(json)
-        new(parsed["severity"], parsed["progname"], parsed["message"], parsed["timestamp"])
+        new( parsed["severity"],
+              parsed["progname"],
+              parsed["message"],
+              parsed["timestamp"],
+              parsed["key"] )
       end
 
       protected
@@ -47,12 +53,22 @@ module Logster
     def report(severity, progname, message)
       message = Row.new(severity, progname, message)
       @redis.rpush(list_key, message.to_json)
+
+      # TODO make it atomic
+      if @redis.llen(list_key) > @max_backlog
+        @redis.lpop(list_key)
+      end
     end
 
-    def latest(severities=nil,limit=50)
+    def latest(opts={})
+      limit = opts[:limit] || 50
+      severity = opts[:severity]
+
       (@redis.lrange(list_key, -limit, limit) || []).map! do |s|
-        Row.from_json(s)
-      end
+        row = Row.from_json(s)
+        row = nil if severity && !severity.include?(row.severity)
+        row
+      end.compact
     end
 
     def clear(severities=nil)
@@ -63,7 +79,7 @@ module Logster
 
 
     def list_key
-      "__LOGSTER__LOG"
+      @list_key ||= "__LOGSTER__LOG"
     end
 
   end
