@@ -1,3 +1,5 @@
+require 'logger'
+
 module Logster
   class Logger < ::Logger
     def initialize(backend)

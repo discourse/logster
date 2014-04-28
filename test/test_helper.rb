@@ -1,1 +1,2 @@
 require 'logster'
+require 'redis'
