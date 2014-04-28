@@ -1,0 +1,2 @@
+module Logster
+end
