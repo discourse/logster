@@ -1,0 +1,2 @@
+require './sample'
+run Sample
