@@ -1,0 +1,12 @@
+body {
+  font-family: Arial, 'Liberation Sans', 'DejaVu Sans', sans-serif;
+}
+
+td.time {
+  font-size: 12px;
+  color: #999;
+}
+td.message {
+  min-width: 600px;
+  font-family: Consolas, mono;
+}

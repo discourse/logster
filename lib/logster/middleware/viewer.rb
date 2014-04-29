@@ -22,7 +22,7 @@ module Logster
 
         if resource = resolve_path(path)
 
-          if resource =~ /\.js$|\.handlebars$/
+          if resource =~ /\.js$|\.handlebars$|\.css$/
             env[PATH_INFO] = resource
             @fileserver.call(env)
           elsif resource.start_with?("/messages.json")
@@ -53,6 +53,14 @@ module Logster
       def preload_json
       end
 
+      def css(name, attrs={})
+        attrs = attrs.map do |k,v|
+          "#{k}='#{v}'"
+        end.join(" ")
+
+        "<link rel='stylesheet' type='text/css' href='#{@logs_path}/stylesheets/#{name}' #{attrs}>"
+      end
+
       def script(name, attrs={})
         attrs = attrs.map do |k,v|
           "#{k}='#{v}'"
@@ -74,6 +82,7 @@ JS
 <<HTML
 <html>
 <head>
+  #{css("app.css")}
   #{script("external/moment.min.js")}
   #{script("external/jquery.min.js")}
   #{script("external/handlebars.min.js")}

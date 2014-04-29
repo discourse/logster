@@ -2,16 +2,16 @@
   <thead>
     <tr>
       <th>Severity</th>
-      <th>Time</th>
       <th>Info</th>
+      <th>Time</th>
     </tr>
   </thead>
   <tbody>
   {{#each model}}
     <tr>
-      <td>{{severity}}</td>
-      <td>{{timeAgo timestamp}}</td>
-      <td>{{message}}</td>
+      <td class="severity">{{severity}}</td>
+      <td class="message">{{message}}</td>
+      <td class="time">{{timeAgo timestamp}}</td>
     </tr>
   {{/each}}
   </tbody>
