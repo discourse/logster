@@ -14,14 +14,18 @@ module Logster
         @key = key || SecureRandom.hex
       end
 
-      def to_json
-        JSON.fast_generate({
+      def to_h
+        {
           message: @message,
           progname: @progname,
           severity: @severity,
           timestamp: @timestamp,
           key: @key
-        })
+        }
+      end
+
+      def to_json(opts=nil)
+        JSON.fast_generate(to_h,opts)
       end
 
       def self.from_json(json)
@@ -42,8 +46,8 @@ module Logster
 
     attr_accessor :max_backlog, :dedup, :max_retention
 
-    def initialize(redis)
-      @redis = redis
+    def initialize(redis = nil)
+      @redis = redis || Redis.new
       @max_backlog = 1000
       @dedup = false
       @max_retention = 60 * 60 * 24 * 7

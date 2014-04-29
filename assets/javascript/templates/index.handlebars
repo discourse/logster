@@ -1,3 +1,18 @@
-<p>
-   Hello Worlds
-</p>
+<table>
+  <thead>
+    <tr>
+      <th>Severity</th>
+      <th>Time</th>
+      <th>Info</th>
+    </tr>
+  </thead>
+  <tbody>
+  {{#each model}}
+    <tr>
+      <td>{{severity}}</td>
+      <td>{{timeAgo timestamp}}</td>
+      <td>{{message}}</td>
+    </tr>
+  {{/each}}
+  </tbody>
+</table>

@@ -1,13 +1,17 @@
+require 'json'
+
 module Logster
   module Middleware
     class Viewer
 
       PATH_INFO = "PATH_INFO".freeze
 
-      def initialize(app, config={})
+      def initialize(app, config)
         @app = app
         @logs_path = config[:path] || "/logs"
         @path_regex = Regexp.new("(#{@logs_path}$)|(#{@logs_path}(/.*))$")
+
+        @store = config[:store] or raise ArgumentError.new("store")
 
         @assets_path = File.expand_path("../../../../assets", __FILE__)
         @fileserver = Rack::File.new(@assets_path)
@@ -17,9 +21,12 @@ module Logster
         path = env[PATH_INFO]
 
         if resource = resolve_path(path)
-          if resource =~ /\.js|\.handlebars/
+
+          if resource =~ /\.js$|\.handlebars$/
             env[PATH_INFO] = resource
             @fileserver.call(env)
+          elsif resource.start_with?("/messages.json")
+            serve_messages(Rack::Request.new(env))
           elsif resource == "/"
             [200, {"Content-Type" => "text/html; charset=utf-8"}, [body(preload_json)]]
           else
@@ -31,6 +38,11 @@ module Logster
       end
 
       protected
+
+      def serve_messages(req)
+        json = JSON.generate(@store.latest)
+        [200, {"Content-Type" => "application/json"}, [json]]
+      end
 
       def resolve_path(path)
         if path =~ @path_regex
@@ -62,6 +74,7 @@ JS
 <<HTML
 <html>
 <head>
+  #{script("external/moment.min.js")}
   #{script("external/jquery.min.js")}
   #{script("external/handlebars.min.js")}
   #{script("external/ember.min.js")}
