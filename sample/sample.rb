@@ -14,6 +14,7 @@ $log = Logster::Logger.new($store)
 $log.info "Some info line"
 $log.warn "Some warn line"
 $log.error "Some error line"
+$log.debug "Some debug line"
 
 class Sample < Sinatra::Base
   use Logster::Middleware::Reporter, log: $log

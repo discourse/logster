@@ -8,8 +8,8 @@
   </thead>
   <tbody>
   {{#each model}}
-    <tr>
-      <td class="severity">{{severity}}</td>
+    <tr class="{{unbound rowClass}}">
+      <td class="severity">{{{glyph}}}</td>
       <td class="message">{{message}}</td>
       <td class="time">{{timeAgo timestamp}}</td>
     </tr>

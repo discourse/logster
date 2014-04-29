@@ -2,6 +2,8 @@ body {
   font-family: Arial, 'Liberation Sans', 'DejaVu Sans', sans-serif;
 }
 
+table { border-collapse:collapse }
+
 td.time {
   font-size: 12px;
   color: #999;
@@ -9,4 +11,23 @@ td.time {
 td.message {
   min-width: 600px;
   font-family: Consolas, mono;
+}
+
+tr.error{
+  background-color: #FFBABA;
+  color: #9F6000;
+}
+
+tr.warn{
+  background-color: #FEEFB3;
+  color: #D8000C;
+}
+
+tr.debug{
+  color: #777;
+}
+
+
+td{
+  line-height: 20px;
 }
