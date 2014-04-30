@@ -20,6 +20,8 @@ Logster is in current development, at the moment the focus is on a decent tool f
 
 The concept is to have an embedded "exception reporting service" admins can view on live sites.
 
+Logs will be visible by default at `http://sitename.com/logs`, only dev mode is implemented now. 
+
 ## Thanks
 
 Logster UI is built using [Ember.js](http://emberjs.com/)
