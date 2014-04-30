@@ -20,6 +20,10 @@ Logster is in current development, at the moment the focus is on a decent tool f
 
 The concept is to have an embedded "exception reporting service" admins can view on live sites.
 
+## Thanks
+
+Logster UI is built using [Ember.js](http://emberjs.com/)
+
 ## Contributing
 
 1. Fork it ( https://github.com/[my-github-username]/rack-log-viewer/fork )
