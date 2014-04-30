@@ -44,17 +44,20 @@ module Logster
       end
     end
 
-    attr_accessor :max_backlog, :dedup, :max_retention
+    attr_accessor :max_backlog, :dedup, :max_retention, :skip_empty
 
     def initialize(redis = nil)
       @redis = redis || Redis.new
       @max_backlog = 1000
       @dedup = false
       @max_retention = 60 * 60 * 24 * 7
+      @skip_empty = true
     end
 
 
     def report(severity, progname, message)
+      return if (!message || (String === message && message.empty?)) && skip_empty
+
       message = Row.new(severity, progname, message)
       @redis.rpush(list_key, message.to_json)
 
@@ -68,7 +71,7 @@ module Logster
       limit = opts[:limit] || 50
       severity = opts[:severity]
 
-      (@redis.lrange(list_key, -limit, limit) || []).map! do |s|
+      (@redis.lrange(list_key, -limit, -1) || []).map! do |s|
         row = Row.from_json(s)
         row = nil if severity && !severity.include?(row.severity)
         row

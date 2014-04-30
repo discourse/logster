@@ -2,9 +2,11 @@ require 'logger'
 
 module Logster
   class Logger < ::Logger
-    def initialize(backend)
+    attr_accessor :store
+
+    def initialize(store)
       super(nil)
-      @backend = backend
+      @store = store
     end
 
     def add(severity, message, progname, &block)
@@ -22,7 +24,7 @@ module Logster
         end
       end
 
-     @backend.report(severity, progname, message)
+     @store.report(severity, progname, message)
 
     end
   end

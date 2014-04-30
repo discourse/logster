@@ -12,6 +12,29 @@ App.Router.map(function(){
 
 App.Message = Ember.Object.extend({
 
+  MAX_LEN: 200,
+
+  expand: function(){
+    this.set("expanded",true);
+  },
+
+  hasMore: function(){
+    var message = this.get("message");
+    var expanded = this.get("expanded");
+
+    return !expanded && message.length > this.MAX_LEN;
+  }.property("message", "expanded"),
+
+  displayMessage: function(){
+    var message = this.get("message");
+    var expanded = this.get("expanded");
+
+    if(!expanded && message.length > this.MAX_LEN){
+      message = message.substr(0,this.MAX_LEN);
+    }
+    return message;
+  }.property("message","expanded"),
+
   rowClass: function() {
     switch(this.get("severity")){
       case 0:
@@ -60,6 +83,12 @@ App.Message.reopenClass({
 App.IndexRoute = Em.Route.extend({
   model: function(){
     return App.Message.latest();
+  }
+});
+
+App.IndexController = Em.Controller.extend({
+  expandMessage: function(message){
+    message.expand();
   }
 });
 

@@ -1,7 +1,7 @@
-<table>
+<table class='log-table'>
   <thead>
     <tr>
-      <th>Severity</th>
+      <th></th>
       <th>Info</th>
       <th>Time</th>
     </tr>
@@ -10,9 +10,32 @@
   {{#each model}}
     <tr class="{{unbound rowClass}}">
       <td class="severity">{{{glyph}}}</td>
-      <td class="message">{{message}}</td>
+      <td class="message">{{displayMessage}}
+        {{#if hasMore}}
+        &hellip; <a href="/" {{action expandMessage this}}>more</a>
+        {{/if}}
+      </td>
       <td class="time">{{timeAgo timestamp}}</td>
     </tr>
   {{/each}}
   </tbody>
 </table>
+
+<div class="action-panel">
+  <label class="debug">
+    {{input type="checkbox" name="showDebug"}}
+    Debug
+  </label>
+  <label class="info">
+    {{input type="checkbox" name="showInfo"}}
+    Info
+  </label>
+  <label class="warn">
+    {{input type="checkbox" name="showWarn"}}
+    Warning
+  </label>
+  <label class="error">
+    {{input type="checkbox" name="showErr"}}
+    Error
+  </label>
+</div>
