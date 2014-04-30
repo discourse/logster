@@ -1,24 +1,24 @@
-# Rack::Log::Viewer
+# Logster
 
-TODO: Write a gem description
+A web log viewer and logging framework for Rack applications
+
+![logster](http://i.imgur.com/cvfcQpv.png)
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-    gem 'rack-log-viewer'
+    gem 'logster', github: 'SamSaffron/logster'
 
 And then execute:
 
     $ bundle
 
-Or install it yourself as:
-
-    $ gem install rack-log-viewer
-
 ## Usage
 
-TODO: Write usage instructions here
+Logster is in current development, at the moment the focus is on a decent tool for dev. Once that is complete production mode will be build.
+
+The concept is to have an embedded "exception reporting service" admins can view on live sites.
 
 ## Contributing
 
