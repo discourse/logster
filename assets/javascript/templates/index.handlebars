@@ -12,35 +12,25 @@
       <td colspan=3>{{model.totalBefore}} more</td>
     </tr>
   {{/if}}
-  {{#each model.messages}}
-    <tr class="{{unbound rowClass}}">
-      <td class="severity">{{{glyph}}}</td>
-      <td class="message">{{displayMessage}}
-        {{#if hasMore}}
-        &hellip; <a href="#" {{action expandMessage this}}>more</a>
-        {{/if}}
-      </td>
-      <td class="time">{{timeAgo timestamp}}</td>
-    </tr>
-  {{/each}}
+  {{each model.messages itemViewClass="App.MessageView"}}
   </tbody>
 </table>
 
 <div class="action-panel">
   <label class="debug">
-    {{input type="checkbox" name="showDebug"}}
+    {{input type="checkbox" checked=showDebug}}
     Debug
   </label>
   <label class="info">
-    {{input type="checkbox" name="showInfo"}}
+    {{input type="checkbox" checked=showInfo}}
     Info
   </label>
   <label class="warn">
-    {{input type="checkbox" name="showWarn"}}
+    {{input type="checkbox" checked=showWarn}}
     Warning
   </label>
   <label class="error">
-    {{input type="checkbox" name="showErr"}}
+    {{input type="checkbox" checked=showErr}}
     Error
   </label>
 </div>

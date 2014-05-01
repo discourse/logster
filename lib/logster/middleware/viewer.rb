@@ -65,12 +65,9 @@ module Logster
         "<link rel='stylesheet' type='text/css' href='#{@logs_path}/stylesheets/#{name}' #{attrs}>"
       end
 
-      def script(name, attrs={})
-        attrs = attrs.map do |k,v|
-          "#{k}='#{v}'"
-        end.join(" ")
-
-        "<script src='#{@logs_path}/javascript/#{name}' #{attrs}></script>"
+      def script(prod, dev=nil)
+        name = ENV['DEBUG_JS'] == "1" && dev ? dev : prod
+        "<script src='#{@logs_path}/javascript/#{name}'></script>"
       end
 
       def handlebars(name)
@@ -90,9 +87,10 @@ JS
   #{script("external/moment.min.js")}
   #{script("external/jquery.min.js")}
   #{script("external/handlebars.min.js")}
-  #{script("external/ember.min.js")}
+  #{script("external/ember.min.js", "external/ember.js")}
   #{handlebars("application")}
   #{handlebars("index")}
+  #{handlebars("message")}
   <script>
     window.Logger = {
        rootPath: "#{@logs_path}"

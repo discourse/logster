@@ -1,0 +1,8 @@
+<!-- <tr class="{{unbound severity}}"> -->
+<td class="severity">{{{glyph}}}</td>
+<td class="message">{{displayMessage}}
+  {{#if hasMore}}
+  &hellip; <a href="#" {{action expandMessage this}}>more</a>
+  {{/if}}
+</td>
+<td class="time">{{timeAgo timestamp}}</td>

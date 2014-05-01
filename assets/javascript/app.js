@@ -76,18 +76,19 @@ App.MessageCollection = Em.Object.extend({
        .success(function(data){
           if(data.messages.length > 0) {
             var messages = App.MessageCollection.toMessages(data.messages);
-            self.set("messages", self.get("messages").concat(messages));
+            self.get("messages").addObjects(messages);
           }
           self.set("total",data.total);
        });
   },
+
   moreBefore: function(){
     return this.get("totalBefore") > 0;
   }.property("totalBefore"),
 
   totalBefore: function() {
     return this.get("total") - this.get("messages").length;
-  }.property("total", "messages"),
+  }.property("total", "messages.@each"),
 
   showMoreBefore: function() {
     var self = this;
@@ -97,7 +98,7 @@ App.MessageCollection = Em.Object.extend({
     App.ajax("/messages.json?before="+firstKey)
        .success(function(data){
           var messages = App.MessageCollection.toMessages(data.messages);
-          self.set("messages", messages.concat(self.get("messages")));
+          self.get("messages").unshiftObjects(messages);
           self.set("total",data.total);
        });
   }
@@ -115,9 +116,11 @@ App.MessageCollection.reopenClass({
 
     App.ajax("/messages.json")
       .success(function(data){
+        var messages = Em.A();
+        messages.addObjects(self.toMessages(data.messages));
         promise.resolve(
           App.MessageCollection.create({
-            messages: self.toMessages(data.messages),
+            messages: messages,
             total: data.total
           })
         );
@@ -130,20 +133,34 @@ App.MessageCollection.reopenClass({
 App.IndexRoute = Em.Route.extend({
   model: function(){
     return App.MessageCollection.latest();
+  },
+
+  setupController: function(controller, model){
+    this._super(controller, model);
+    controller.set("showDebug",true);
+    controller.set("showInfo",true);
+    controller.set("showWarn",true);
+    controller.set("showErr",true);
   }
 });
 
 App.IndexController = Em.Controller.extend({
-  expandMessage: function(message){
-    message.expand();
+  actions: {
+    expandMessage: function(message){
+      message.expand();
+    },
+
+    showMoreBefore: function(){
+      this.get('model').showMoreBefore();
+    },
+
+    loadMore: function(){
+      return this.get('model').loadMore();
+    }
   },
 
-  showMoreBefore: function(){
-    this.get('model').showMoreBefore();
-  },
-
-  loadMore: function(){
-    return this.get('model').loadMore();
+  checkIfAtBottom: function(){
+    this.stickToBottom = window.innerHeight + window.scrollY > document.body.offsetHeight;
   }
 });
 
@@ -151,12 +168,55 @@ App.IndexView = Em.View.extend({
   didInsertElement: function(){
     var self = this;
     this.refreshInterval = setInterval(function(){
-      self.get('controller').loadMore();
+      self.get('controller').send("loadMore");
     }, 3000);
   },
 
   willDestroyElement: function(){
     clearInterval(this.refreshInterval);
+  }
+});
+
+App.MessageView = Em.View.extend({
+  templateName: "message",
+
+  tagName: "tr",
+
+  classNameBindings: ["context.rowClass", "hidden:hidden"],
+
+  hidden: function(){
+    var controller = this.get("controller");
+    var context = this.get("context");
+
+    switch(context.get("severity")){
+      case 0:
+        return !controller.get("showDebug");
+      case 1:
+        return !controller.get("showInfo");
+      case 2:
+        return !controller.get("showWarn");
+      case 3:
+        return !controller.get("showErr");
+    }
+  }.property(
+      "controller.showDebug",
+      "controller.showInfo",
+      "controller.showWarn",
+      "controller.showErr"
+    ),
+
+  willInsertElement: function(){
+    this.get("controller").checkIfAtBottom();
+  },
+
+  didInsertElement: function(){
+    var self = this;
+    Em.run.next(function(){
+      if (self.get("controller.stickToBottom")){
+        self.set("controller.stickToBottom", false);
+        $(window).scrollTop($(document).height());
+      }
+    });
   }
 });
 
