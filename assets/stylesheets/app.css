@@ -49,9 +49,20 @@ tr.warn{
 }
 
 
-td{
+td {
   line-height: 20px;
 }
+
+tr.show-more {
+  text-align: center;
+  height: 30px;
+  text-decoration: none;
+  background-color: #ccc;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+
 
 .action-panel {
   position: fixed;

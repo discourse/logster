@@ -63,17 +63,61 @@ App.Message = Ember.Object.extend({
   }.property("severity")
 });
 
-App.Message.reopenClass({
+App.MessageCollection = Em.Object.extend({
+  loadMore: function(){
+    var self = this;
+    var messages = this.get("messages");
+    var lastKey = messages[messages.length-1].get("key");
+
+    App.ajax("/messages.json?after="+lastKey)
+       .success(function(data){
+          if(data.messages.length > 0) {
+            var messages = App.MessageCollection.toMessages(data.messages);
+            self.set("messages", self.get("messages").concat(messages));
+          }
+          self.set("total",data.total);
+       });
+  },
+  moreBefore: function(){
+    return this.get("totalBefore") > 0;
+  }.property("totalBefore"),
+
+  totalBefore: function() {
+    return this.get("total") - this.get("messages").length;
+  }.property("total", "messages"),
+
+  showMoreBefore: function() {
+    var self = this;
+    var messages = this.get("messages");
+    var firstKey = messages[0].get("key");
+
+    App.ajax("/messages.json?before="+firstKey)
+       .success(function(data){
+          var messages = App.MessageCollection.toMessages(data.messages);
+          self.set("messages", messages.concat(self.get("messages")));
+          self.set("total",data.total);
+       });
+  }
+});
+
+App.MessageCollection.reopenClass({
+  toMessages: function(messages){
+    return messages.map(function(m){
+        return App.Message.create(m);
+    });
+  },
   latest: function(){
-    var promise = Ember.Deferred.create();
+    var self = this;
+    var promise = Em.Deferred.create();
 
     App.ajax("/messages.json")
       .success(function(data){
-        var messages = Em.A();
-        data.forEach(function(o){
-          messages.pushObject(App.Message.create(o));
-        });
-        promise.resolve(messages);
+        promise.resolve(
+          App.MessageCollection.create({
+            messages: self.toMessages(data.messages),
+            total: data.total
+          })
+        );
       });
 
     return promise;
@@ -82,13 +126,34 @@ App.Message.reopenClass({
 
 App.IndexRoute = Em.Route.extend({
   model: function(){
-    return App.Message.latest();
+    return App.MessageCollection.latest();
   }
 });
 
 App.IndexController = Em.Controller.extend({
   expandMessage: function(message){
     message.expand();
+  },
+
+  showMoreBefore: function(){
+    this.get('model').showMoreBefore();
+  },
+
+  loadMore: function(){
+    return this.get('model').loadMore();
+  }
+});
+
+App.IndexView = Em.View.extend({
+  didInsertElement: function(){
+    var self = this;
+    this.refreshInterval = setInterval(function(){
+      self.get('controller').loadMore();
+    }, 3000);
+  },
+
+  willDestroyElement: function(){
+    clearInterval(this.refreshInterval);
   }
 });
 

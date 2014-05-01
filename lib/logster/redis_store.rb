@@ -67,15 +67,60 @@ module Logster
       end
     end
 
+    def count
+      @redis.llen(list_key)
+    end
+
     def latest(opts={})
       limit = opts[:limit] || 50
       severity = opts[:severity]
+      before = opts[:before]
+      after = opts[:after]
+      start = -limit
+      finish = -1
 
-      (@redis.lrange(list_key, -limit, -1) || []).map! do |s|
+      if before || after
+        # inefficient may change to sorted list, also timing issues
+        found = nil
+        find = before || after
+
+        while !found
+          items = @redis.lrange(list_key, start, finish)
+
+          break unless items && items.length > 0
+
+          found = items.index do |i|
+            Row.from_json(i).key == find
+          end
+          break if found
+          start -= limit
+          finish -= limit
+        end
+
+        if found
+          if before
+            offset = -(limit - found)
+          else
+            offset = found + 1
+          end
+
+          start += offset
+          finish += offset
+
+          finish = -1 if finish > -1
+        end
+      end
+
+      results = []
+
+      (@redis.lrange(list_key, start, finish) || []).each do |s|
         row = Row.from_json(s)
         row = nil if severity && !severity.include?(row.severity)
-        row
-      end.compact
+        break if before && before == row.key
+        results << row if row
+      end
+
+      results
     end
 
     def clear(severities=nil)

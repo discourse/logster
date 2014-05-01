@@ -7,12 +7,17 @@
     </tr>
   </thead>
   <tbody>
-  {{#each model}}
+  {{#if model.moreBefore}}
+    <tr {{action showMoreBefore}} class="show-more">
+      <td colspan=3>{{model.totalBefore}} more</td>
+    </tr>
+  {{/if}}
+  {{#each model.messages}}
     <tr class="{{unbound rowClass}}">
       <td class="severity">{{{glyph}}}</td>
       <td class="message">{{displayMessage}}
         {{#if hasMore}}
-        &hellip; <a href="/" {{action expandMessage this}}>more</a>
+        &hellip; <a href="#" {{action expandMessage this}}>more</a>
         {{/if}}
       </td>
       <td class="time">{{timeAgo timestamp}}</td>

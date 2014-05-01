@@ -40,7 +40,11 @@ module Logster
       protected
 
       def serve_messages(req)
-        json = JSON.generate(@store.latest)
+        payload = {
+          messages: @store.latest(before: req["before"], after: req["after"]),
+          total: @store.count
+        }
+        json = JSON.generate(payload)
         [200, {"Content-Type" => "application/json"}, [json]]
       end
 

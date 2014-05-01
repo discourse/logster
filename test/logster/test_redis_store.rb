@@ -5,6 +5,7 @@ class TestRedisStore < Minitest::Test
 
   def setup
     @store = Logster::RedisStore.new(Redis.new)
+    @store.clear
   end
 
   def teardown
@@ -24,6 +25,47 @@ class TestRedisStore < Minitest::Test
     assert_equal(Logger::WARN, latest[1].severity)
     assert_equal("test", latest[1].progname)
     assert(!latest[1].key.nil?)
+  end
+
+  def test_latest_after
+    10.times do |i|
+      @store.report(Logger::WARN, "test", "A#{i}")
+    end
+
+    message = @store.latest[-1]
+
+    3.times do |i|
+      @store.report(Logger::WARN, "test", i.to_s)
+    end
+
+    message = @store.latest(after: message.key, limit: 3)[0]
+
+    assert_equal("0", message.message)
+  end
+
+  def test_latest_before
+    10.times do
+      @store.report(Logger::WARN, "test", "A")
+    end
+    10.times do
+      @store.report(Logger::WARN, "test", "B")
+    end
+    10.times do
+      @store.report(Logger::WARN, "test", "C")
+    end
+
+    messages = @store.latest(limit: 10)
+    assert_equal("C", messages[0].message)
+    assert_equal(10, messages.length)
+
+    messages = @store.latest(limit: 10, before: messages[0].key)
+    assert_equal("B", messages[0].message)
+    assert_equal(10, messages.length)
+
+    messages = @store.latest(limit: 10, before: messages[0].key)
+    assert_equal("A", messages[0].message)
+    assert_equal(10, messages.length)
+
   end
 
   def test_backlog
