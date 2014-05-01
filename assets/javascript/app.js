@@ -2,6 +2,9 @@ App = Ember.Application.create({
 });
 
 App.ajax =  function(url, settings) {
+  settings = settings || {};
+  settings.headers = settings.headers || {};
+  settings.headers["X-SILENCE-LOGGER"] = true;
   return $.ajax(Logger.rootPath + url, settings);
 };
 

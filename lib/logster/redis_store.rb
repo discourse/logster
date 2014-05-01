@@ -108,6 +108,7 @@ module Logster
           finish += offset
 
           finish = -1 if finish > -1
+          return [] if start > -1
         end
       end
 
