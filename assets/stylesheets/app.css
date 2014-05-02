@@ -95,10 +95,10 @@ tr.show-more {
 
 #divider {
   position: fixed;
-  bottom: 308px;
+  bottom: 310px;
   left: 0;
   right: 0;
-  height: 8px;
+  height: 10px;
   border-top: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
   background-color: #fafafa;
@@ -106,7 +106,7 @@ tr.show-more {
   z-index: 1;
 }
 
-#log-table-wrapper {
+#top-panel {
   position: fixed;
   top: 0;
   left: 0;
@@ -152,4 +152,15 @@ tr.show-more {
 
 .message-info pre {
   padding: 10px;
+}
+
+#overlay {
+  position: fixed;
+  z-index: 99999;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  cursor: row-resize;
+  opacity: 0;
 }

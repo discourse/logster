@@ -98,6 +98,7 @@ JS
   #{script("external/moment.min.js")}
   #{script("external/jquery.min.js")}
   #{script("external/handlebars.min.js")}
+  #{script("external/lodash.min.js")}
   #{script("external/ember.min.js", "external/ember.js")}
   #{handlebars("application")}
   #{handlebars("index")}

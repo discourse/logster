@@ -24,7 +24,6 @@ App.ajax =  function(url, settings) {
   settings = settings || {};
   settings.headers = settings.headers || {};
   settings.headers["X-SILENCE-LOGGER"] = true;
-  console.log(settings);
   return $.ajax(Logger.rootPath + url, settings);
 };
 
@@ -230,7 +229,18 @@ App.IndexController = Em.Controller.extend({
     ),
 
   checkIfAtBottom: function(){
-    this.stickToBottom = window.innerHeight + window.scrollY > document.body.offsetHeight;
+    if (this.checkedBottom) {
+      return;
+    }
+
+    var $topPanel = $("#top-panel");
+
+    var scrollTop = $topPanel.scrollTop();
+    var height = $topPanel.height();
+    var scrollHeight = $topPanel[0].scrollHeight;
+
+    this.stickToBottom = scrollHeight - 20 < height + scrollTop;
+    this.checkedBottom = true;
   }
 });
 
@@ -240,9 +250,38 @@ App.IndexView = Em.View.extend({
     this.refreshInterval = setInterval(function(){
       self.get('controller').send("loadMore");
     }, 3000);
+
+    // inspired by http://plugins.jquery.com/misc/textarea.js
+    var $win = $(window),
+        topPanel = $("#top-panel"),
+        divider = $("#divider"),
+        bottomPanel = $("#bottom-panel");
+
+    var performDrag = function(e){
+      var y = e.clientY;
+      var fromBottom = $win.height() - y;
+      topPanel.css("bottom", fromBottom + 10);
+      bottomPanel.css("height", fromBottom - 10);
+      divider.css("bottom", fromBottom);
+    };
+
+    var endDrag = function(){
+      $("#overlay").remove();
+      $(document)
+          .unbind('mousemove', performDrag)
+          .unbind('mouseup', endDrag);
+    };
+
+    $("#divider").on("mousedown", function(){
+      $("<div id='overlay'></div>").appendTo($("body"));
+      $(document)
+        .mousemove(performDrag)
+        .mouseup(endDrag);
+    });
   },
 
   willDestroyElement: function(){
+    $("#divider").off("mousedown");
     clearInterval(this.refreshInterval);
   }
 });
@@ -269,10 +308,13 @@ App.MessageView = Em.View.extend({
 
   didInsertElement: function(){
     var self = this;
+    var $topPanel = $("#top-panel");
     Em.run.next(function(){
+      self.set("controller.checkedBottom", false);
+
       if (self.get("controller.stickToBottom")){
         self.set("controller.stickToBottom", false);
-        $(window).scrollTop($(document).height());
+        $topPanel.scrollTop($topPanel[0].scrollHeight - $topPanel.height());
       }
     });
   }
