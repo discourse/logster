@@ -75,6 +75,8 @@ module Logster
 
       results = []
 
+      direction = after ? 1 : -1
+
       begin
         rows = @redis.lrange(list_key, start, finish) || []
 
@@ -82,16 +84,22 @@ module Logster
 
         rows.each do |s|
           row = Message.from_json(s)
-          row = nil if severity && !severity.include?(row.severity)
           break if before && before == row.key
+          row = nil if severity && !severity.include?(row.severity)
           temp << row if row
         end
 
-        results = temp + results
+        if direction == -1
+          results = temp + results
+        else
+          results += temp
+        end
 
-        start -= limit
-        finish -= limit
-      end while rows.length > 0 && results.length < limit
+        start += limit * direction
+        finish += limit * direction
+
+        finish = -1 if finish > -1
+      end while rows.length > 0 && results.length < limit && start < 0
 
       results
     end

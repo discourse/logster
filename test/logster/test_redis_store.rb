@@ -95,6 +95,11 @@ class TestRedisStore < Minitest::Test
     assert_equal(2, latest.length)
     assert_equal("B", latest[0].message)
     assert_equal("C", latest[1].message)
+
+    @store.report(Logger::ERROR, "test", "E")
+    # respects after
+    latest = @store.latest(severity: [Logger::ERROR, Logger::WARN], limit: 2, after: latest[1].key)
+    assert_equal(1, latest.length);
   end
 
 end
