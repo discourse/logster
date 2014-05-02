@@ -1,4 +1,5 @@
 require 'logster/logger'
+require 'logster/message'
 
 module Logster
 end

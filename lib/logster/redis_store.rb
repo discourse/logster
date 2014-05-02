@@ -3,47 +3,6 @@ require 'json'
 module Logster
   class RedisStore
 
-    class Row
-      attr_accessor :timestamp, :severity, :progname, :message, :key
-
-      def initialize(severity, progname, message, timestamp = nil, key = nil)
-        @timestamp = timestamp || get_timestamp
-        @severity = severity
-        @progname = progname
-        @message = message
-        @key = key || SecureRandom.hex
-      end
-
-      def to_h
-        {
-          message: @message,
-          progname: @progname,
-          severity: @severity,
-          timestamp: @timestamp,
-          key: @key
-        }
-      end
-
-      def to_json(opts=nil)
-        JSON.fast_generate(to_h,opts)
-      end
-
-      def self.from_json(json)
-        parsed = ::JSON.parse(json)
-        new( parsed["severity"],
-              parsed["progname"],
-              parsed["message"],
-              parsed["timestamp"],
-              parsed["key"] )
-      end
-
-      protected
-
-      def get_timestamp
-        (Time.new.to_f * 1000).to_i
-      end
-    end
-
     attr_accessor :max_backlog, :dedup, :max_retention, :skip_empty
 
     def initialize(redis = nil)
@@ -58,13 +17,15 @@ module Logster
     def report(severity, progname, message)
       return if (!message || (String === message && message.empty?)) && skip_empty
 
-      message = Row.new(severity, progname, message)
+      message = Message.new(severity, progname, message)
       @redis.rpush(list_key, message.to_json)
 
       # TODO make it atomic
       if @redis.llen(list_key) > @max_backlog
         @redis.lpop(list_key)
       end
+
+      nil
     end
 
     def count
@@ -90,7 +51,7 @@ module Logster
           break unless items && items.length > 0
 
           found = items.index do |i|
-            Row.from_json(i).key == find
+            Message.from_json(i).key == find
           end
           break if found
           start -= limit
@@ -114,12 +75,23 @@ module Logster
 
       results = []
 
-      (@redis.lrange(list_key, start, finish) || []).each do |s|
-        row = Row.from_json(s)
-        row = nil if severity && !severity.include?(row.severity)
-        break if before && before == row.key
-        results << row if row
-      end
+      begin
+        rows = @redis.lrange(list_key, start, finish) || []
+
+        temp = []
+
+        rows.each do |s|
+          row = Message.from_json(s)
+          row = nil if severity && !severity.include?(row.severity)
+          break if before && before == row.key
+          temp << row if row
+        end
+
+        results = temp + results
+
+        start -= limit
+        finish -= limit
+      end while rows.length > 0 && results.length < limit
 
       results
     end

@@ -40,10 +40,21 @@ module Logster
       protected
 
       def serve_messages(req)
+        opts = {
+          before: req["before"],
+          after: req["after"]
+        }
+
+        if(filter = req["filter"])
+          filter = filter.split("_").map{|s| s.to_i}
+          opts[:severity] = filter
+        end
+
         payload = {
-          messages: @store.latest(before: req["before"], after: req["after"]),
+          messages: @store.latest(opts),
           total: @store.count
         }
+
         json = JSON.generate(payload)
         [200, {"Content-Type" => "application/json"}, [json]]
       end

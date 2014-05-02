@@ -1,3 +1,22 @@
+moment.lang('en', {
+      relativeTime : {
+        future: "in %s",
+        past:   "%s ago",
+        s:  "secs",
+        m:  "a min",
+        mm: "%d mins",
+        h:  "an hr",
+        hh: "%d hrs",
+        d:  "a day",
+        dd: "%d days",
+        M:  "a mth",
+        MM: "%d mths",
+        y:  "a yr",
+        yy: "%d yrs"
+      }
+});
+
+
 App = Ember.Application.create({
 });
 
@@ -5,6 +24,7 @@ App.ajax =  function(url, settings) {
   settings = settings || {};
   settings.headers = settings.headers || {};
   settings.headers["X-SILENCE-LOGGER"] = true;
+  console.log(settings);
   return $.ajax(Logger.rootPath + url, settings);
 };
 
@@ -48,6 +68,8 @@ App.Message = Ember.Object.extend({
         return "warn";
       case 3:
         return "error";
+      case 4:
+        return "fatal";
     }
   }.property("severity"),
 
@@ -61,25 +83,67 @@ App.Message = Ember.Object.extend({
         return "x";
       case 3:
         return "!";
+      case 4:
+        return "!!";
     }
-
   }.property("severity")
 });
 
 App.MessageCollection = Em.Object.extend({
-  loadMore: function(){
-    var self = this;
-    var messages = this.get("messages");
-    var lastKey = messages[messages.length-1].get("key");
 
-    App.ajax("/messages.json?after="+lastKey)
-       .success(function(data){
-          if(data.messages.length > 0) {
-            var messages = App.MessageCollection.toMessages(data.messages);
-            self.get("messages").addObjects(messages);
+  messages: Em.A(),
+  total: 0,
+
+  load: function(opts){
+    var self = this;
+    opts = opts || {};
+
+    var data = {
+      filter: this.get("filter").join("_")
+    };
+
+    if(opts.before){
+      data.before = opts.before;
+    }
+
+    if (opts.after){
+      data.after = opts.after;
+    }
+
+    App.ajax("/messages.json", {
+      data: data
+    }).success(function(data){
+        if(data.messages.length > 0) {
+          var newRows = self.toMessages(data.messages);
+          var messages = self.get("messages");
+          if(opts.before) {
+            messages.unshiftObjects(newRows);
+          } else {
+            messages.addObjects(newRows);
           }
-          self.set("total",data.total);
-       });
+        }
+        self.set("total",data.total);
+     });
+  },
+
+  reload: function(){
+    this.set("total", 0);
+    this.get("messages").clear();
+
+    this.load();
+  },
+
+  loadMore: function(){
+
+    var messages = this.get("messages");
+    if(messages.length === 0){
+      return;
+    }
+
+    var lastKey = messages[messages.length-1].get("key");
+    this.load({
+      after: lastKey
+    });
   },
 
   moreBefore: function(){
@@ -91,56 +155,38 @@ App.MessageCollection = Em.Object.extend({
   }.property("total", "messages.@each"),
 
   showMoreBefore: function() {
-    var self = this;
     var messages = this.get("messages");
     var firstKey = messages[0].get("key");
 
-    App.ajax("/messages.json?before="+firstKey)
-       .success(function(data){
-          var messages = App.MessageCollection.toMessages(data.messages);
-          self.get("messages").unshiftObjects(messages);
-          self.set("total",data.total);
-       });
-  }
-});
+    this.load({
+      before: firstKey
+    });
+  },
 
-App.MessageCollection.reopenClass({
   toMessages: function(messages){
     return messages.map(function(m){
         return App.Message.create(m);
     });
-  },
-  latest: function(){
-    var self = this;
-    var promise = Em.Deferred.create();
-
-    App.ajax("/messages.json")
-      .success(function(data){
-        var messages = Em.A();
-        messages.addObjects(self.toMessages(data.messages));
-        promise.resolve(
-          App.MessageCollection.create({
-            messages: messages,
-            total: data.total
-          })
-        );
-      });
-
-    return promise;
   }
 });
 
+
 App.IndexRoute = Em.Route.extend({
   model: function(){
-    return App.MessageCollection.latest();
+    return App.MessageCollection.create();
   },
 
   setupController: function(controller, model){
     this._super(controller, model);
-    controller.set("showDebug",true);
-    controller.set("showInfo",true);
-    controller.set("showWarn",true);
-    controller.set("showErr",true);
+    controller.setProperties({
+      "showDebug": true,
+      "showInfo": true,
+      "showWarn": true,
+      "showErr": true,
+      "showFatal": true
+    });
+    controller.set("initialized", true);
+    model.reload();
   }
 });
 
@@ -158,6 +204,30 @@ App.IndexController = Em.Controller.extend({
       return this.get('model').loadMore();
     }
   },
+
+  filterChanged: function(){
+    var severities = ["Debug", "Info", "Warn", "Err", "Fatal"];
+    var filter = [];
+    for(var i=0; i<5; i++){
+      if(this.get("show" + severities[i])){
+        filter.push(i);
+      }
+    }
+
+    // always show unknown, rare
+    filter.push(5);
+    var model = this.get("model");
+    model.set("filter", filter);
+    if(this.get("initialized")){
+      model.reload();
+    }
+  }.observes(
+      "showDebug",
+      "showInfo",
+      "showWarn",
+      "showErr",
+      "showFatal"
+    ),
 
   checkIfAtBottom: function(){
     this.stickToBottom = window.innerHeight + window.scrollY > document.body.offsetHeight;
@@ -182,28 +252,7 @@ App.MessageView = Em.View.extend({
 
   tagName: "tr",
 
-  classNameBindings: ["context.rowClass", "hidden:hidden"],
-
-  hidden: function(){
-    var controller = this.get("controller");
-    var context = this.get("context");
-
-    switch(context.get("severity")){
-      case 0:
-        return !controller.get("showDebug");
-      case 1:
-        return !controller.get("showInfo");
-      case 2:
-        return !controller.get("showWarn");
-      case 3:
-        return !controller.get("showErr");
-    }
-  }.property(
-      "controller.showDebug",
-      "controller.showInfo",
-      "controller.showWarn",
-      "controller.showErr"
-    ),
+  classNameBindings: ["context.rowClass", ":message-row"],
 
   willInsertElement: function(){
     this.get("controller").checkIfAtBottom();

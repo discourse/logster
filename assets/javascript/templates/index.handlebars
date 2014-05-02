@@ -1,9 +1,9 @@
 <table class='log-table'>
   <thead>
     <tr>
-      <th></th>
-      <th>Info</th>
-      <th>Time</th>
+      <th class="severity"></th>
+      <th class="info">Info</th>
+      <th class="time">Time</th>
     </tr>
   </thead>
   <tbody>
@@ -32,5 +32,9 @@
   <label class="error">
     {{input type="checkbox" checked=showErr}}
     Error
+  </label>
+  <label class="fatal">
+    {{input type="checkbox" checked=showFatal}}
+    Fatal
   </label>
 </div>

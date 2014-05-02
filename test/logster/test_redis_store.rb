@@ -82,9 +82,15 @@ class TestRedisStore < Minitest::Test
   def test_filter_latest
     @store.report(Logger::INFO, "test", "A")
     @store.report(Logger::WARN, "test", "B")
+    10.times do
+      @store.report(Logger::INFO, "test", "A")
+    end
     @store.report(Logger::ERROR, "test", "C")
+    10.times do
+      @store.report(Logger::INFO, "test", "A")
+    end
 
-    latest = @store.latest(severity: [Logger::ERROR, Logger::WARN])
+    latest = @store.latest(severity: [Logger::ERROR, Logger::WARN], limit: 2)
 
     assert_equal(2, latest.length)
     assert_equal("B", latest[0].message)
