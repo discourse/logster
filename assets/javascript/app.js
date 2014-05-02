@@ -252,7 +252,16 @@ App.MessageView = Em.View.extend({
 
   tagName: "tr",
 
-  classNameBindings: ["context.rowClass", ":message-row"],
+  classNameBindings: ["context.rowClass", ":message-row", "context.selected:selected"],
+
+  click: function(){
+    var old = this.get("controller.currentMessage");
+    if(old){
+      old.set("selected",false);
+    }
+    this.set("context.selected", true);
+    this.set("controller.currentMessage", this.get("context"));
+  },
 
   willInsertElement: function(){
     this.get("controller").checkIfAtBottom();

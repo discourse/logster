@@ -3,12 +3,6 @@ body {
   font-size: 12px;
 }
 
-table {
-  border-collapse:collapse;
-  margin: auto;
-  width: 98%;
-  table-layout: fixed;
-}
 
 tbody tr {
   width: 98%;
@@ -19,9 +13,13 @@ tbody tr td {
   line-height: 25px;
 }
 
-tbody tr.message-row:hover {
+.message-row:hover {
   background-color: #f8f8f8;
   cursor: pointer;
+}
+
+.message-row.selected {
+  background-color: #dfdfdf;
 }
 
 th {
@@ -43,6 +41,7 @@ td.time {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  padding-right: 10px;
 }
 
 th.severity{
@@ -50,7 +49,7 @@ th.severity{
 }
 
 th.time{
-  width: 100px;
+  width: 90px;
 }
 
 .fatal{
@@ -82,29 +81,75 @@ tr.show-more {
 
 
 
-.action-panel {
+#bottom-panel{
   position: fixed;
   bottom: 0;
   left: 0;
   right: 100%;
-  height: 30px;
+  height: 300px;
   width: 100%;
   background-color: #F1F1F1;
-  padding: 8px 0px 0 0;
+  padding: 8px;
   font-size: 12px;
-  font-weight: bold;
 }
 
+#divider {
+  position: fixed;
+  bottom: 308px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  background-color: #fafafa;
+  cursor: row-resize;
+  z-index: 1;
+}
+
+#log-table-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 320px;
+  overflow: auto;
+}
+
+.message-info {
+  position: absolute;
+  border-bottom: 1px solid #DDD;
+  bottom: 35px;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.action-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30px;
+  font-weight: bold;
+}
 .action-panel input {
   position: relative;
   top: 2px;
   margin-left: 20px;
 }
 
-.log-table {
-  margin-bottom: 60px;
+#log-table {
+  border-collapse:collapse;
+  margin: auto;
+  width: 99%;
+  table-layout: fixed;
 }
+
 
 .hidden {
   display: none;
+}
+
+.message-info pre {
+  padding: 10px;
 }

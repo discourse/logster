@@ -1,40 +1,48 @@
-<table class='log-table'>
-  <thead>
-    <tr>
-      <th class="severity"></th>
-      <th class="info">Info</th>
-      <th class="time">Time</th>
-    </tr>
-  </thead>
-  <tbody>
-  {{#if model.moreBefore}}
-    <tr {{action showMoreBefore}} class="show-more">
-      <td colspan=3>{{model.totalBefore}} more</td>
-    </tr>
-  {{/if}}
-  {{each model.messages itemViewClass="App.MessageView"}}
-  </tbody>
-</table>
+<div id='log-table-wrapper'>
+  <table id='log-table'>
+    <thead>
+      <tr>
+        <th class="severity"></th>
+        <th class="info">Info</th>
+        <th class="time">Time</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{#if model.moreBefore}}
+      <tr {{action showMoreBefore}} class="show-more">
+        <td colspan=3>{{model.totalBefore}} more</td>
+      </tr>
+    {{/if}}
+    {{each model.messages itemViewClass="App.MessageView"}}
+    </tbody>
+  </table>
+</div>
+<div id="divider"></div>
+<div id="bottom-panel">
+  <div class="message-info">
+    <pre>{{currentMessage.message}}</pre>
+  </div>
 
-<div class="action-panel">
-  <label class="debug">
-    {{input type="checkbox" checked=showDebug}}
-    Debug
-  </label>
-  <label class="info">
-    {{input type="checkbox" checked=showInfo}}
-    Info
-  </label>
-  <label class="warn">
-    {{input type="checkbox" checked=showWarn}}
-    Warning
-  </label>
-  <label class="error">
-    {{input type="checkbox" checked=showErr}}
-    Error
-  </label>
-  <label class="fatal">
-    {{input type="checkbox" checked=showFatal}}
-    Fatal
-  </label>
+  <div class="action-panel">
+    <label class="debug">
+      {{input type="checkbox" checked=showDebug}}
+      Debug
+    </label>
+    <label class="info">
+      {{input type="checkbox" checked=showInfo}}
+      Info
+    </label>
+    <label class="warn">
+      {{input type="checkbox" checked=showWarn}}
+      Warning
+    </label>
+    <label class="error">
+      {{input type="checkbox" checked=showErr}}
+      Error
+    </label>
+    <label class="fatal">
+      {{input type="checkbox" checked=showFatal}}
+      Fatal
+    </label>
+  </div>
 </div>
