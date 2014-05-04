@@ -106,6 +106,26 @@ tr.show-more {
   z-index: 1;
 }
 
+#divider div {
+  margin: auto;
+  width: 24px;
+  height: 1px;
+  background-color: #ccc;
+  position: relative;
+}
+
+#divider .line-1 {
+  top: 3px;
+}
+
+#divider .line-2 {
+  top: 4px;
+}
+
+#divider .line-3 {
+  top: 5px;
+}
+
 #top-panel {
   position: fixed;
   top: 0;

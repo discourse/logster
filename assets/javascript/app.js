@@ -245,6 +245,20 @@ App.IndexController = Em.Controller.extend({
 });
 
 App.IndexView = Em.View.extend({
+  divideView: function(fromTop, win){
+    var $win = win || $(window);
+    var height = $win.height();
+    var fromBottom = $win.height() - fromTop;
+
+    if (fromTop < 100 || fromTop + 100 > height) {
+      return;
+    }
+
+    this.topPanel.css("bottom", fromBottom + 5);
+    this.bottomPanel.css("height", fromBottom - 15);
+    this.divider.css("bottom", fromBottom - 5);
+  },
+
   didInsertElement: function(){
     var self = this;
     this.refreshInterval = setInterval(function(){
@@ -252,31 +266,45 @@ App.IndexView = Em.View.extend({
     }, 3000);
 
     // inspired by http://plugins.jquery.com/misc/textarea.js
+    this.topPanel = $("#top-panel");
+    this.divider = $("#divider");
+    this.bottomPanel = $("#bottom-panel");
+
     var $win = $(window),
-        topPanel = $("#top-panel"),
-        divider = $("#divider"),
-        bottomPanel = $("#bottom-panel");
+        resizing = false;
 
     var performDrag = function(e){
-      var y = e.clientY;
-      var fromBottom = $win.height() - y;
-      topPanel.css("bottom", fromBottom + 10);
-      bottomPanel.css("height", fromBottom - 10);
-      divider.css("bottom", fromBottom);
+      if(!resizing) { return; }
+      self.divideView(e.clientY, $win);
     };
 
     var endDrag = function(){
       $("#overlay").remove();
+      resizing = false;
+
+      if(localStorage){
+        localStorage.logster_divider_bottom = parseInt(self.divider.css("bottom"),10);
+      }
+
       $(document)
           .unbind('mousemove', performDrag)
           .unbind('mouseup', endDrag);
     };
 
-    $("#divider").on("mousedown", function(){
+    self.divider.on("mousedown", function(){
       $("<div id='overlay'></div>").appendTo($("body"));
+      resizing = true;
       $(document)
-        .mousemove(performDrag)
+        .mousemove(_.throttle(performDrag,25))
         .mouseup(endDrag);
+    }).append("<div class='line-1'></div><div class='line-2'></div><div class='line-3'></div>");
+
+
+    Em.run.next(function(){
+      if(localStorage && localStorage.logster_divider_top){
+        var fromTop = $win.height() - parseInt(localStorage.logster_divider_bottom,10);
+        self.divideView(fromTop, $win);
+      }
     });
   },
 
