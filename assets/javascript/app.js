@@ -237,7 +237,7 @@ App.IndexController = Em.Controller.extend({
     ),
 
   searchChanged: function(){
-    var search = this.get("search")
+    var search = this.get("search");
     var model = this.get("model");
     model.set("search", search);
 
@@ -249,7 +249,7 @@ App.IndexController = Em.Controller.extend({
     ),
 
   regexChanged: function(){
-    var regex = this.get("regex")
+    var regex = this.get("regex");
     var model = this.get("model");
     model.set("regex", regex);
 
