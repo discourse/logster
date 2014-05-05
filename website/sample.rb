@@ -67,10 +67,10 @@ class Sample < Sinatra::Base
 <head>
 </head>
 <body>
-<h3>Welcome to the sample app:</h3>
+<h3>Welcome to logster:</h3>
 <ul>
-  <li><a href='/report_error'>Report error</a></li>
-  <li><a href='/logs'>View logs</a></li>
+  <li><a href='https://github.com/SamSaffron/logster'>Learn about logster</a></li>
+  <li><a href='/logs'>View sample dev logs</a></li>
 </ul>
 </body>
 </html>

@@ -6,13 +6,16 @@ A web log viewer and logging framework for Rack applications
 
 ## Installation
 
-Add this line to your application's Gemfile:
+Add these lines to your application's Gemfile:
 
-    gem 'logster', github: 'SamSaffron/logster'
+    gem 'redis'
+    gem 'logster'
 
 And then execute:
 
     $ bundle
+
+Logster will wire up `/logs` path in your Rails app in **development** mode only. Production mode is being worked on.
 
 ## Usage
 
