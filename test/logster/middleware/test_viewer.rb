@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../../test_helper'
 require 'rack'
 require 'logster/redis_store'
 require 'logster/middleware/viewer'
