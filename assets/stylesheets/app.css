@@ -142,6 +142,7 @@ tr.show-more {
   top: 0;
   left: 0;
   right: 0;
+  overflow: auto;
 }
 
 .action-panel {
@@ -171,7 +172,8 @@ tr.show-more {
 }
 
 .message-info pre {
-  padding: 10px;
+  position: relative;
+  margin: 10px;
 }
 
 #overlay {
