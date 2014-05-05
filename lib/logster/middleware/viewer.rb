@@ -42,12 +42,17 @@ module Logster
       def serve_messages(req)
         opts = {
           before: req["before"],
-          after: req["after"]
+          after: req["after"],
+          regex: req["regex"]
         }
 
         if(filter = req["filter"])
           filter = filter.split("_").map{|s| s.to_i}
           opts[:severity] = filter
+        end
+
+        if search = req["search"]
+          opts[:search] = search
         end
 
         payload = {

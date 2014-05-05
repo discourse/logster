@@ -37,6 +37,8 @@ module Logster
       severity = opts[:severity]
       before = opts[:before]
       after = opts[:after]
+      search = opts[:search]
+      regex = opts[:regex]
       start = -limit
       finish = -1
 
@@ -91,6 +93,17 @@ module Logster
           row = Message.from_json(s)
           break if before && before == row.key
           row = nil if severity && !severity.include?(row.severity)
+          if row && search
+            if regex == "true"
+              unless Regexp.new(search) =~ row.message
+                row = nil
+              end
+            else
+              unless row.message.include?(search)
+                row = nil
+              end
+            end
+          end
           temp << row if row
         end
 

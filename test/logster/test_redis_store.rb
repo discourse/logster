@@ -109,4 +109,28 @@ class TestRedisStore < Minitest::Test
     assert_equal(1, latest.length);
   end
 
+  def test_search
+    @store.report(Logger::INFO, "test", "A")
+    @store.report(Logger::INFO, "test", "B")
+
+    messages = @store.latest
+    assert_equal(2, messages.length)
+
+    latest = @store.latest(search: "B")
+
+    assert_equal(1, latest.length)
+  end
+
+  def test_regex_search
+    @store.report(Logger::INFO, "test", "pattern_1")
+    @store.report(Logger::INFO, "test", "pattern_2")
+
+    messages = @store.latest
+    assert_equal(2, messages.length)
+
+    latest = @store.latest(search: "^pattern_[1]$", regex: "true")
+
+    assert_equal(1, latest.length)
+  end
+
 end

@@ -68,7 +68,14 @@ th.time{
   color: #777;
 }
 
+.search input {
+  border: 1px solid #DDD;
+  padding: 3px;
+}
 
+.regex input {
+  margin-left: 2px !important;
+}
 
 tr.show-more {
   text-align: center;
@@ -155,7 +162,7 @@ tr.show-more {
 }
 .action-panel input {
   position: relative;
-  top: 2px;
+  top: -1px;
   margin-left: 20px;
 }
 
