@@ -41,14 +41,14 @@ hooks:
         cmd:
           - sudo -E -u logster bundle install --path=/shared/gems --verbose
     - file:
-       path: /etc/service/unicorn/run
+       path: /etc/service/puma/run
        chmod: "+x"
        contents: |
          #!/bin/bash
          exec 2>&1
          # redis
          cd $home/website
-         exec sudo -E -u logster LD_PRELOAD=/usr/lib/libjemalloc.so.1 bundle exec unicorn -E production
+         exec sudo -E -u logster LD_PRELOAD=/usr/lib/libjemalloc.so.1 bundle exec puma -p 8080 -e production
     - exec: rm /etc/nginx/sites-enabled/default
     - replace:
         filename: /etc/nginx/nginx.conf
