@@ -301,7 +301,7 @@ App.IndexView = Em.View.extend({
 
 
     Em.run.next(function(){
-      if(localStorage && localStorage.logster_divider_top){
+      if(localStorage && localStorage.logster_divider_bottom){
         var fromTop = $win.height() - parseInt(localStorage.logster_divider_bottom,10);
         self.divideView(fromTop, $win);
       }
