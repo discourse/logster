@@ -67,7 +67,7 @@ hooks:
             gzip_min_length 1000;
             server_name logster.info;
             keepalive_timeout 65;
-            location ~ ^/logs/(?<relative>[^\?]+).* {
+            location ~ ^/logs(?<relative>/[^\?]+).* {
               root /var/www/logster/assets;
               expires 1y;
               add_header ETag "";
