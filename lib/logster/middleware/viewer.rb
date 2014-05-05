@@ -50,6 +50,10 @@ module Logster
           opts[:severity] = filter
         end
 
+        if ignore = req["ignore"]
+          opts[:ignore] = ignore
+        end
+
         payload = {
           messages: @store.latest(opts),
           total: @store.count

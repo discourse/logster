@@ -37,6 +37,7 @@ module Logster
       severity = opts[:severity]
       before = opts[:before]
       after = opts[:after]
+      ignore = opts[:ignore]
       start = -limit
       finish = -1
 
@@ -91,6 +92,7 @@ module Logster
           row = Message.from_json(s)
           break if before && before == row.key
           row = nil if severity && !severity.include?(row.severity)
+          row = nil if row && ignore && Regexp.new(ignore) =~ row.message
           temp << row if row
         end
 

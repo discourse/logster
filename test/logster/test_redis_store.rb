@@ -109,4 +109,17 @@ class TestRedisStore < Minitest::Test
     assert_equal(1, latest.length);
   end
 
+  def test_ignore
+    @store.report(Logger::INFO, "test", "A")
+    @store.report(Logger::INFO, "test", "pattern_1")
+    @store.report(Logger::INFO, "test", "pattern_2")
+
+    messages = @store.latest
+    assert_equal(3, messages.length)
+
+    latest = @store.latest(ignore: "^pattern_[0-9]$")
+
+    assert_equal(1, latest.length)
+  end
+
 end

@@ -101,6 +101,11 @@ App.MessageCollection = Em.Object.extend({
       filter: this.get("filter").join("_")
     };
 
+    ignore = this.get("ignore");
+    if (ignore != "") {
+      data.ignore = ignore;
+    }
+
     if(opts.before){
       data.before = opts.before;
     }
@@ -182,7 +187,8 @@ App.IndexRoute = Em.Route.extend({
       "showInfo": true,
       "showWarn": true,
       "showErr": true,
-      "showFatal": true
+      "showFatal": true,
+      "ignore": ''
     });
     controller.set("initialized", true);
     model.reload();
@@ -226,6 +232,18 @@ App.IndexController = Em.Controller.extend({
       "showWarn",
       "showErr",
       "showFatal"
+    ),
+
+  ignoreChanged: function(){
+    var ignore = this.get("ignore")
+    var model = this.get("model");
+    model.set("ignore", ignore);
+
+    if(this.get("initialized")){
+      model.reload();
+    }
+  }.observes(
+      "ignore"
     ),
 
   checkIfAtBottom: function(){
