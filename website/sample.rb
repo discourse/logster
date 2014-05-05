@@ -11,6 +11,7 @@ require 'sinatra/base'
 $store = Logster::RedisStore.new
 
 $log = Logster::Logger.new($store)
+
 $log.info "Some info line"
 $log.warn "Some warn line"
 $log.error "Some error line"
