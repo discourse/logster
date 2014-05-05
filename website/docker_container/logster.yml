@@ -72,7 +72,6 @@ hooks:
               expires 1y;
               add_header ETag "";
               add_header Cache-Control public;
-              echo $relative;
               try_files $relative @logster;
             }
             location / {
