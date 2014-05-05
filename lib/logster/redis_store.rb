@@ -53,6 +53,11 @@ module Logster
           found = items.index do |i|
             Message.from_json(i).key == find
           end
+
+          if items.length < limit
+            found += limit - items.length if found
+            break
+          end
           break if found
           start -= limit
           finish -= limit

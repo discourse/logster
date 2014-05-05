@@ -82,6 +82,13 @@ class TestRedisStore < Minitest::Test
   def test_filter_latest
     @store.report(Logger::INFO, "test", "A")
     @store.report(Logger::WARN, "test", "B")
+
+    messages = @store.latest
+    assert_equal(2, messages.length)
+
+    messages = @store.latest(after: messages.last.key)
+    assert_equal(0, messages.length)
+
     10.times do
       @store.report(Logger::INFO, "test", "A")
     end
