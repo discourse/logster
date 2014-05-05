@@ -50,6 +50,10 @@ hooks:
          cd $home/website
          exec sudo -E -u logster LD_PRELOAD=/usr/lib/libjemalloc.so.1 bundle exec unicorn -E production
     - exec: rm /etc/nginx/sites-enabled/default
+    - replace:
+        filename: /etc/nginx/nginx.conf
+        from: pid /run/nginx.pid;
+        to: daemon off;
     - file:
         path: /etc/nginx/conf.d/logster.conf
         contents: |
@@ -60,9 +64,21 @@ hooks:
             listen 80;
             gzip on;
             gzip_types application/json text/css application/x-javascript;
+            gzip_min_length 1000;
             server_name logster.info;
             keepalive_timeout 65;
+            location ~ ^/logs/(?<relative>[^\?]+).* {
+              root /var/www/logster/assets;
+              expires 1y;
+              add_header ETag "";
+              add_header Cache-Control public;
+              echo $relative;
+              try_files $relative @logster;
+            }
             location / {
+              try_files $uri @logster;
+            }
+            location @logster {
               proxy_set_header Host $http_host;
               proxy_set_header X-Real-IP $remote_addr;
               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
