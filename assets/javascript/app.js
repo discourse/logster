@@ -348,7 +348,30 @@ App.MessageView = Em.View.extend({
   }
 });
 
+App.ApplicationView = Em.View.extend({
+  didInsertElement: function(){
+    var updateTimes = function(){
+      $('.auto-update-time').each(function(){
+        var newTime = moment(
+            parseInt(this.getAttribute('data-timestamp'),10)
+          ).fromNow();
+
+        if(newTime != this.innerText) {
+          this.innerText = newTime;
+        }
+
+      });
+      Em.run.later(updateTimes, 10000);
+    };
+
+    Em.run.later(updateTimes, 10000);
+  }
+});
+
 Handlebars.registerHelper('timeAgo', function(prop, options){
   var timestamp = Ember.Handlebars.get(this, prop, options);
-  return moment(timestamp).fromNow();
+  var parsed = moment(timestamp);
+  var formatted = "<span data-timestamp='" + timestamp + "' class='auto-update-time' title='" + parsed.format() +  "'>" + parsed.fromNow() + "</span>";
+
+  return new Handlebars.SafeString(formatted);
 });
