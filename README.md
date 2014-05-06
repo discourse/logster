@@ -38,3 +38,7 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
+
+# CHANGELOG
+
+- 2014-05-07: Started changelog :)
