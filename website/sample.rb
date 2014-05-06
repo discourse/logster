@@ -10,8 +10,8 @@ require 'sinatra/base'
 
 # log a few errors
 $redis = Redis.new
-$store = Logster::RedisStore.new($redis)
-$log = Logster::Logger.new($store)
+$store = Logster.store = Logster::RedisStore.new($redis)
+$log = Logster.logger = Logster::Logger.new($store)
 
 class SampleLoader
   def initialize
@@ -57,8 +57,7 @@ $loader.ensure_samples_loaded
 $loader.load_samples
 
 class Sample < Sinatra::Base
-  use Logster::Middleware::Reporter, log: $log
-  use Logster::Middleware::Viewer, store: $store
+  use Logster::Middleware::Viewer
 
   get '/' do
 

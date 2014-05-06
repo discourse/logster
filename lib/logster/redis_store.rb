@@ -3,7 +3,8 @@ require 'json'
 module Logster
   class RedisStore
 
-    attr_accessor :max_backlog, :dedup, :max_retention, :skip_empty
+    attr_accessor :level, :redis, :max_backlog,
+                  :dedup, :max_retention, :skip_empty
 
     def initialize(redis = nil)
       @redis = redis || Redis.new
@@ -16,6 +17,7 @@ module Logster
 
     def report(severity, progname, message)
       return if (!message || (String === message && message.empty?)) && skip_empty
+      return if level && severity < level
 
       message = Message.new(severity, progname, message)
       @redis.rpush(list_key, message.to_json)

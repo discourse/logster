@@ -5,22 +5,31 @@ module Logster
     class Viewer
 
       PATH_INFO = "PATH_INFO".freeze
+      SCRIPT_NAME = "SCRIPT_NAME".freeze
 
-      def initialize(app, config)
+      def initialize(app)
         @app = app
-        @logs_path = config[:path] || "/logs"
-        @path_regex = Regexp.new("^(#{@logs_path}$)|^(#{@logs_path}(/.*))$")
 
-        @store = config[:store] or raise ArgumentError.new("store")
+        @logs_path = Logster.config.subdirectory || "/logs"
+        @path_regex = Regexp.new("^(#{@logs_path}$)|^(#{@logs_path}(/.*))$")
+        @store = Logster.store or raise ArgumentError.new("store")
 
         @assets_path = File.expand_path("../../../../assets", __FILE__)
         @fileserver = Rack::File.new(@assets_path)
+        @authorize_callback = Logster.config.authorize_callback
       end
 
       def call(env)
         path = env[PATH_INFO]
+        script_name = env[SCRIPT_NAME]
+
+        if script_name && script_name.length > 0
+          path = script_name + path
+        end
 
         if resource = resolve_path(path)
+
+          return @app.call(env) if @authorize_callback && !@authorize_callback.call(env)
 
           if resource =~ /\.js$|\.handlebars$|\.css$/
             env[PATH_INFO] = resource

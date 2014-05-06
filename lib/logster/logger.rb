@@ -9,9 +9,24 @@ module Logster
       @store = store
     end
 
+    def chain(logger)
+      @chained ||= []
+      @chained << logger
+    end
+
     def add(severity, message, progname, &block)
       if severity < @level
         return true
+      end
+
+      if @chained
+        i = 0
+        # micro optimise for logging
+        while i < @chained.length
+          # TODO double yielding blocks
+          @chained[i].add(severity, message, progname, &block)
+          i += 1
+        end
       end
 
       progname ||= @progname
@@ -24,7 +39,7 @@ module Logster
         end
       end
 
-     @store.report(severity, progname, message)
+      @store.report(severity, progname, message)
 
     end
   end

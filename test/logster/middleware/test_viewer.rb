@@ -5,14 +5,40 @@ require 'logster/middleware/viewer'
 
 class TestViewer < Minitest::Test
 
+  class BrokenApp
+    def call(env)
+      [500, {}, ["broken"]]
+    end
+  end
+
+  def setup
+    Logster.store = Logster::RedisStore.new
+  end
+
   def teardown
+    Logster.config.subdirectory = nil
+    Logster.config.authorize_callback = nil
+    Logster.store = nil
   end
 
   def viewer
     @viewer ||= begin
-                  store = Logster::RedisStore.new
-                  Logster::Middleware::Viewer.new(nil, store: store, path: "/logsie")
+                  Logster.config.subdirectory = "/logsie"
+                  Logster::Middleware::Viewer.new(nil)
                 end
+  end
+
+  def test_authorize_callback
+    Logster.config.authorize_callback = lambda{ |env|
+      env["authorized"]
+    }
+
+    viewer = Logster::Middleware::Viewer.new(BrokenApp.new)
+    status, _  = viewer.call({"PATH_INFO" => "/logs"})
+    assert_equal(500, status)
+
+    status, _  = viewer.call({"PATH_INFO" => "/logs", "authorized" => true})
+    assert_equal(200, status)
   end
 
   def test_path_resolution
