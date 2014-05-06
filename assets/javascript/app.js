@@ -98,8 +98,14 @@ App.MessageCollection = Em.Object.extend({
     opts = opts || {};
 
     var data = {
-      filter: this.get("filter").join("_")
+      filter: this.get("filter").join("_"),
+      regex: this.get("regex")
     };
+
+    search = this.get("search");
+    if (search != "") {
+      data.search = search;
+    }
 
     if(opts.before){
       data.before = opts.before;
@@ -182,7 +188,9 @@ App.IndexRoute = Em.Route.extend({
       "showInfo": true,
       "showWarn": true,
       "showErr": true,
-      "showFatal": true
+      "showFatal": true,
+      "regex": false,
+      "search": ''
     });
     controller.set("initialized", true);
     model.reload();
@@ -226,6 +234,30 @@ App.IndexController = Em.Controller.extend({
       "showWarn",
       "showErr",
       "showFatal"
+    ),
+
+  searchChanged: function(){
+    var search = this.get("search");
+    var model = this.get("model");
+    model.set("search", search);
+
+    if(this.get("initialized")){
+      model.reload();
+    }
+  }.observes(
+      "search"
+    ),
+
+  regexChanged: function(){
+    var regex = this.get("regex");
+    var model = this.get("model");
+    model.set("regex", regex);
+
+    if(this.get("initialized")){
+      model.reload();
+    }
+  }.observes(
+      "regex"
     ),
 
   checkIfAtBottom: function(){
