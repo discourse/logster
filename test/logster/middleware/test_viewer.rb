@@ -17,6 +17,8 @@ class TestViewer < Minitest::Test
 
   def test_path_resolution
     assert_nil(viewer.send(:resolve_path, "/logs"))
+    assert_nil(viewer.send(:resolve_path, "/admin/logsie"))
+    assert_nil(viewer.send(:resolve_path, "/admin/logsie/bla"))
     assert_equal("/",viewer.send(:resolve_path, "/logsie"))
     assert_equal("/",viewer.send(:resolve_path, "/logsie/"))
     assert_equal("/hello/world",viewer.send(:resolve_path, "/logsie/hello/world"))
@@ -29,6 +31,10 @@ class TestViewer < Minitest::Test
 
     result,  = viewer.call(env)
     assert_equal(200, result)
+  end
+
+  def test_regex_parse
+    assert_equal(/hello/i, viewer.send(:parse_regex, '/hello/i'))
   end
 
 end

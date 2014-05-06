@@ -128,7 +128,7 @@ class TestRedisStore < Minitest::Test
     messages = @store.latest
     assert_equal(2, messages.length)
 
-    latest = @store.latest(search: "^pattern_[1]$", regex: "true")
+    latest = @store.latest(search: /^pattern_[1]$/)
 
     assert_equal(1, latest.length)
   end

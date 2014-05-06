@@ -98,13 +98,16 @@ App.MessageCollection = Em.Object.extend({
     opts = opts || {};
 
     var data = {
-      filter: this.get("filter").join("_"),
-      regex: this.get("regex")
+      filter: this.get("filter").join("_")
     };
 
     search = this.get("search");
-    if (search != "") {
+    if (!_.isEmpty(search)) {
       data.search = search;
+      var regexSearch = this.get("regexSearch");
+      if(regexSearch) {
+        data.regex_search = "true";
+      }
     }
 
     if(opts.before){
@@ -168,6 +171,23 @@ App.MessageCollection = Em.Object.extend({
     });
   },
 
+  regexSearch: function() {
+    search = this.get("search");
+    if( search &&
+        search.length > 2 &&
+        search[0] === "/"
+      ){
+      var match = search.match(/\/(.*)\/(.*)/);
+      if(match && match.length === 3){
+        try {
+          return new RegExp(match[1], match[2]);
+        } catch(err) {
+          // don't care
+        }
+      }
+    }
+  }.property("search"),
+
   toMessages: function(messages){
     return messages.map(function(m){
         return App.Message.create(m);
@@ -189,7 +209,6 @@ App.IndexRoute = Em.Route.extend({
       "showWarn": true,
       "showErr": true,
       "showFatal": true,
-      "regex": false,
       "search": ''
     });
     controller.set("initialized", true);
@@ -248,17 +267,6 @@ App.IndexController = Em.Controller.extend({
       "search"
     ),
 
-  regexChanged: function(){
-    var regex = this.get("regex");
-    var model = this.get("model");
-    model.set("regex", regex);
-
-    if(this.get("initialized")){
-      model.reload();
-    }
-  }.observes(
-      "regex"
-    ),
 
   checkIfAtBottom: function(){
     if (this.checkedBottom) {

@@ -38,47 +38,10 @@ module Logster
       before = opts[:before]
       after = opts[:after]
       search = opts[:search]
-      regex = opts[:regex]
-      start = -limit
-      finish = -1
 
-      if before || after
-        # inefficient may change to sorted list, also timing issues
-        found = nil
-        find = before || after
+      start, finish = find_location(before, after, limit)
 
-        while !found
-          items = @redis.lrange(list_key, start, finish)
-
-          break unless items && items.length > 0
-
-          found = items.index do |i|
-            Message.from_json(i).key == find
-          end
-
-          if items.length < limit
-            found += limit - items.length if found
-            break
-          end
-          break if found
-          start -= limit
-          finish -= limit
-        end
-
-        if found
-          if before
-            offset = -(limit - found)
-          else
-            offset = found + 1
-          end
-
-          start += offset
-          finish += offset
-
-          finish = -1 if finish > -1
-          return [] if start > -1
-        end
-      end
+      return [] unless start && finish
 
       results = []
 
@@ -93,17 +56,8 @@ module Logster
           row = Message.from_json(s)
           break if before && before == row.key
           row = nil if severity && !severity.include?(row.severity)
-          if row && search
-            if regex == "true"
-              unless Regexp.new(search) =~ row.message
-                row = nil
-              end
-            else
-              unless row.message.include?(search)
-                row = nil
-              end
-            end
-          end
+
+          row = filter_search(row, search)
           temp << row if row
         end
 
@@ -127,6 +81,62 @@ module Logster
     end
 
     protected
+
+    def find_location(before, after, limit)
+      start = -limit
+      finish = -1
+
+      return [start,finish] unless before || after
+
+      # inefficient may change to sorted list, also timing issues
+      found = nil
+      find = before || after
+
+      while !found
+        items = @redis.lrange(list_key, start, finish)
+
+        break unless items && items.length > 0
+
+        found = items.index do |i|
+          Message.from_json(i).key == find
+        end
+
+        if items.length < limit
+          found += limit - items.length if found
+          break
+        end
+        break if found
+        start -= limit
+        finish -= limit
+      end
+
+      if found
+        if before
+          offset = -(limit - found)
+        else
+          offset = found + 1
+        end
+
+        start += offset
+        finish += offset
+
+        finish = -1 if finish > -1
+        return nil if start > -1
+      end
+
+      [start, finish]
+    end
+
+    def filter_search(row, search)
+      return row unless row && search
+
+      if Regexp === search
+        row if row.message =~ search
+      elsif row.message.include?(search)
+        row
+      end
+
+    end
 
 
     def list_key

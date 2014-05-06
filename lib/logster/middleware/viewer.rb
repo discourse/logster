@@ -9,7 +9,7 @@ module Logster
       def initialize(app, config)
         @app = app
         @logs_path = config[:path] || "/logs"
-        @path_regex = Regexp.new("(#{@logs_path}$)|(#{@logs_path}(/.*))$")
+        @path_regex = Regexp.new("^(#{@logs_path}$)|^(#{@logs_path}(/.*))$")
 
         @store = config[:store] or raise ArgumentError.new("store")
 
@@ -42,8 +42,7 @@ module Logster
       def serve_messages(req)
         opts = {
           before: req["before"],
-          after: req["after"],
-          regex: req["regex"]
+          after: req["after"]
         }
 
         if(filter = req["filter"])
@@ -52,6 +51,7 @@ module Logster
         end
 
         if search = req["search"]
+          search = (parse_regex(search) || search) if req["regex_search"] == "true"
           opts[:search] = search
         end
 
@@ -62,6 +62,14 @@ module Logster
 
         json = JSON.generate(payload)
         [200, {"Content-Type" => "application/json"}, [json]]
+      end
+
+      def parse_regex(string)
+        if string =~ /\/(.+)\/(.*)/
+          s = $1
+          flags = Regexp::IGNORECASE if $2 && $2.include?("i")
+          Regexp.new(s, flags) rescue nil
+        end
       end
 
       def resolve_path(path)
