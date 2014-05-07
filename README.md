@@ -42,3 +42,6 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 # CHANGELOG
 
 - 2014-05-07: Started changelog :)
+- 2014-05-07: Version 0.0.4
+  - Feature: Ability to ignore patterns with Logster.store.ignore = [/regex/]
+  - Feature: Store backtraces, allow people to view them in the GUI
