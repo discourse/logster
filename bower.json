@@ -1,0 +1,24 @@
+{
+  "name": "logster",
+  "version": "0.0.3",
+  "homepage": "https://github.com/SamSaffron/logster",
+  "description": "logging framework and viewer",
+  "authors": [
+    "Sam Saffron"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "ember": "~1.5.1",
+    "lodash": "~2.4.1",
+    "moment": "~2.6.0",
+    "qunit": "~1.14.0"
+  }
+}
