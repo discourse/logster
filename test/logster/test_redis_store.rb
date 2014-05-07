@@ -139,4 +139,12 @@ class TestRedisStore < Minitest::Test
     assert_match("test_backtrace", message.backtrace)
   end
 
+  def test_ignore
+    @store.ignore = [/^test/]
+    @store.report(Logger::INFO, "test", "test it")
+    @store.report(Logger::INFO, "test", " test it")
+
+    assert_equal(1, @store.latest.count)
+  end
+
 end

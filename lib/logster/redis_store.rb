@@ -4,7 +4,8 @@ module Logster
   class RedisStore
 
     attr_accessor :level, :redis, :max_backlog,
-                  :dedup, :max_retention, :skip_empty
+                  :dedup, :max_retention, :skip_empty,
+                  :ignore
 
     def initialize(redis = nil)
       @redis = redis || Redis.new
@@ -18,6 +19,7 @@ module Logster
     def report(severity, progname, message, opts = nil)
       return if (!message || (String === message && message.empty?)) && skip_empty
       return if level && severity < level
+      return if @ignore && @ignore.any?{|pattern| message =~ pattern}
 
       message = Message.new(severity, progname, message)
 
