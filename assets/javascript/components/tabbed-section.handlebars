@@ -1,0 +1,6 @@
+{{yield}}
+<ul class="tabs">
+  {{#each tab in tabs}}
+    <li><a href="#" {{bind-attr class="tab.active"}} {{action selectTab tab}}>{{tab.name}}</a></li>
+  {{/each}}
+</ul>

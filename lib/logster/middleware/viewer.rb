@@ -103,8 +103,16 @@ module Logster
         "<script src='#{@logs_path}/javascript/#{name}'></script>"
       end
 
+      def component(name)
+        ember_template("components/#{name}", "components/" << name)
+      end
+
       def handlebars(name)
-        val = File.read("#{@assets_path}/javascript/templates/#{name}.handlebars")
+        ember_template("templates/#{name}", name)
+      end
+
+      def ember_template(location, name)
+        val = File.read("#{@assets_path}/javascript/#{location}.handlebars")
 <<JS
       <script>
         Ember.TEMPLATES[#{name.inspect}] = Ember.Handlebars.compile(#{val.inspect});
@@ -125,6 +133,8 @@ JS
   #{handlebars("application")}
   #{handlebars("index")}
   #{handlebars("message")}
+  #{component("tabbed-section")}
+  #{component("tab-contents")}
   <script>
     window.Logger = {
        rootPath: "#{@logs_path}"

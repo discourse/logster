@@ -415,3 +415,34 @@ Handlebars.registerHelper('timeAgo', function(prop, options){
 
   return new Handlebars.SafeString(formatted);
 });
+
+
+App.TabbedSectionComponent = Ember.Component.extend({
+  selectTab: function(view){
+    var selected = this.get("selected");
+    if(selected){
+      selected.set("active",false);
+    }
+    this.set("selected", view);
+    view.set("active", true);
+  },
+  tabs: function(){
+    var result = [],
+        first = true,
+        self = this;
+
+    this.get("childViews").forEach(function(view){
+      if(view.constructor + "" === "App.TabContentsComponent"){
+        result.push(view);
+        if(first){
+          self.selectTab(view);
+          first = false;
+        }
+      }
+    });
+    return result;
+  }.property()
+});
+App.TabContentsComponent = Ember.Component.extend({
+  classNameBindings: ["active", ":content"]
+});
