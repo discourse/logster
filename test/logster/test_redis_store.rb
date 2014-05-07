@@ -133,4 +133,10 @@ class TestRedisStore < Minitest::Test
     assert_equal(1, latest.length)
   end
 
+  def test_backtrace
+    @store.report(Logger::INFO, "test", "pattern_1")
+    message = @store.latest(limit: 1).first
+    assert_match("test_backtrace", message.backtrace)
+  end
+
 end

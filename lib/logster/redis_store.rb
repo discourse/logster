@@ -15,11 +15,18 @@ module Logster
     end
 
 
-    def report(severity, progname, message)
+    def report(severity, progname, message, opts = nil)
       return if (!message || (String === message && message.empty?)) && skip_empty
       return if level && severity < level
 
       message = Message.new(severity, progname, message)
+
+      if opts && opts[:backtrace]
+        message.backtrace = backtrace
+      else
+        message.backtrace = caller.join("\n")
+      end
+
       @redis.rpush(list_key, message.to_json)
 
       # TODO make it atomic

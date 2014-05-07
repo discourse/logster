@@ -1,6 +1,6 @@
 module Logster
   class Message
-    attr_accessor :timestamp, :severity, :progname, :message, :key
+    attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace
 
     def initialize(severity, progname, message, timestamp = nil, key = nil)
       @timestamp = timestamp || get_timestamp
@@ -8,6 +8,7 @@ module Logster
       @progname = progname
       @message = message
       @key = key || SecureRandom.hex
+      @backtrace = nil
     end
 
     def to_h
@@ -16,7 +17,8 @@ module Logster
         progname: @progname,
         severity: @severity,
         timestamp: @timestamp,
-        key: @key
+        key: @key,
+        backtrace: @backtrace
       }
     end
 
@@ -26,11 +28,13 @@ module Logster
 
     def self.from_json(json)
       parsed = ::JSON.parse(json)
-      new( parsed["severity"],
+      msg = new( parsed["severity"],
             parsed["progname"],
             parsed["message"],
             parsed["timestamp"],
             parsed["key"] )
+      msg.backtrace = parsed["backtrace"]
+      msg
     end
 
     protected
