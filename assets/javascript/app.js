@@ -57,6 +57,18 @@ App.Message = Ember.Object.extend({
     return message;
   }.property("message","expanded"),
 
+  envDebug: function(){
+    var env = this.get("env");
+    if(env){
+      var buffer = [];
+      _.each(env, function(v,k){
+        buffer.push(k + ": " + v);
+      });
+      return buffer.join("\n");
+    }
+
+  }.property("env"),
+
   rowClass: function() {
     switch(this.get("severity")){
       case 0:
@@ -418,6 +430,7 @@ Handlebars.registerHelper('timeAgo', function(prop, options){
 
 
 App.TabbedSectionComponent = Ember.Component.extend({
+  tabs: Em.A(),
   selectTab: function(view){
     var selected = this.get("selected");
     if(selected){
@@ -426,23 +439,38 @@ App.TabbedSectionComponent = Ember.Component.extend({
     this.set("selected", view);
     view.set("active", true);
   },
-  tabs: function(){
-    var result = [],
-        first = true,
-        self = this;
+  addTab: function(tab){
+    this.get("tabs").addObject(tab);
+    if(!this.get("selected")){
+      this.selectTab(tab);
+    }
+  },
+  removeTab: function(tab){
 
-    this.get("childViews").forEach(function(view){
-      if(view.constructor + "" === "App.TabContentsComponent"){
-        result.push(view);
-        if(first){
-          self.selectTab(view);
-          first = false;
-        }
-      }
-    });
-    return result;
-  }.property()
+    if(this.get("selected") === tab){
+      this.set("selected", null);
+    }
+    this.get("tabs").removeObject(tab);
+  }
 });
+
 App.TabContentsComponent = Ember.Component.extend({
-  classNameBindings: ["active", ":content"]
+  classNameBindings: ["active", ":content"],
+
+  invokeParent: function(name){
+    var current = this.get("parentView");
+    while(current && !current[name]) {
+      current = current.get("parentView");
+    }
+    if(current){
+      current[name](this);
+    }
+  },
+
+  didInsertElement: function(){
+    this.invokeParent("addTab");
+  },
+  willDestroyElement: function(){
+    this.invokeParent("removeTab");
+  }
 });

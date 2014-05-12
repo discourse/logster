@@ -5,6 +5,7 @@ module Logster::Rails
 
     if defined?(Redis)
       require 'logster/middleware/viewer'
+      require 'logster/middleware/reporter'
       require 'logster/redis_store'
 
       store = Logster.store ||= Logster::RedisStore.new
@@ -29,6 +30,8 @@ module Logster::Rails
         # or by inserting middleware
         app.middleware.use Logster::Middleware::Viewer
       end
+
+      app.middleware.insert_before ActionDispatch::ShowExceptions, Logster::Middleware::Reporter
 
       app.config.colorize_logging = false
     end

@@ -2,6 +2,8 @@ require 'logger'
 
 module Logster
   class Logger < ::Logger
+    LOGSTER_ENV = "logster_env".freeze
+
     attr_accessor :store
 
     def initialize(store)
@@ -39,7 +41,9 @@ module Logster
         end
       end
 
-      @store.report(severity, progname, message)
+      @store.report(severity, progname, message, {
+        env: Thread.current[LOGSTER_ENV]
+      })
 
     end
   end

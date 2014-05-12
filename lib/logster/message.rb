@@ -1,6 +1,14 @@
 module Logster
   class Message
-    attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace
+    LOGSTER_ENV = "_logster_env".freeze
+    ALLOWED_ENV = %w{
+      HTTP_HOST
+      REQUEST_URI
+      REQUEST_METHOD
+      HTTP_USER_AGENT
+    }
+
+    attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :env
 
     def initialize(severity, progname, message, timestamp = nil, key = nil)
       @timestamp = timestamp || get_timestamp
@@ -18,7 +26,8 @@ module Logster
         severity: @severity,
         timestamp: @timestamp,
         key: @key,
-        backtrace: @backtrace
+        backtrace: @backtrace,
+        env: @env
       }
     end
 
@@ -34,7 +43,23 @@ module Logster
             parsed["timestamp"],
             parsed["key"] )
       msg.backtrace = parsed["backtrace"]
+      msg.env = parsed["env"]
       msg
+    end
+
+    def populate_from_env(env)
+      @env = Message.populate_from_env(env)
+    end
+
+
+    def self.populate_from_env(env)
+      env[LOGSTER_ENV] ||= begin
+          scrubbed = {}
+          ALLOWED_ENV.map{ |k|
+           scrubbed[k] = env[k] if env[k]
+          }
+          scrubbed
+      end
     end
 
     protected

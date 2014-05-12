@@ -26,6 +26,11 @@ module Logster
   def self.config
     @config ||= Configuration.new
   end
+
+  def self.add_to_env(env, key, value)
+    logster_env = Logster::Message.populate_from_env(env)
+    logster_env[key] = value
+  end
 end
 
 if defined?(::Rails) && ::Rails::VERSION::MAJOR.to_i >= 3

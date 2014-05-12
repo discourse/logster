@@ -3,7 +3,7 @@ require 'logster/logger'
 require 'logger'
 
 class NullStore
-  def report(severity,progname,message)
+  def report(severity,progname,message,options=nil)
   end
 end
 

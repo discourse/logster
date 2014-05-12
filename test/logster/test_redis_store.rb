@@ -147,4 +147,21 @@ class TestRedisStore < Minitest::Test
     assert_equal(1, @store.latest.count)
   end
 
+  def test_env
+    env = {
+      "REQUEST_URI" => "/test",
+      "HTTP_HOST" => "www.site.com",
+      "REQUEST_METHOD" => "GET",
+      "HTTP_USER_AGENT" => "SOME WHERE"
+    }
+    orig = env.dup
+    orig["test"] = "tests"
+    orig["test1"] = "tests1"
+
+    Logster.add_to_env(env,"test","tests")
+    Logster.add_to_env(env,"test1","tests1")
+    @store.report(Logger::INFO, "test", "test",  env: env)
+    assert_equal(orig, @store.latest.last.env)
+  end
+
 end

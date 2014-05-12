@@ -23,6 +23,9 @@
     {{#tabbed-section}}
       {{#tab-contents name="info" hint="show info"}}<pre>{{currentMessage.message}}</pre>{{/tab-contents}}
       {{#tab-contents name="backtrace" hint="show backtrace"}}<pre>{{currentMessage.backtrace}}</pre>{{/tab-contents}}
+      {{#if currentMessage.env}}
+      {{#tab-contents name="env" hint="show environment"}}<pre>{{currentMessage.envDebug}}</pre>{{/tab-contents}}
+      {{/if}}
     {{/tabbed-section}}
   </div>
 

@@ -29,6 +29,10 @@ module Logster
         message.backtrace = caller.join("\n")
       end
 
+      if opts && env=opts[:env]
+        message.populate_from_env(env)
+      end
+
       @redis.rpush(list_key, message.to_json)
 
       # TODO make it atomic
