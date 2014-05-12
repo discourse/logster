@@ -6,6 +6,10 @@ module Logster
       REQUEST_URI
       REQUEST_METHOD
       HTTP_USER_AGENT
+      HTTP_ACCEPT
+      HTTP_REFERER
+      HTTP_X_FORWARDED_FOR
+      HTTP_X_REAL_IP
     }
 
     attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :env
