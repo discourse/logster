@@ -45,3 +45,6 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 - 2014-05-07: Version 0.0.4
   - Feature: Ability to ignore patterns with Logster.store.ignore = [/regex/]
   - Feature: Store backtraces, allow people to view them in the GUI
+- 2014-05-12: Version 0.0.5
+  - Feature: We now log basic rack environment with the messages
+  -  Add your on with Logster.add_to_env(env, key, value)
