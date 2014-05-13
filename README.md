@@ -50,3 +50,5 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   -  Add your on with Logster.add_to_env(env, key, value)
 - 2014-05-12: Version 0.0.6
   - Add referer to env
+- 2014-05-13: Version 0.0.7
+  - Add support for javascript exception logging

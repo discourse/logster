@@ -1,5 +1,9 @@
 module Logster::Rails
 
+  # this magically registers logster.js in the asset pipeline
+  class Engine < Rails::Engine
+  end
+
   def self.set_logger(config)
     return unless Rails.env.development? || Rails.env.production?
 

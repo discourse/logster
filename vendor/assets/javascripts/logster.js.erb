@@ -1,0 +1,30 @@
+(function(){
+  var lastReport = null;
+
+  window.onerror = function(message, url, line, column, errorObj) {
+    debugger;
+    // never bother reporting more than once a minute
+    if(lastReport && new Date() - lastReport < 1000 * 60) {
+      return;
+    }
+
+    lastReport = new Date();
+
+    var err = {
+      message: message,
+      url: url,
+      line: line,
+      column: column
+    };
+
+    if(errorObj && errorObj.stack) {
+      err.stacktrace = errorObj.stack;
+    }
+
+    $.ajax("<%= Logster.config.subdirectory || '/logs' %>" + "/report_js_error",{
+      data: err,
+      type: "POST",
+      cache: false
+    });
+  };
+})();
