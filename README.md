@@ -52,3 +52,5 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   - Add referer to env
 - 2014-05-13: Version 0.0.7
   - Add support for javascript exception logging
+- 2014-05-13: Version 0.0.8
+  - Fix pacakging binstubs by mistake
