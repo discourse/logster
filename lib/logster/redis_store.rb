@@ -23,13 +23,13 @@ module Logster
 
       message = Message.new(severity, progname, message)
 
-      if opts && opts[:backtrace]
+      if opts && backtrace = opts[:backtrace]
         message.backtrace = backtrace
       else
         message.backtrace = caller.join("\n")
       end
 
-      if opts && env=opts[:env]
+      if opts && env = opts[:env]
         message.populate_from_env(env)
       end
 

@@ -48,7 +48,10 @@ class SampleLoader
     @index += 1
     @index %= @length
 
-    $store.report(message["severity"], message["progname"], message["message"])
+    $store.report(message["severity"], message["progname"], message["message"], {
+      backtrace: message["backtrace"],
+      env: message["env"]
+    })
   end
 end
 
