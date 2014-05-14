@@ -54,3 +54,5 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   - Add support for javascript exception logging
 - 2014-05-13: Version 0.0.8
   - Fix pacakging binstubs by mistake
+- 2014-05-13: Version 0.0.9
+  - Stray debugger message removed, add window.location logging to js

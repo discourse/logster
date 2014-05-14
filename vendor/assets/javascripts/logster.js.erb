@@ -2,7 +2,6 @@
   var lastReport = null;
 
   window.onerror = function(message, url, line, column, errorObj) {
-    debugger;
     // never bother reporting more than once a minute
     if(lastReport && new Date() - lastReport < 1000 * 60) {
       return;
@@ -14,7 +13,8 @@
       message: message,
       url: url,
       line: line,
-      column: column
+      column: column,
+      window_location: window.location && (window.location + "")
     };
 
     if(errorObj && errorObj.stack) {

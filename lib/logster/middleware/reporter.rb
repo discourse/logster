@@ -28,6 +28,7 @@ module Logster
         message << "\nUrl: " << req["url"] if req["url"]
         message << "\nLine: " << req["line"] if req["line"]
         message << "\nColumn: " << req["column"] if req["column"]
+        message << "\nWindow Location: " << req["window_location"] if req["window_location"]
 
         backtrace = req["stacktrace"] || ""
         Logster.store.report(::Logger::Severity::WARN,
