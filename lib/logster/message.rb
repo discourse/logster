@@ -59,6 +59,16 @@ module Logster
     def self.populate_from_env(env)
       env[LOGSTER_ENV] ||= begin
           scrubbed = {}
+          request = Rack::Request.new(env)
+          params = {}
+          request.params.each do |k,v|
+            if k.include? "password"
+              params[k] = "[reducted]"
+            else
+              params[k] = v[0..100]
+            end
+          end
+          scrubbed["params"] = params if params.length > 0
           ALLOWED_ENV.map{ |k|
            scrubbed[k] = env[k] if env[k]
           }

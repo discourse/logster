@@ -16,7 +16,6 @@ module Logster
 
         @assets_path = File.expand_path("../../../../assets", __FILE__)
         @fileserver = Rack::File.new(@assets_path)
-        @authorize_callback = Logster.config.authorize_callback
       end
 
       def call(env)
@@ -29,7 +28,7 @@ module Logster
 
         if resource = resolve_path(path)
 
-          return @app.call(env) if @authorize_callback && !@authorize_callback.call(env)
+          return @app.call(env) if !Logster.config.authorize_callback.call(env)
 
           if resource =~ /\.js$|\.handlebars$|\.css$/
             env[PATH_INFO] = resource

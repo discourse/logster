@@ -1,5 +1,6 @@
 require_relative '../test_helper'
 require 'logster/redis_store'
+require 'rack'
 
 class TestRedisStore < Minitest::Test
 
@@ -148,18 +149,26 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_env
-    env = {
-      "REQUEST_URI" => "/test",
+    env = Rack::MockRequest.env_for("/test").merge({
       "HTTP_HOST" => "www.site.com",
-      "REQUEST_METHOD" => "GET",
       "HTTP_USER_AGENT" => "SOME WHERE"
-    }
+    })
     orig = env.dup
     orig["test"] = "tests"
     orig["test1"] = "tests1"
-
     Logster.add_to_env(env,"test","tests")
     Logster.add_to_env(env,"test1","tests1")
+
+    orig.delete_if do |k,v|
+      !%w{
+        HTTP_HOST
+        REQUEST_METHOD
+        HTTP_USER_AGENT
+        test
+        test1
+      }.include? k
+    end
+
     @store.report(Logger::INFO, "test", "test",  env: env)
     assert_equal(orig, @store.latest.last.env)
   end

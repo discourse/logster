@@ -4,7 +4,7 @@ module Logster
   class Logger < ::Logger
     LOGSTER_ENV = "logster_env".freeze
 
-    attr_accessor :store
+    attr_accessor :store, :skip_store
 
     def initialize(store)
       super(nil)
@@ -15,6 +15,7 @@ module Logster
       @chained ||= []
       @chained << logger
     end
+
 
     def add(severity, message, progname, &block)
       if severity < @level
@@ -40,6 +41,8 @@ module Logster
           progname = @progname
         end
       end
+
+      return if @skip_store
 
       @store.report(severity, progname, message, {
         env: Thread.current[LOGSTER_ENV]

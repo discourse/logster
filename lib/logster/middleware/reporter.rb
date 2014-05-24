@@ -14,7 +14,10 @@ module Logster
 
         path = env[PATH_INFO]
         if path == @error_path
-          return report_js_error(env)
+          Logster.config.current_context.call(env) do
+            report_js_error(env)
+          end
+          return [200,{},["OK"]]
         end
 
         @app.call(env)
@@ -36,7 +39,6 @@ module Logster
                             message,
                             backtrace: backtrace,
                             env: env)
-        [200,{},["OK"]]
       end
 
     end

@@ -62,8 +62,19 @@ App.Message = Ember.Object.extend({
     if(env){
       var buffer = [];
       _.each(env, function(v,k){
-        buffer.push(k + ": " + v);
+        if(k !== "params"){
+          buffer.push(k + ": " + v);
+        }
       });
+
+      buffer.push("");
+      if(_.size(env.params) > 0){
+        buffer.push("Params:");
+        buffer.push("");
+        _.each(env.params, function(v,k){
+          buffer.push("  " + k + ": " + v);
+        });
+      }
       return buffer.join("\n");
     }
 

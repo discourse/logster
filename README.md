@@ -17,15 +17,15 @@ And then execute:
 
     $ bundle
 
-Logster will wire up `/logs` path in your Rails app in **development** mode only. Production mode is being worked on.
+Logster will wire up `/logs` path in your Rails app in **development** mode only.
 
 ## Usage
 
-Logster is in current development, at the moment the focus is on a decent tool for dev. Once that is complete production mode will be built.
+Logster is in current development, at the moment the focus is on a decent tool for dev. 
 
 The concept is to have an embedded "exception reporting service" admins can view on live sites.
 
-Logs will be visible by default at `http://sitename.com/logs`, only dev mode is implemented now. 
+Logs will be visible by default at `http://sitename.com/logs`, only dev mode is implemented now.
 
 ## Thanks
 

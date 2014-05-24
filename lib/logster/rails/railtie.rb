@@ -8,7 +8,7 @@ module Logster::Rails
     return unless Rails.env.development? || Rails.env.production?
 
     if defined?(Redis)
-      require 'logster/middleware/viewer'
+      require 'logster/middleware/debug_exceptions'
       require 'logster/middleware/reporter'
       require 'logster/redis_store'
 
@@ -25,18 +25,14 @@ module Logster::Rails
     end
   end
 
+
   def self.initialize!(app)
     return unless Rails.env.development? || Rails.env.production?
 
     if Logster::Logger === Rails.logger
-      if Rails.env.development?
-        # in production you must mount in routes.rb
-        # or by inserting middleware
-        app.middleware.use Logster::Middleware::Viewer
-      end
-
       app.middleware.insert_before ActionDispatch::ShowExceptions, Logster::Middleware::Reporter
-
+      app.middleware.insert_before ActionDispatch::DebugExceptions, Logster::Middleware::DebugExceptions, Rails.application
+      app.middleware.delete ActionDispatch::DebugExceptions
       app.config.colorize_logging = false
     end
   end
@@ -44,6 +40,9 @@ module Logster::Rails
   class Railtie < ::Rails::Railtie
 
     config.before_initialize do
+      Logster.config.authorize_callback = lambda {|env|
+        Rails.env == "development"
+      }
       Logster::Rails.set_logger(config)
     end
 
