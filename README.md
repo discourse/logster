@@ -17,15 +17,17 @@ And then execute:
 
     $ bundle
 
-Logster will wire up `/logs` path in your Rails app in **development** mode only.
+Logster will wire up `/logs` path in your Rails app in **development** mode only. To wire up in production you will need to set
+
+```
+Logster.config.authorize_callback = lambda{|env| your_own_can_see_logs? }
+```
 
 ## Usage
 
-Logster is in current development, at the moment the focus is on a decent tool for dev. 
-
 The concept is to have an embedded "exception reporting service" admins can view on live sites.
 
-Logs will be visible by default at `http://sitename.com/logs`, only dev mode is implemented now.
+Logs will be visible by default at `http://sitename.com/logs`
 
 ## Thanks
 
@@ -56,3 +58,7 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   - Fix pacakging binstubs by mistake
 - 2014-05-13: Version 0.0.9
   - Stray debugger message removed, add window.location logging to js
+- 2014-05-24: Version 0.0.10
+  - Correct context for error reporting
+  - Clean up backtraces of reported exceptions
+  - Report params in env tab
