@@ -17,7 +17,15 @@ And then execute:
 
     $ bundle
 
-Logster will wire up `/logs` path in your Rails app in **development** mode only. To wire up in production you will need to set
+Make Logster available in your development environment by adding the following to your routes.rb:
+
+```
+if Rails.env == "development"
+  mount Logster::Web => "/logs"
+end
+```
+
+Logster will be available in your Rails app in **development** mode only. To wire up in production you will need to set
 
 ```
 Logster.config.authorize_callback = lambda{|env| your_own_can_see_logs? }
