@@ -1,5 +1,5 @@
 moment.lang('en', {
-      relativeTime : {
+      relativeTime: {
         future: "in %s",
         past:   "%s ago",
         s:  "secs",
@@ -16,19 +16,17 @@ moment.lang('en', {
       }
 });
 
-
 App = Ember.Application.create({
 });
 
-App.ajax =  function(url, settings) {
+App.ajax = function(url, settings) {
   settings = settings || {};
   settings.headers = settings.headers || {};
   settings.headers["X-SILENCE-LOGGER"] = true;
   return $.ajax(Logger.rootPath + url, settings);
 };
 
-
-App.Router.map(function(){
+App.Router.map(function() {
   this.route("index", { path: "/" });
 });
 
@@ -36,42 +34,42 @@ App.Message = Ember.Object.extend({
 
   MAX_LEN: 200,
 
-  expand: function(){
-    this.set("expanded",true);
+  expand: function() {
+    this.set("expanded", true);
   },
 
-  hasMore: function(){
+  hasMore: function() {
     var message = this.get("message");
     var expanded = this.get("expanded");
 
     return !expanded && message.length > this.MAX_LEN;
   }.property("message", "expanded"),
 
-  displayMessage: function(){
+  displayMessage: function() {
     var message = this.get("message");
     var expanded = this.get("expanded");
 
-    if(!expanded && message.length > this.MAX_LEN){
-      message = message.substr(0,this.MAX_LEN);
+    if (!expanded && message.length > this.MAX_LEN) {
+      message = message.substr(0, this.MAX_LEN);
     }
     return message;
-  }.property("message","expanded"),
+  }.property("message", "expanded"),
 
-  envDebug: function(){
+  envDebug: function() {
     var env = this.get("env");
-    if(env){
+    if (env) {
       var buffer = [];
-      _.each(env, function(v,k){
-        if(k !== "params"){
+      _.each(env, function(v, k) {
+        if (k !== "params") {
           buffer.push(k + ": " + v);
         }
       });
 
       buffer.push("");
-      if(_.size(env.params) > 0){
+      if (_.size(env.params) > 0) {
         buffer.push("Params:");
         buffer.push("");
-        _.each(env.params, function(v,k){
+        _.each(env.params, function(v, k) {
           buffer.push("  " + k + ": " + v);
         });
       }
@@ -81,7 +79,7 @@ App.Message = Ember.Object.extend({
   }.property("env"),
 
   rowClass: function() {
-    switch(this.get("severity")){
+    switch (this.get("severity")) {
       case 0:
         return "debug";
       case 1:
@@ -95,8 +93,8 @@ App.Message = Ember.Object.extend({
     }
   }.property("severity"),
 
-  glyph: function(){
-    switch(this.get("severity")){
+  glyph: function() {
+    switch (this.get("severity")) {
       case 0:
         return "";
       case 1:
@@ -116,7 +114,7 @@ App.MessageCollection = Em.Object.extend({
   messages: Em.A(),
   total: 0,
 
-  load: function(opts){
+  load: function(opts) {
     var self = this;
     opts = opts || {};
 
@@ -128,56 +126,56 @@ App.MessageCollection = Em.Object.extend({
     if (!_.isEmpty(search)) {
       data.search = search;
       var regexSearch = this.get("regexSearch");
-      if(regexSearch) {
+      if (regexSearch) {
         data.regex_search = "true";
       }
     }
 
-    if(opts.before){
+    if (opts.before) {
       data.before = opts.before;
     }
 
-    if (opts.after){
+    if (opts.after) {
       data.after = opts.after;
     }
 
     App.ajax("/messages.json", {
       data: data
-    }).success(function(data){
-        if(data.messages.length > 0) {
-          var newRows = self.toMessages(data.messages);
-          var messages = self.get("messages");
-          if(opts.before) {
-            messages.unshiftObjects(newRows);
-          } else {
-            messages.addObjects(newRows);
-          }
+    }).success(function(data) {
+      if (data.messages.length > 0) {
+        var newRows = self.toMessages(data.messages);
+        var messages = self.get("messages");
+        if (opts.before) {
+          messages.unshiftObjects(newRows);
+        } else {
+          messages.addObjects(newRows);
         }
-        self.set("total",data.total);
-     });
+      }
+      self.set("total", data.total);
+    });
   },
 
-  reload: function(){
+  reload: function() {
     this.set("total", 0);
     this.get("messages").clear();
 
     this.load();
   },
 
-  loadMore: function(){
+  loadMore: function() {
 
     var messages = this.get("messages");
-    if(messages.length === 0){
+    if (messages.length === 0) {
       return;
     }
 
-    var lastKey = messages[messages.length-1].get("key");
+    var lastKey = messages[messages.length - 1].get("key");
     this.load({
       after: lastKey
     });
   },
 
-  moreBefore: function(){
+  moreBefore: function() {
     return this.get("totalBefore") > 0;
   }.property("totalBefore"),
 
@@ -196,35 +194,34 @@ App.MessageCollection = Em.Object.extend({
 
   regexSearch: function() {
     search = this.get("search");
-    if( search &&
+    if (search &&
         search.length > 2 &&
         search[0] === "/"
-      ){
+        ) {
       var match = search.match(/\/(.*)\/(.*)/);
-      if(match && match.length === 3){
+      if (match && match.length === 3) {
         try {
           return new RegExp(match[1], match[2]);
-        } catch(err) {
+        } catch (err) {
           // don't care
         }
       }
     }
   }.property("search"),
 
-  toMessages: function(messages){
-    return messages.map(function(m){
-        return App.Message.create(m);
+  toMessages: function(messages) {
+    return messages.map(function(m) {
+      return App.Message.create(m);
     });
   }
 });
 
-
 App.IndexRoute = Em.Route.extend({
-  model: function(){
+  model: function() {
     return App.MessageCollection.create();
   },
 
-  setupController: function(controller, model){
+  setupController: function(controller, model) {
     this._super(controller, model);
     controller.setProperties({
       "showDebug": true,
@@ -241,24 +238,24 @@ App.IndexRoute = Em.Route.extend({
 
 App.IndexController = Em.Controller.extend({
   actions: {
-    expandMessage: function(message){
+    expandMessage: function(message) {
       message.expand();
     },
 
-    showMoreBefore: function(){
+    showMoreBefore: function() {
       this.get('model').showMoreBefore();
     },
 
-    loadMore: function(){
+    loadMore: function() {
       return this.get('model').loadMore();
     }
   },
 
-  filterChanged: function(){
+  filterChanged: function() {
     var severities = ["Debug", "Info", "Warn", "Err", "Fatal"];
     var filter = [];
-    for(var i=0; i<5; i++){
-      if(this.get("show" + severities[i])){
+    for (var i = 0; i < 5; i++) {
+      if (this.get("show" + severities[i])) {
         filter.push(i);
       }
     }
@@ -267,7 +264,7 @@ App.IndexController = Em.Controller.extend({
     filter.push(5);
     var model = this.get("model");
     model.set("filter", filter);
-    if(this.get("initialized")){
+    if (this.get("initialized")) {
       model.reload();
     }
   }.observes(
@@ -276,22 +273,21 @@ App.IndexController = Em.Controller.extend({
       "showWarn",
       "showErr",
       "showFatal"
-    ),
+  ),
 
-  searchChanged: function(){
+  searchChanged: function() {
     var search = this.get("search");
     var model = this.get("model");
     model.set("search", search);
 
-    if(this.get("initialized")){
+    if (this.get("initialized")) {
       model.reload();
     }
   }.observes(
       "search"
-    ),
+  ),
 
-
-  checkIfAtBottom: function(){
+  checkIfAtBottom: function() {
     if (this.checkedBottom) {
       return;
     }
@@ -308,7 +304,7 @@ App.IndexController = Em.Controller.extend({
 });
 
 App.IndexView = Em.View.extend({
-  divideView: function(fromTop, win){
+  divideView: function(fromTop, win) {
     var $win = win || $(window);
     var height = $win.height();
     var fromBottom = $win.height() - fromTop;
@@ -322,9 +318,9 @@ App.IndexView = Em.View.extend({
     this.divider.css("bottom", fromBottom - 5);
   },
 
-  didInsertElement: function(){
+  didInsertElement: function() {
     var self = this;
-    this.refreshInterval = setInterval(function(){
+    this.refreshInterval = setInterval(function() {
       self.get('controller').send("loadMore");
     }, 3000);
 
@@ -336,17 +332,17 @@ App.IndexView = Em.View.extend({
     var $win = $(window),
         resizing = false;
 
-    var performDrag = function(e){
-      if(!resizing) { return; }
+    var performDrag = function(e) {
+      if (!resizing) { return; }
       self.divideView(e.clientY, $win);
     };
 
-    var endDrag = function(){
+    var endDrag = function() {
       $("#overlay").remove();
       resizing = false;
 
-      if(localStorage){
-        localStorage.logster_divider_bottom = parseInt(self.divider.css("bottom"),10);
+      if (localStorage) {
+        localStorage.logster_divider_bottom = parseInt(self.divider.css("bottom"), 10);
       }
 
       $(document)
@@ -354,24 +350,23 @@ App.IndexView = Em.View.extend({
           .unbind('mouseup', endDrag);
     };
 
-    self.divider.on("mousedown", function(){
+    self.divider.on("mousedown", function() {
       $("<div id='overlay'></div>").appendTo($("body"));
       resizing = true;
       $(document)
-        .mousemove(_.throttle(performDrag,25))
-        .mouseup(endDrag);
+          .mousemove(_.throttle(performDrag, 25))
+          .mouseup(endDrag);
     }).append("<div class='line-1'></div><div class='line-2'></div><div class='line-3'></div>");
 
-
-    Em.run.next(function(){
-      if(localStorage && localStorage.logster_divider_bottom){
-        var fromTop = $win.height() - parseInt(localStorage.logster_divider_bottom,10);
+    Em.run.next(function() {
+      if (localStorage && localStorage.logster_divider_bottom) {
+        var fromTop = $win.height() - parseInt(localStorage.logster_divider_bottom, 10);
         self.divideView(fromTop, $win);
       }
     });
   },
 
-  willDestroyElement: function(){
+  willDestroyElement: function() {
     $("#divider").off("mousedown");
     clearInterval(this.refreshInterval);
   }
@@ -384,26 +379,26 @@ App.MessageView = Em.View.extend({
 
   classNameBindings: ["context.rowClass", ":message-row", "context.selected:selected"],
 
-  click: function(){
+  click: function() {
     var old = this.get("controller.currentMessage");
-    if(old){
-      old.set("selected",false);
+    if (old) {
+      old.set("selected", false);
     }
     this.set("context.selected", true);
     this.set("controller.currentMessage", this.get("context"));
   },
 
-  willInsertElement: function(){
+  willInsertElement: function() {
     this.get("controller").checkIfAtBottom();
   },
 
-  didInsertElement: function(){
+  didInsertElement: function() {
     var self = this;
     var $topPanel = $("#top-panel");
-    Em.run.next(function(){
+    Em.run.next(function() {
       self.set("controller.checkedBottom", false);
 
-      if (self.get("controller.stickToBottom")){
+      if (self.get("controller.stickToBottom")) {
         self.set("controller.stickToBottom", false);
         $topPanel.scrollTop($topPanel[0].scrollHeight - $topPanel.height());
       }
@@ -412,14 +407,14 @@ App.MessageView = Em.View.extend({
 });
 
 App.ApplicationView = Em.View.extend({
-  didInsertElement: function(){
-    var updateTimes = function(){
-      $('.auto-update-time').each(function(){
+  didInsertElement: function() {
+    var updateTimes = function() {
+      $('.auto-update-time').each(function() {
         var newTime = moment(
-            parseInt(this.getAttribute('data-timestamp'),10)
-          ).fromNow();
+            parseInt(this.getAttribute('data-timestamp'), 10)
+        ).fromNow();
 
-        if(newTime != this.innerText) {
+        if (newTime != this.innerText) {
           this.innerText = newTime;
         }
 
@@ -431,34 +426,33 @@ App.ApplicationView = Em.View.extend({
   }
 });
 
-Handlebars.registerHelper('timeAgo', function(prop, options){
+Handlebars.registerHelper('timeAgo', function(prop, options) {
   var timestamp = Ember.Handlebars.get(this, prop, options);
   var parsed = moment(timestamp);
-  var formatted = "<span data-timestamp='" + timestamp + "' class='auto-update-time' title='" + parsed.format() +  "'>" + parsed.fromNow() + "</span>";
+  var formatted = "<span data-timestamp='" + timestamp + "' class='auto-update-time' title='" + parsed.format() + "'>" + parsed.fromNow() + "</span>";
 
   return new Handlebars.SafeString(formatted);
 });
 
-
 App.TabbedSectionComponent = Ember.Component.extend({
   tabs: Em.A(),
-  selectTab: function(view){
+  selectTab: function(view) {
     var selected = this.get("selected");
-    if(selected){
-      selected.set("active",false);
+    if (selected) {
+      selected.set("active", false);
     }
     this.set("selected", view);
     view.set("active", true);
   },
-  addTab: function(tab){
+  addTab: function(tab) {
     this.get("tabs").addObject(tab);
-    if(!this.get("selected")){
+    if (!this.get("selected")) {
       this.selectTab(tab);
     }
   },
-  removeTab: function(tab){
+  removeTab: function(tab) {
 
-    if(this.get("selected") === tab){
+    if (this.get("selected") === tab) {
       this.set("selected", null);
     }
     this.get("tabs").removeObject(tab);
@@ -468,20 +462,20 @@ App.TabbedSectionComponent = Ember.Component.extend({
 App.TabContentsComponent = Ember.Component.extend({
   classNameBindings: ["active", ":content"],
 
-  invokeParent: function(name){
+  invokeParent: function(name) {
     var current = this.get("parentView");
-    while(current && !current[name]) {
+    while (current && !current[name]) {
       current = current.get("parentView");
     }
-    if(current){
+    if (current) {
       current[name](this);
     }
   },
 
-  didInsertElement: function(){
+  didInsertElement: function() {
     this.invokeParent("addTab");
   },
-  willDestroyElement: function(){
+  willDestroyElement: function() {
     this.invokeParent("removeTab");
   }
 });
