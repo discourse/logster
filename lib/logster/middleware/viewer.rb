@@ -28,7 +28,10 @@ module Logster
 
         if resource = resolve_path(path)
 
-          return @app.call(env) if !Logster.config.authorize_callback.call(env)
+          # easier to debug, call per line
+          if !Logster.config.authorize_callback.call(env)
+            return @app.call(env)
+          end
 
           if resource =~ /\.js$|\.handlebars$|\.css$/
             env[PATH_INFO] = resource

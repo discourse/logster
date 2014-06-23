@@ -51,6 +51,10 @@ class TestViewer < Minitest::Test
   end
 
   def test_assets
+    Logster.config.authorize_callback = lambda{ |env|
+      true
+    }
+
     env = {}
     env["PATH_INFO"] = "/logsie/javascript/external/jquery.min.js"
     env["REQUEST_METHOD"] = "GET"
