@@ -21,7 +21,7 @@ module Logster
       return if level && severity < level
       return if @ignore && @ignore.any?{|pattern| message =~ pattern}
 
-      message = Message.new(severity, progname, message)
+      message = Logster::Message.new(severity, progname, message)
 
       if opts && backtrace = opts[:backtrace]
         message.backtrace = backtrace

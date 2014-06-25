@@ -1,7 +1,7 @@
 PATH
   remote: ../
   specs:
-    logster (0.0.6)
+    logster (0.0.10)
 
 GEM
   remote: https://rubygems.org/
