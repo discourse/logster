@@ -34,13 +34,20 @@ module Logster
       end
 
       @redis.rpush(list_key, message.to_json)
+      @redis.hset(hash_key, message.key, message.to_json)
 
       # TODO make it atomic
       if @redis.llen(list_key) > @max_backlog
-        @redis.lpop(list_key)
+        removed = @redis.lpop(list_key)
+        if removed
+          removed_key = Message.from_json(removed).key
+          unless @redis.sismember(saved_key, removed_key)
+            @redis.hdel(hash_key, removed_key)
+          end
+        end
       end
 
-      nil
+      message
     end
 
     def count
@@ -95,7 +102,61 @@ module Logster
       @redis.del(list_key)
     end
 
+    def get(message_key)
+      json = @redis.hget(hash_key, message_key)
+      return nil unless json
+
+      Message.from_json(json)
+    end
+
+    def save(message_key)
+      index = find_message(list_key, message_key)
+      # can't save something we already lost
+      return false unless index
+
+      @redis.sadd(saved_key, message_key)
+      true
+    end
+
+    def unsave(message_key)
+      value = @redis.hget(hash_key, message_key)
+      # this is a failure of retention
+      raise "Message already deleted?" unless value
+
+      @redis.srem(saved_key, message_key)
+
+      index = find_message(list_key, message_key)
+      if index == nil
+        # Message fell off list - delete
+        @redis.hdel(hash_key, message_key)
+      end
+
+      true
+    end
+
     protected
+
+    def find_message(list, message_key)
+      limit = 50
+      start = 0
+      finish = limit - 1
+
+      found = nil
+      while found == nil
+        items = @redis.lrange(list, start, finish)
+
+        break unless items && items.length > 0
+
+        found = items.index do |i|
+          Message.from_json(i).key == message_key
+        end
+        break if found
+        start += limit
+        finish += limit
+      end
+
+      found
+    end
 
     def find_location(before, after, limit)
       start = -limit
@@ -158,5 +219,12 @@ module Logster
       @list_key ||= "__LOGSTER__LOG"
     end
 
+    def hash_key
+      @hash_key ||= "__LOGSTER__MAP"
+    end
+
+    def saved_key
+      @saved_key ||= "__LOGSTER__SAVED"
+    end
   end
 end
