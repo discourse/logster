@@ -27,9 +27,30 @@ App.ajax =  function(url, settings) {
   return $.ajax(Logger.rootPath + url, settings);
 };
 
+App.preloadOrAjax = function(url, settings) {
+  var preloaded = Logger.preload[url];
+  if (preloaded) {
+    delete Logger.preload[url];
+    Em.Logger.log("Successful preload");
+    // return a pseudo-XHR
+    return {
+      success: function(callback) {
+        setTimeout(function() {
+          callback(preloaded);
+        }, 0);
+        return this;
+      },
+      error: function() { return this; }
+    };
+  } else {
+    Em.Logger.log("Failed preload");
+    return App.ajax(url, settings);
+  }
+};
 
 App.Router.map(function(){
   this.route("index", { path: "/" });
+  this.route("show", { path: "/show/:id" });
 });
 
 App.Message = Ember.Object.extend({
@@ -37,7 +58,12 @@ App.Message = Ember.Object.extend({
   MAX_LEN: 200,
 
   expand: function(){
-    this.set("expanded",true);
+    this.set("expanded", true);
+  },
+
+  protect: function() {
+    var self = this;
+    return App.ajax("/protect/" + this.get('key'), { type: "PUT" });
   },
 
   hasMore: function(){
@@ -46,6 +72,10 @@ App.Message = Ember.Object.extend({
 
     return !expanded && message.length > this.MAX_LEN;
   }.property("message", "expanded"),
+
+  shareUrl: function() {
+    return Logger.rootPath + "/show/" + this.get('key');
+  }.property("key"),
 
   displayMessage: function(){
     var message = this.get("message");
@@ -143,17 +173,17 @@ App.MessageCollection = Em.Object.extend({
 
     App.ajax("/messages.json", {
       data: data
-    }).success(function(data){
-        if(data.messages.length > 0) {
+    }).success(function(data) {
+        if (data.messages.length > 0) {
           var newRows = self.toMessages(data.messages);
           var messages = self.get("messages");
-          if(opts.before) {
+          if (opts.before) {
             messages.unshiftObjects(newRows);
           } else {
             messages.addObjects(newRows);
           }
         }
-        self.set("total",data.total);
+        self.set("total", data.total);
      });
   },
 
@@ -221,10 +251,11 @@ App.MessageCollection = Em.Object.extend({
 
 App.IndexRoute = Em.Route.extend({
   model: function(){
+    // TODO from preload json?
     return App.MessageCollection.create();
   },
 
-  setupController: function(controller, model){
+  setupController: function(controller, model) {
     this._super(controller, model);
     controller.setProperties({
       "showDebug": true,
@@ -236,6 +267,19 @@ App.IndexRoute = Em.Route.extend({
     });
     controller.set("initialized", true);
     model.reload();
+  }
+});
+
+App.ShowRoute = Em.Route.extend({
+  model: function(params) {
+    var self = this;
+    Em.Logger.log("opening show ");
+    return new Promise(function(resolve, reject) {
+      App.preloadOrAjax("/show/" + params.id + ".json").success(function(json) {
+        Em.Logger.log(json);
+        resolve(App.Message.create(json));
+      }).error(reject);
+    });
   }
 });
 
@@ -251,6 +295,14 @@ App.IndexController = Em.Controller.extend({
 
     loadMore: function(){
       return this.get('model').loadMore();
+    },
+
+    saveMessage: function(message) {
+      alert(message);
+      Em.Logger.log("saving");
+      this.get('currentMessage').protect().success(function() {
+        self.transitionToRoute("show", {id: self.get('key')});
+      });
     }
   },
 
@@ -417,10 +469,11 @@ App.ApplicationView = Em.View.extend({
       $('.auto-update-time').each(function(){
         var newTime = moment(
             parseInt(this.getAttribute('data-timestamp'),10)
-          ).fromNow();
+          ).fromNow(),
+            elem = this;
 
-        if(newTime != this.innerText) {
-          this.innerText = newTime;
+        if(newTime != elem.innerText) {
+          elem.innerText = newTime;
         }
 
       });
@@ -439,26 +492,30 @@ Handlebars.registerHelper('timeAgo', function(prop, options){
   return new Handlebars.SafeString(formatted);
 });
 
-
 App.TabbedSectionComponent = Ember.Component.extend({
   tabs: Em.A(),
-  selectTab: function(view){
+  selectTab: function(view) {
+    if (view.get('isLink')) {
+      Em.Logger.log("sending action", view.get('action'));
+      this.triggerAction(view.get('action'));
+      return;
+    }
+
     var selected = this.get("selected");
-    if(selected){
-      selected.set("active",false);
+    if (selected) {
+      selected.set("active", false);
     }
     this.set("selected", view);
     view.set("active", true);
   },
-  addTab: function(tab){
+  addTab: function(tab) {
     this.get("tabs").addObject(tab);
-    if(!this.get("selected")){
+    if (!this.get("selected") && !tab.get('isLink')) {
       this.selectTab(tab);
     }
   },
-  removeTab: function(tab){
-
-    if(this.get("selected") === tab){
+  removeTab: function(tab) {
+    if (this.get("selected") === tab) {
       this.set("selected", null);
     }
     this.get("tabs").removeObject(tab);
@@ -467,21 +524,26 @@ App.TabbedSectionComponent = Ember.Component.extend({
 
 App.TabContentsComponent = Ember.Component.extend({
   classNameBindings: ["active", ":content"],
+  isLink: false,
 
-  invokeParent: function(name){
+  invokeParent: function(name) {
     var current = this.get("parentView");
-    while(current && !current[name]) {
+    while (current && !current[name]) {
       current = current.get("parentView");
     }
-    if(current){
+    if (current) {
       current[name](this);
     }
   },
 
-  didInsertElement: function(){
+  didInsertElement: function() {
     this.invokeParent("addTab");
   },
-  willDestroyElement: function(){
+  willDestroyElement: function() {
     this.invokeParent("removeTab");
   }
+});
+
+App.TabLinkComponent = App.TabContentsComponent.extend({
+  isLink: true
 });
