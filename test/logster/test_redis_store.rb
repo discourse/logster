@@ -81,6 +81,8 @@ class TestRedisStore < Minitest::Test
   def test_backlog
     @store.max_backlog = 1
     @store.report(Logger::WARN, "test", "A")
+    @store.report(Logger::WARN, "test", "A")
+    @store.report(Logger::WARN, "test", "A")
     @store.report(Logger::WARN, "test", "B")
 
     latest = @store.latest
@@ -93,9 +95,9 @@ class TestRedisStore < Minitest::Test
     @store.max_backlog = 2
     @store.report(Logger::WARN, "test", "A")
     b_message = @store.report(Logger::WARN, "test", "B")
-    @store.save(b_message.key)
+    @store.protect b_message.key
     c_message = @store.report(Logger::WARN, "test", "C")
-    @store.save(c_message.key)
+    @store.protect c_message.key
     @store.report(Logger::WARN, "test", "D")
 
     latest = @store.latest
@@ -108,12 +110,35 @@ class TestRedisStore < Minitest::Test
     assert_equal("B", @store.get(b_message.key).message)
 
     # Unsave does not delete message if still recent
-    @store.unsave(c_message.key)
+    @store.unprotect c_message.key
     assert_equal("C", @store.get(c_message.key).message)
 
     # Unsave *does* delete message if not recent
-    @store.unsave(b_message.key)
+    @store.unprotect b_message.key
     assert_nil(@store.get(b_message.key))
+  end
+
+  def test_clear
+    10.times do
+      @store.report(Logger::WARN, "test", "A")
+    end
+    # Protected messages are not deleted
+    b_message = @store.report(Logger::WARN, "test", "B")
+    @store.protect b_message.key
+    c_message = @store.report(Logger::WARN, "test", "C")
+    10.times do
+      @store.report(Logger::WARN, "test", "D")
+    end
+
+    latest = @store.latest
+    assert_equal(22, latest.length)
+
+    @store.clear
+
+    latest = @store.latest
+    assert_equal(0, latest.length)
+    assert_equal("B", @store.get(b_message.key).message)
+    assert_nil(@store.get(c_message.key))
   end
 
   def test_hash_cleanup
