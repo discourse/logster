@@ -30,7 +30,6 @@ App.ajax =  function(url, settings) {
 App.preloadOrAjax = function(url, settings) {
   var preloaded = Logger.preload[url];
   if (preloaded) {
-    delete Logger.preload[url];
     Em.Logger.log("Successful preload");
     // return a pseudo-XHR
     return {
@@ -57,13 +56,17 @@ App.Message = Ember.Object.extend({
 
   MAX_LEN: 200,
 
-  expand: function(){
+  expand: function() {
     this.set("expanded", true);
   },
 
   protect: function() {
-    var self = this;
+    this.set('saved', true);
     return App.ajax("/protect/" + this.get('key'), { type: "PUT" });
+  },
+  unprotect: function() {
+    this.set('saved', false);
+    return App.ajax("/protect/" + this.get('key'), { type: "DELETE" });
   },
 
   hasMore: function(){
@@ -280,6 +283,20 @@ App.ShowRoute = Em.Route.extend({
         resolve(App.Message.create(json));
       }).error(reject);
     });
+  },
+
+  actions: {
+    protect: function(message) {
+      alert(message);
+      Em.Logger.log("saving");
+      this.get('model').protect();
+    },
+
+    unprotect: function(message) {
+      alert(message);
+      Em.Logger.log("saving");
+      this.get('model').unprotect();
+    }
   }
 });
 
@@ -297,11 +314,19 @@ App.IndexController = Em.Controller.extend({
       return this.get('model').loadMore();
     },
 
-    saveMessage: function(message) {
+    protect: function(message) {
       alert(message);
       Em.Logger.log("saving");
       this.get('currentMessage').protect().success(function() {
         self.transitionToRoute("show", {id: self.get('key')});
+      });
+    },
+
+    unprotect: function(message) {
+      alert(message);
+      Em.Logger.log("saving");
+      this.get('currentMessage').unprotect().success(function() {
+
       });
     }
   },
