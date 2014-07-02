@@ -21,7 +21,7 @@ module Logster
       return if level && severity < level
       return if @ignore && @ignore.any?{|pattern| message =~ pattern}
 
-      message = Message.new(severity, progname, message)
+      message = Logster::Message.new(severity, progname, message)
 
       if opts && backtrace = opts[:backtrace]
         message.backtrace = backtrace
@@ -33,14 +33,21 @@ module Logster
         message.populate_from_env(env)
       end
 
-      @redis.rpush(list_key, message.to_json)
+      # multi for integrity
+      @redis.multi do
+        @redis.hset(hash_key, message.key, message.to_json)
+        @redis.rpush(list_key, message.key)
+      end
 
       # TODO make it atomic
       if @redis.llen(list_key) > @max_backlog
-        @redis.lpop(list_key)
+        removed_key = @redis.lpop(list_key)
+        if removed_key && !@redis.sismember(protected_key, removed_key)
+          @redis.hdel(hash_key, removed_key)
+        end
       end
 
-      nil
+      message
     end
 
     def count
@@ -63,7 +70,9 @@ module Logster
       direction = after ? 1 : -1
 
       begin
-        rows = @redis.lrange(list_key, start, finish) || []
+        keys = @redis.lrange(list_key, start, finish) || []
+        break unless keys and keys.count > 0
+        rows = @redis.hmget(hash_key, keys)
 
         temp = []
 
@@ -91,11 +100,78 @@ module Logster
       results
     end
 
-    def clear(severities=nil)
+    def clear
       @redis.del(list_key)
+      keys = @redis.smembers(protected_key) || []
+      if keys.empty?
+        @redis.del(hash_key)
+      else
+        protected = @redis.mapped_hmget(hash_key, *keys)
+        @redis.del(hash_key)
+        @redis.mapped_hmset(hash_key, protected)
+      end
+    end
+
+    def clear_all
+      @redis.del(list_key)
+      @redis.del(protected_key)
+      @redis.del(hash_key)
+    end
+
+    def get(message_key)
+      json = @redis.hget(hash_key, message_key)
+      return nil unless json
+
+      Message.from_json(json)
+    end
+
+    def protect(message_key)
+      index = find_message(list_key, message_key)
+      # can't save something we already lost
+      return false unless index
+
+      @redis.sadd(protected_key, message_key)
+      true
+    end
+
+    def unprotect(message_key)
+      value = @redis.hget(hash_key, message_key)
+      # this is a failure of retention
+      raise "Message already deleted?" unless value
+
+      @redis.srem(protected_key, message_key)
+
+      index = find_message(list_key, message_key)
+      if index == nil
+        # Message fell off list - delete
+        @redis.hdel(hash_key, message_key)
+      end
+
+      true
     end
 
     protected
+
+    def find_message(list, message_key)
+      limit = 50
+      start = 0
+      finish = limit - 1
+
+      found = nil
+      while found == nil
+        items = @redis.lrange(list, start, finish)
+
+        break unless items && items.length > 0
+
+        found = items.index(message_key)
+        break if found
+
+        start += limit
+        finish += limit
+      end
+
+      found
+    end
 
     def find_location(before, after, limit)
       start = -limit
@@ -103,7 +179,6 @@ module Logster
 
       return [start,finish] unless before || after
 
-      # inefficient may change to sorted list, also timing issues
       found = nil
       find = before || after
 
@@ -112,9 +187,7 @@ module Logster
 
         break unless items && items.length > 0
 
-        found = items.index do |i|
-          Message.from_json(i).key == find
-        end
+        found = items.index(find)
 
         if items.length < limit
           found += limit - items.length if found
@@ -155,8 +228,15 @@ module Logster
 
 
     def list_key
-      @list_key ||= "__LOGSTER__LOG"
+      @list_key ||= "__LOGSTER__LATEST"
     end
 
+    def hash_key
+      @hash_key ||= "__LOGSTER__MAP"
+    end
+
+    def protected_key
+      @saved_key ||= "__LOGSTER__SAVED"
+    end
   end
 end

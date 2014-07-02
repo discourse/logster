@@ -12,7 +12,7 @@ module Logster
       HTTP_X_REAL_IP
     }
 
-    attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :env
+    attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :count, :env
 
     def initialize(severity, progname, message, timestamp = nil, key = nil)
       @timestamp = timestamp || get_timestamp
@@ -21,6 +21,7 @@ module Logster
       @message = message
       @key = key || SecureRandom.hex
       @backtrace = nil
+      @count = 1
     end
 
     def to_h
@@ -31,12 +32,13 @@ module Logster
         timestamp: @timestamp,
         key: @key,
         backtrace: @backtrace,
+        count: @count,
         env: @env
       }
     end
 
-    def to_json(opts=nil)
-      JSON.fast_generate(to_h,opts)
+    def to_json(opts = nil)
+      JSON.fast_generate(to_h, opts)
     end
 
     def self.from_json(json)
@@ -48,6 +50,7 @@ module Logster
             parsed["key"] )
       msg.backtrace = parsed["backtrace"]
       msg.env = parsed["env"]
+      msg.count = parsed["count"]
       msg
     end
 

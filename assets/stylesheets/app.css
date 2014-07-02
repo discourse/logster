@@ -100,6 +100,17 @@ tr.show-more {
   font-size: 12px;
 }
 
+.share {
+    position: fixed;
+    bottom: 70px;
+    right: 10px;
+}
+.save {
+    position: fixed;
+    bottom: 70px;
+    right: 50px;
+}
+
 #divider {
   position: fixed;
   bottom: 310px;

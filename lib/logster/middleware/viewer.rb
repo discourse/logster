@@ -6,6 +6,7 @@ module Logster
 
       PATH_INFO = "PATH_INFO".freeze
       SCRIPT_NAME = "SCRIPT_NAME".freeze
+      REQUEST_METHOD = "REQUEST_METHOD".freeze
 
       def initialize(app)
         @app = app
@@ -29,7 +30,7 @@ module Logster
         if resource = resolve_path(path)
 
           # easier to debug, call per line
-          if !Logster.config.authorize_callback.call(env)
+          unless Logster.config.authorize_callback.call(env)
             return @app.call(env)
           end
 
@@ -38,6 +39,32 @@ module Logster
             @fileserver.call(env)
           elsif resource.start_with?("/messages.json")
             serve_messages(Rack::Request.new(env))
+          elsif resource =~ /\/protect\/([0-9a-f]+)$/
+            key = $1
+            if env[REQUEST_METHOD] == "PUT"
+              Logster.store.protect(key)
+              return [200, {"Content-Type" => "text/plain; charset=utf-8"}, ["OK"]]
+            elsif env[REQUEST_METHOD] == "DELETE"
+              Logster.store.unprotect(key)
+              return [200, {"Content-Type" => "text/plain; charset=utf-8"}, ["OK"]]
+            else
+              return [405, {}, ["Only PUT and DELETE are supported for this URL"]]
+            end
+          elsif resource =~ /\/show\/([0-9a-f]+)(\.json)?$/
+            key = $1
+            json = $2 == ".json"
+
+            message = Logster.store.get(key)
+            unless message
+              return [404, {}, ["Message not found"]]
+            end
+
+            if json
+              [200, {"Content-Type" => "application/json; charset=utf-8"}, [message.to_json]]
+            else
+              preload = preload_json({"/show/#{key}.json" => message})
+              [200, {"Content-Type" => "text/html; charset=utf-8"}, [body(preload)]]
+            end
           elsif resource == "/"
             [200, {"Content-Type" => "text/html; charset=utf-8"}, [body(preload_json)]]
           else
@@ -89,7 +116,9 @@ module Logster
         end
       end
 
-      def preload_json
+      def preload_json(extra={})
+        values = {}
+        values.merge!(extra)
       end
 
       def css(name, attrs={})
@@ -135,16 +164,26 @@ JS
   #{handlebars("application")}
   #{handlebars("index")}
   #{handlebars("message")}
+  #{handlebars("show")}
+  #{component("message-info")}
   #{component("tabbed-section")}
   #{component("tab-contents")}
+  #{component("tab-link")}
   <script>
     window.Logger = {
-       rootPath: "#{@logs_path}"
+       rootPath: "#{@logs_path}",
+       preload: #{JSON.fast_generate(preload)}
     };
   </script>
 </head>
 <body>
   #{script("app.js")}
+  <script>
+    App.Router.reopen({
+      rootURL: Logger.rootPath,
+      location: 'history'
+    });
+  </script>
 </body>
 </html>
 HTML

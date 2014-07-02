@@ -69,8 +69,19 @@ class TestRedisStore < Minitest::Test
 
   end
 
+  def test_get
+    a_message = @store.report(Logger::WARN, "test", "A")
+    b_message = @store.report(Logger::WARN, "test", "B")
+    @store.report(Logger::WARN, "test", "C")
+
+    assert_equal("A", @store.get(a_message.key).message)
+    assert_equal("B", @store.get(b_message.key).message)
+  end
+
   def test_backlog
     @store.max_backlog = 1
+    @store.report(Logger::WARN, "test", "A")
+    @store.report(Logger::WARN, "test", "A")
     @store.report(Logger::WARN, "test", "A")
     @store.report(Logger::WARN, "test", "B")
 
@@ -78,6 +89,65 @@ class TestRedisStore < Minitest::Test
 
     assert_equal(1, latest.length)
     assert_equal("B", latest[0].message)
+  end
+
+  def test_save_unsave
+    @store.max_backlog = 2
+    @store.report(Logger::WARN, "test", "A")
+    b_message = @store.report(Logger::WARN, "test", "B")
+    @store.protect b_message.key
+    c_message = @store.report(Logger::WARN, "test", "C")
+    @store.protect c_message.key
+    @store.report(Logger::WARN, "test", "D")
+
+    latest = @store.latest
+
+    assert_equal(2, latest.length)
+    assert_equal("C", latest[0].message)
+    assert_equal("D", latest[1].message)
+
+    # Saved messages still accessible by key
+    assert_equal("B", @store.get(b_message.key).message)
+
+    # Unsave does not delete message if still recent
+    @store.unprotect c_message.key
+    assert_equal("C", @store.get(c_message.key).message)
+
+    # Unsave *does* delete message if not recent
+    @store.unprotect b_message.key
+    assert_nil(@store.get(b_message.key))
+  end
+
+  def test_clear
+    10.times do
+      @store.report(Logger::WARN, "test", "A")
+    end
+    # Protected messages are not deleted
+    b_message = @store.report(Logger::WARN, "test", "B")
+    @store.protect b_message.key
+    c_message = @store.report(Logger::WARN, "test", "C")
+    10.times do
+      @store.report(Logger::WARN, "test", "D")
+    end
+
+    latest = @store.latest
+    assert_equal(22, latest.length)
+
+    @store.clear
+
+    latest = @store.latest
+    assert_equal(0, latest.length)
+    assert_equal("B", @store.get(b_message.key).message)
+    assert_nil(@store.get(c_message.key))
+  end
+
+  def test_hash_cleanup
+    @store.max_backlog = 2
+    a_message = @store.report(Logger::WARN, "test", "A")
+    @store.report(Logger::WARN, "test", "B")
+    @store.report(Logger::WARN, "test", "C")
+
+    assert_nil(@store.get(a_message.key))
   end
 
   def test_filter_latest

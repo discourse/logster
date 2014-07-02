@@ -1,0 +1,19 @@
+<div class="message-info">
+  {{#tabbed-section}}
+    {{#tab-contents name="info" hint="show info"}}
+      <pre>{{currentMessage.message}}</pre>
+      {{#if currentMessage}}
+        <a {{bind-attr href=currentMessage.shareUrl}} class="share">Share</a>
+        {{#if currentMessage.saved}}
+            <a {{action unprotect currentMessage}} href class="save">Unprotect</a>
+        {{else}}
+            <a {{action protect currentMessage}} href class="save">Protect</a>
+        {{/if}}
+      {{/if}}
+    {{/tab-contents}}
+    {{#tab-contents name="backtrace" hint="show backtrace"}}<pre>{{currentMessage.backtrace}}</pre>{{/tab-contents}}
+    {{#if currentMessage.env}}
+      {{#tab-contents name="env" hint="show environment"}}<pre>{{currentMessage.envDebug}}</pre>{{/tab-contents}}
+    {{/if}}
+  {{/tabbed-section}}
+</div>
