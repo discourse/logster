@@ -30,7 +30,6 @@ App.ajax =  function(url, settings) {
 App.preloadOrAjax = function(url, settings) {
   var preloaded = Logger.preload[url];
   if (preloaded) {
-    Em.Logger.log("Successful preload");
     // return a pseudo-XHR
     return {
       success: function(callback) {
@@ -42,7 +41,6 @@ App.preloadOrAjax = function(url, settings) {
       error: function() { return this; }
     };
   } else {
-    Em.Logger.log("Failed preload");
     return App.ajax(url, settings);
   }
 };
@@ -276,10 +274,8 @@ App.IndexRoute = Em.Route.extend({
 App.ShowRoute = Em.Route.extend({
   model: function(params) {
     var self = this;
-    Em.Logger.log("opening show ");
     return new Promise(function(resolve, reject) {
       App.preloadOrAjax("/show/" + params.id + ".json").success(function(json) {
-        Em.Logger.log(json);
         resolve(App.Message.create(json));
       }).error(reject);
     });
@@ -287,14 +283,10 @@ App.ShowRoute = Em.Route.extend({
 
   actions: {
     protect: function(message) {
-      alert(message);
-      Em.Logger.log("saving");
       this.get('model').protect();
     },
 
     unprotect: function(message) {
-      alert(message);
-      Em.Logger.log("saving");
       this.get('model').unprotect();
     }
   }
@@ -315,19 +307,13 @@ App.IndexController = Em.Controller.extend({
     },
 
     protect: function(message) {
-      alert(message);
-      Em.Logger.log("saving");
       this.get('currentMessage').protect().success(function() {
         self.transitionToRoute("show", {id: self.get('key')});
       });
     },
 
     unprotect: function(message) {
-      alert(message);
-      Em.Logger.log("saving");
-      this.get('currentMessage').unprotect().success(function() {
-
-      });
+      this.get('currentMessage').unprotect();
     }
   },
 
@@ -521,7 +507,6 @@ App.TabbedSectionComponent = Ember.Component.extend({
   tabs: Em.A(),
   selectTab: function(view) {
     if (view.get('isLink')) {
-      Em.Logger.log("sending action", view.get('action'));
       this.triggerAction(view.get('action'));
       return;
     }
