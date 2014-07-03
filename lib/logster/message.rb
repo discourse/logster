@@ -12,7 +12,7 @@ module Logster
       HTTP_X_REAL_IP
     }
 
-    attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :count, :env
+    attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :count, :env, :protected
 
     def initialize(severity, progname, message, timestamp = nil, key = nil)
       @timestamp = timestamp || get_timestamp
@@ -33,7 +33,8 @@ module Logster
         key: @key,
         backtrace: @backtrace,
         count: @count,
-        env: @env
+        env: @env,
+        protected: @protected
       }
     end
 

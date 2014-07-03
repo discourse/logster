@@ -100,6 +100,11 @@ tr.show-more {
   font-size: 12px;
 }
 
+#bottom-panel.full {
+    height: 90%;
+    border-top: 2px solid black;
+}
+
 .share {
     position: fixed;
     bottom: 70px;

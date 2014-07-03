@@ -126,11 +126,17 @@ module Logster
     end
 
     def protect(message_key)
-      index = find_message(list_key, message_key)
-      # can't save something we already lost
-      return false unless index
+      json = @redis.hget(hash_key, message_key)
+      # Message already lost
+      return false unless json
 
-      @redis.sadd(protected_key, message_key)
+      message = Message.from_json(json)
+      message.protected = true
+      @redis.multi do
+        @redis.hset(hash_key, message_key, message.to_json)
+        @redis.sadd(protected_key, message_key)
+      end
+
       true
     end
 
@@ -145,6 +151,10 @@ module Logster
       if index == nil
         # Message fell off list - delete
         @redis.hdel(hash_key, message_key)
+      else
+        message = Message.from_json(value)
+        message.protected = false
+        @redis.hset(hash_key, message_key, message.to_json)
       end
 
       true

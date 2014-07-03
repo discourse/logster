@@ -64,7 +64,7 @@ App.Message = Ember.Object.extend({
   },
   unprotect: function() {
     this.set('saved', false);
-    return App.ajax("/protect/" + this.get('key'), { type: "DELETE" });
+    return App.ajax("/unprotect/" + this.get('key'), { type: "DELETE" });
   },
 
   hasMore: function(){
@@ -76,6 +76,10 @@ App.Message = Ember.Object.extend({
 
   shareUrl: function() {
     return Logger.rootPath + "/show/" + this.get('key');
+  }.property("key"),
+
+  protectUrl: function() {
+    return Logger.rootPath + (this.get('saved') ? '/unprotect/' : '/protect/') + this.get('key');
   }.property("key"),
 
   displayMessage: function(){
@@ -279,16 +283,6 @@ App.ShowRoute = Em.Route.extend({
         resolve(App.Message.create(json));
       }).error(reject);
     });
-  },
-
-  actions: {
-    protect: function(message) {
-      this.get('model').protect();
-    },
-
-    unprotect: function(message) {
-      this.get('model').unprotect();
-    }
   }
 });
 
@@ -367,6 +361,18 @@ App.IndexController = Em.Controller.extend({
 
     this.stickToBottom = scrollHeight - 20 < height + scrollTop;
     this.checkedBottom = true;
+  }
+});
+
+App.ShowController = Em.Controller.extend({
+  actions: {
+    protect: function(message) {
+      this.get('model').protect();
+    },
+
+    unprotect: function(message) {
+      this.get('model').unprotect();
+    }
   }
 });
 

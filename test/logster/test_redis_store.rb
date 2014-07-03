@@ -108,10 +108,12 @@ class TestRedisStore < Minitest::Test
 
     # Saved messages still accessible by key
     assert_equal("B", @store.get(b_message.key).message)
+    assert_equal(true, @store.get(b_message.key).protected)
 
     # Unsave does not delete message if still recent
     @store.unprotect c_message.key
     assert_equal("C", @store.get(c_message.key).message)
+    assert_equal(false, @store.get(c_message.key).protected)
 
     # Unsave *does* delete message if not recent
     @store.unprotect b_message.key
