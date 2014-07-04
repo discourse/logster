@@ -39,16 +39,27 @@ module Logster
             @fileserver.call(env)
           elsif resource.start_with?("/messages.json")
             serve_messages(Rack::Request.new(env))
-          elsif resource =~ /\/protect\/([0-9a-f]+)$/
-            key = $1
-            if env[REQUEST_METHOD] == "PUT"
-              Logster.store.protect(key)
-              return [200, {"Content-Type" => "text/plain; charset=utf-8"}, ["OK"]]
-            elsif env[REQUEST_METHOD] == "DELETE"
-              Logster.store.unprotect(key)
-              return [200, {"Content-Type" => "text/plain; charset=utf-8"}, ["OK"]]
+          elsif resource =~ /\/(un)?protect\/([0-9a-f]+)$/
+            off = $1 == "un"
+            key = $2
+
+            message = Logster.store.get(key)
+            unless message
+              return [404, {}, ["Message not found"]]
+            end
+
+            if off
+              if Logster.store.unprotect(key)
+                return [301, {"Location" => "#{@logs_path}/show/#{key}?protected=false"}, []]
+              else
+                return [500, {}, ["Failed"]]
+              end
             else
-              return [405, {}, ["Only PUT and DELETE are supported for this URL"]]
+              if Logster.store.protect(key)
+                return [301, {"Location" => "#{@logs_path}/show/#{key}?protected=true"}, []]
+              else
+                return [500, {}, ["Failed"]]
+              end
             end
           elsif resource =~ /\/show\/([0-9a-f]+)(\.json)?$/
             key = $1
