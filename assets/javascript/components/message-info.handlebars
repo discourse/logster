@@ -4,15 +4,13 @@
       <pre>{{currentMessage.message}}</pre>
       {{#if currentMessage}}
         <a {{bind-attr href=currentMessage.shareUrl}} class="share">Share</a>
-        <!--
         <a {{bind-attr href=currentMessage.protectUrl}} class="save">
-          {{#if currentMessage.saved}}
+          {{#if currentMessage.protected}}
               Unprotect
           {{else}}
               Protect
           {{/if}}
         </a>
-        -->
       {{/if}}
     {{/tab-contents}}
     {{#tab-contents name="backtrace" hint="show backtrace"}}<pre>{{currentMessage.backtrace}}</pre>{{/tab-contents}}

@@ -59,11 +59,11 @@ App.Message = Ember.Object.extend({
   },
 
   protect: function() {
-    this.set('saved', true);
+    this.set('protected', true);
     return App.ajax("/protect/" + this.get('key'), { type: "PUT" });
   },
   unprotect: function() {
-    this.set('saved', false);
+    this.set('protected', false);
     return App.ajax("/unprotect/" + this.get('key'), { type: "DELETE" });
   },
 
@@ -79,7 +79,7 @@ App.Message = Ember.Object.extend({
   }.property("key"),
 
   protectUrl: function() {
-    return Logger.rootPath + (this.get('saved') ? '/unprotect/' : '/protect/') + this.get('key');
+    return Logger.rootPath + (this.get('protected') ? '/unprotect/' : '/protect/') + this.get('key');
   }.property("key"),
 
   displayMessage: function(){

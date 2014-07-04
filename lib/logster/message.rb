@@ -22,6 +22,7 @@ module Logster
       @key = key || SecureRandom.hex
       @backtrace = nil
       @count = 1
+      @protected = false
     end
 
     def to_h
