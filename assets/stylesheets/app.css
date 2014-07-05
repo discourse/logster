@@ -45,7 +45,11 @@ td.time {
 }
 
 th.severity{
-  width: 30px;
+  width: 10px;
+}
+
+th.quantity {
+  width: 25px;
 }
 
 th.time{

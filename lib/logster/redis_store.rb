@@ -27,6 +27,7 @@ module Logster
       if last_key
         last_message = get(last_key)
         if last_message.should_combine?(severity, progname, message)
+          # Combine the messages
           last_message.count += 1
           @redis.hset(hash_key, last_key, last_message.to_json)
 
