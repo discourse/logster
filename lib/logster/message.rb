@@ -25,6 +25,13 @@ module Logster
       @protected = false
     end
 
+    def should_combine?(severity, progname, message)
+      return false if severity != @severity
+      return false if progname != @progname
+      return false if message != @message
+      true
+    end
+
     def to_h
       {
         message: @message,

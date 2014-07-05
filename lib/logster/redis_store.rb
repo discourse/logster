@@ -20,6 +20,19 @@ module Logster
       return if (!message || (String === message && message.empty?)) && skip_empty
       return if level && severity < level
       return if @ignore && @ignore.any?{|pattern| message =~ pattern}
+      opts ||= {}
+
+      # Retrieve the last message
+      last_key = @redis.lindex(list_key, -1)
+      if last_key
+        last_message = get(last_key)
+        if last_message.should_combine?(severity, progname, message)
+          last_message.count += 1
+          @redis.hset(hash_key, last_key, last_message.to_json)
+
+          return last_message
+        end
+      end
 
       message = Logster::Message.new(severity, progname, message)
 
