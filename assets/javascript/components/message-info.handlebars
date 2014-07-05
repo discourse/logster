@@ -3,7 +3,8 @@
     {{#tab-contents name="info" hint="show info"}}
       <pre>{{currentMessage.message}}</pre>
       {{#if currentMessage}}
-        <a {{bind-attr href=currentMessage.shareUrl}} class="share">Share</a>
+        {{#link-to 'show' currentMessage.key class="share"}}Share{{/link-to}}
+        <!-- TODO turn protecting into an action -->
         <a {{bind-attr href=currentMessage.protectUrl}} class="save">
           {{#if currentMessage.protected}}
               Unprotect
