@@ -34,8 +34,11 @@ module Logster
   end
 end
 
+# Configuration defaults
 Logster.config.current_context = lambda{|env, &block| block.call}
 Logster.config.authorize_callback = lambda{|env| true}
+Logster.config.group_errors = true
+Logster.config.subdirectory = "/logs"
 
 if defined?(::Rails) && ::Rails::VERSION::MAJOR.to_i >= 3
   require 'logster/rails/railtie'
