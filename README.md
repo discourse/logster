@@ -57,7 +57,7 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   - Feature: Store backtraces, allow people to view them in the GUI
 - 2014-05-12: Version 0.0.5
   - Feature: We now log basic rack environment with the messages
-  -  Add your on with Logster.add_to_env(env, key, value)
+  - Add your own with Logster.add_to_env(env, key, value)
 - 2014-05-12: Version 0.0.6
   - Add referer to env
 - 2014-05-13: Version 0.0.7
@@ -70,3 +70,7 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   - Correct context for error reporting
   - Clean up backtraces of reported exceptions
   - Report params in env tab
+- 2014-07-04: Version 0.0.12
+  - Feature: Able to share logs, at /logs/show/(hexdigits)
+  - Add protecting logs, so they aren't deleted when old (for use with sharing)
+  - Restructured Redis data model
