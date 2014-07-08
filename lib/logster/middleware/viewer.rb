@@ -61,6 +61,16 @@ module Logster
                 return [500, {}, ["Failed"]]
               end
             end
+
+          elsif resource =~ /\/clear$/
+            puts env
+            puts env[REQUEST_METHOD]
+            if env[REQUEST_METHOD] != "POST"
+              return [405, {}, ["GET not allowed for /clear"]]
+            end
+            Logster.store.clear
+            return [200, {}, ["Messages cleared"]]
+
           elsif resource =~ /\/show\/([0-9a-f]+)(\.json)?$/
             key = $1
             json = $2 == ".json"
