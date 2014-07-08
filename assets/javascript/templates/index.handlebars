@@ -10,7 +10,7 @@
     <tbody>
     {{#if model.moreBefore}}
       <tr {{action showMoreBefore}} class="show-more">
-        <td colspan=3>{{model.totalBefore}} more</td>
+        <td colspan=4>{{model.totalBefore}} more</td>
       </tr>
     {{/if}}
     {{each model.messages itemViewClass="App.MessageView"}}
@@ -45,5 +45,6 @@
     <label class="search">
       {{input type="textfield" placeholder="Search" value=search}}
     </label>
+    <a class="clear" href {{action clear}}>Clear logs</a>
   </div>
 </div>

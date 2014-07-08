@@ -202,7 +202,8 @@ App.MessageCollection = Em.Object.extend({
   loadMore: function(){
 
     var messages = this.get("messages");
-    if(messages.length === 0){
+    if (messages.length === 0) {
+      this.load({});
       return;
     }
 
@@ -298,6 +299,13 @@ App.IndexController = Em.Controller.extend({
 
     loadMore: function(){
       return this.get('model').loadMore();
+    },
+
+    clear: function() {
+      var self = this;
+      App.ajax("/clear", { type: "POST" }).success(function() {
+        self.get('model').reload();
+      });
     },
 
     protect: function(message) {

@@ -63,12 +63,16 @@ module Logster
 
     def self.populate_from_env(env)
       env[LOGSTER_ENV] ||= begin
+          unless env.include? "rack.input"
+            # Not a web request
+            return env
+          end
           scrubbed = {}
           request = Rack::Request.new(env)
           params = {}
           request.params.each do |k,v|
             if k.include? "password"
-              params[k] = "[reducted]"
+              params[k] = "[redacted]"
             else
               params[k] = v[0..100]
             end

@@ -68,9 +68,10 @@ th.time{
   color: #777;
 }
 
-.search input {
+.action-panel .search input {
   border: 1px solid #DDD;
   padding: 3px;
+  vertical-align: middle;
 }
 
 .regex input {
@@ -180,6 +181,14 @@ tr.show-more {
   position: relative;
   top: -1px;
   margin-left: 20px;
+  vertical-align: sub;
+}
+
+.action-panel .clear {
+  position: relative;
+  top: -1px;
+  margin-left: 50px;
+  vertical-align: middle;
 }
 
 #log-table {
