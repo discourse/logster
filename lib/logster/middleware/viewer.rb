@@ -37,8 +37,10 @@ module Logster
           if resource =~ /\.js$|\.handlebars$|\.css$/
             env[PATH_INFO] = resource
             @fileserver.call(env)
+
           elsif resource.start_with?("/messages.json")
             serve_messages(Rack::Request.new(env))
+
           elsif resource =~ /\/(un)?protect\/([0-9a-f]+)$/
             off = $1 == "un"
             key = $2
@@ -86,8 +88,10 @@ module Logster
               preload = preload_json({"/show/#{key}.json" => message})
               [200, {"Content-Type" => "text/html; charset=utf-8"}, [body(preload)]]
             end
+
           elsif resource == "/"
             [200, {"Content-Type" => "text/html; charset=utf-8"}, [body(preload_json)]]
+
           else
             [404, {}, ["Not found"]]
           end

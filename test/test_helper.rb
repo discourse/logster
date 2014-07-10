@@ -12,7 +12,28 @@ class Logster::TestStore
     @reported = []
   end
 
-  def report(*args)
-    @reported << args
+  def report(severity, progname, message, opts = nil)
+    opts ||= {}
+    env = opts[:env]
+    backtrace = opts[:backtrace]
+    if env && !backtrace
+      backtrace = env[:backtrace]
+    end
+
+    message = Logster::Message.new(severity, progname, message)
+
+    if backtrace
+      message.backtrace = backtrace
+    else
+      message.backtrace = caller.join("\n")
+    end
+
+    if env
+      message.populate_from_env(env)
+    end
+
+    @reported << message
+
+    message
   end
 end
