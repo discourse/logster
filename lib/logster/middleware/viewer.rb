@@ -36,6 +36,8 @@ module Logster
 
           if resource =~ /\.js$|\.handlebars$|\.css$/
             env[PATH_INFO] = resource
+            # accl redirect is going to be trouble, ensure its bypassed
+            env['sendfile.type'] = ''
             @fileserver.call(env)
           elsif resource.start_with?("/messages.json")
             serve_messages(Rack::Request.new(env))
