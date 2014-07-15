@@ -1,21 +1,15 @@
 <div class="message-info">
   {{#tabbed-section}}
-    {{#tab-contents name="info" hint="show info"}}
+    {{#tab-contents name="info" hint="show info" currentMessage=currentMessage}}
       <pre>{{currentMessage.message}}</pre>
-      {{#if currentMessage}}
-        <a {{bind-attr href=currentMessage.shareUrl}} class="share">Share</a>
-        <a {{bind-attr href=currentMessage.protectUrl}} class="save">
-          {{#if currentMessage.protected}}
-              Unprotect
-          {{else}}
-              Protect
-          {{/if}}
-        </a>
-      {{/if}}
     {{/tab-contents}}
-    {{#tab-contents name="backtrace" hint="show backtrace"}}<pre>{{currentMessage.backtrace}}</pre>{{/tab-contents}}
+    {{#tab-contents name="backtrace" hint="show backtrace" currentMessage=currentMessage}}
+        <pre>{{currentMessage.backtrace}}</pre>
+    {{/tab-contents}}
     {{#if currentMessage.env}}
-      {{#tab-contents name="env" hint="show environment"}}<pre>{{currentMessage.envDebug}}</pre>{{/tab-contents}}
+      {{#tab-contents name="env" hint="show environment" currentMessage=currentMessage}}
+          <pre>{{currentMessage.envDebug}}</pre>
+      {{/tab-contents}}
     {{/if}}
   {{/tabbed-section}}
 </div>
