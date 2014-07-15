@@ -45,26 +45,26 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_latest_before
-    10.times do
-      @store.report(Logger::WARN, "test", "A")
+    10.times do |i|
+      @store.report(Logger::WARN, "test", "A#{i}")
     end
-    10.times do
-      @store.report(Logger::WARN, "test", "B")
+    10.times do |i|
+      @store.report(Logger::WARN, "test", "B#{i}")
     end
-    10.times do
-      @store.report(Logger::WARN, "test", "C")
+    10.times do |i|
+      @store.report(Logger::WARN, "test", "C#{i}")
     end
 
     messages = @store.latest(limit: 10)
-    assert_equal("C", messages[0].message)
+    assert_equal("C0", messages[0].message)
     assert_equal(10, messages.length)
 
     messages = @store.latest(limit: 10, before: messages[0].key)
-    assert_equal("B", messages[0].message)
+    assert_equal("B0", messages[0].message)
     assert_equal(10, messages.length)
 
     messages = @store.latest(limit: 10, before: messages[0].key)
-    assert_equal("A", messages[0].message)
+    assert_equal("A0", messages[0].message)
     assert_equal(10, messages.length)
 
   end
@@ -81,7 +81,7 @@ class TestRedisStore < Minitest::Test
   def test_backlog
     @store.max_backlog = 1
     @store.report(Logger::WARN, "test", "A")
-    @store.report(Logger::WARN, "test", "A")
+    @store.report(Logger::WARN, "test", "C")
     @store.report(Logger::WARN, "test", "A")
     @store.report(Logger::WARN, "test", "B")
 
@@ -121,15 +121,15 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_clear
-    10.times do
-      @store.report(Logger::WARN, "test", "A")
+    10.times do |i|
+      @store.report(Logger::WARN, "test", "A#{i}")
     end
     # Protected messages are not deleted
     b_message = @store.report(Logger::WARN, "test", "B")
     @store.protect b_message.key
     c_message = @store.report(Logger::WARN, "test", "C")
-    10.times do
-      @store.report(Logger::WARN, "test", "D")
+    10.times do |i|
+      @store.report(Logger::WARN, "test", "D#{i}")
     end
 
     latest = @store.latest
@@ -152,6 +152,19 @@ class TestRedisStore < Minitest::Test
     assert_nil(@store.get(a_message.key))
   end
 
+  def test_grouping
+    @store.report(Logger::INFO, "test", "Q")
+    10.times do
+      @store.report(Logger::WARN, "test", "Q")
+    end
+    @store.report(Logger::WARN, "test", "Blah")
+    @store.report(Logger::WARN, "Different", "Q")
+
+    latest = @store.latest
+    assert_equal(4, latest.length)
+    assert_equal(10, latest[1].count)
+  end
+
   def test_filter_latest
     @store.report(Logger::INFO, "test", "A")
     @store.report(Logger::WARN, "test", "B")
@@ -162,12 +175,12 @@ class TestRedisStore < Minitest::Test
     messages = @store.latest(after: messages.last.key)
     assert_equal(0, messages.length)
 
-    10.times do
-      @store.report(Logger::INFO, "test", "A")
+    10.times do |i|
+      @store.report(Logger::INFO, "test", "A#{i}")
     end
     @store.report(Logger::ERROR, "test", "C")
-    10.times do
-      @store.report(Logger::INFO, "test", "A")
+    10.times do |i|
+      @store.report(Logger::INFO, "test", "A#{i}")
     end
 
     latest = @store.latest(severity: [Logger::ERROR, Logger::WARN], limit: 2)

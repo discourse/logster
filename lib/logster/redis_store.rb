@@ -20,16 +20,47 @@ module Logster
       return if (!message || (String === message && message.empty?)) && skip_empty
       return if level && severity < level
       return if @ignore && @ignore.any?{|pattern| message =~ pattern}
+      opts ||= {}
+      env = opts[:env]
+      backtrace = opts[:backtrace]
+      if env && !backtrace
+        backtrace = env[:backtrace]
+      end
+
+      if Logster.config.group_errors
+        # Retrieve the last message
+        last_key = @redis.lindex(list_key, -1)
+        if last_key
+          last_message = get(last_key)
+          if last_message.should_combine?(severity, progname, message, backtrace)
+            # Combine the messages
+            last_message.count += 1
+
+            old_env = last_message.env
+            last_message.env = nil
+            last_message.populate_from_env(env)
+            new_env = last_message.env
+
+            if old_env != new_env
+
+            end
+
+            @redis.hset(hash_key, last_key, last_message.to_json)
+
+            return last_message
+          end
+        end
+      end
 
       message = Logster::Message.new(severity, progname, message)
 
-      if opts && backtrace = opts[:backtrace]
+      if backtrace
         message.backtrace = backtrace
       else
         message.backtrace = caller.join("\n")
       end
 
-      if opts && env = opts[:env]
+      if env
         message.populate_from_env(env)
       end
 

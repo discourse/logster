@@ -25,6 +25,15 @@ module Logster
       @protected = false
     end
 
+    def should_combine?(severity, progname, message, backtrace)
+      return false if severity != @severity
+      return false if progname != @progname
+      return false if message != @message
+      # Don't fail if backtrace isn't specified
+      return false if backtrace != nil && backtrace != @backtrace
+      true
+    end
+
     def to_h
       {
         message: @message,

@@ -82,7 +82,7 @@ App.Message = Ember.Object.extend({
     return Logger.rootPath + (this.get('protected') ? '/unprotect/' : '/protect/') + this.get('key');
   }.property("key"),
 
-  displayMessage: function(){
+  displayMessage: function() {
     var message = this.get("message");
     var expanded = this.get("expanded");
 
@@ -90,7 +90,16 @@ App.Message = Ember.Object.extend({
       message = message.substr(0,this.MAX_LEN);
     }
     return message;
-  }.property("message","expanded"),
+  }.property("message", "expanded"),
+
+  showCount: function() {
+    var count = this.get('count');
+    if (count <= 1) {
+      return "";
+    } else {
+      return "x" + count;
+    }
+  }.property("count"),
 
   envDebug: function(){
     var env = this.get("env");
