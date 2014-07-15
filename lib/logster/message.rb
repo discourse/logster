@@ -85,6 +85,13 @@ module Logster
       end
     end
 
+    def <=>(other)
+      time = self.timestamp <=> other.timestamp
+      return time if time && time != 0
+
+      self.key <=> other.key
+    end
+
     protected
 
     def get_timestamp
