@@ -10,7 +10,7 @@ class TestRedisStore < Minitest::Test
   end
 
   def teardown
-    @store.clear
+    @store.clear_all
   end
 
   def test_latest
@@ -121,26 +121,35 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_clear
-    10.times do
-      @store.report(Logger::WARN, "test", "A")
+    @store.max_backlog = 25
+    a_message = @store.report(Logger::WARN, "test", "A", timestamp: Time.now - (24*60*60))
+    @store.protect a_message.key
+    20.times do
+      @store.report(Logger::WARN, "test", "B")
     end
-    # Protected messages are not deleted
-    b_message = @store.report(Logger::WARN, "test", "B")
-    @store.protect b_message.key
-    c_message = @store.report(Logger::WARN, "test", "C")
+    c_message = @store.report(Logger::WARN, "test", "C", timestamp: Time.now + (24*60*60))
+    @store.protect c_message.key
+    d_message = @store.report(Logger::WARN, "test", "D")
     10.times do
-      @store.report(Logger::WARN, "test", "D")
+      @store.report(Logger::WARN, "test", "E")
     end
 
     latest = @store.latest
-    assert_equal(22, latest.length)
+    assert_equal(25, latest.length)
 
     @store.clear
 
+    # Protected messages are still accessible by their key
+    assert_equal("C", @store.get(c_message.key).message)
+    # Unprotected messages are gone
+    assert_nil(@store.get(d_message.key))
+
+    # The latest list is rebuilt with protected messages, earliest first
+    # Including messages that previously fell off (A)
     latest = @store.latest
-    assert_equal(0, latest.length)
-    assert_equal("B", @store.get(b_message.key).message)
-    assert_nil(@store.get(c_message.key))
+    assert_equal(2, latest.length)
+    assert_equal("A", latest[0].message)
+    assert_equal("C", latest[1].message)
   end
 
   def test_hash_cleanup

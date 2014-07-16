@@ -1,1 +1,11 @@
 {{yield}}
+{{#if currentMessage}}
+    <a {{bind-attr href=currentMessage.shareUrl}} class="share">Share</a>
+    <a {{bind-attr href=currentMessage.protectUrl}} class="save">
+      {{#if currentMessage.protected}}
+          Unprotect
+      {{else}}
+          Protect
+      {{/if}}
+    </a>
+{{/if}}

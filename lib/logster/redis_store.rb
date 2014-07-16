@@ -21,7 +21,7 @@ module Logster
       return if level && severity < level
       return if @ignore && @ignore.any?{|pattern| message =~ pattern}
 
-      message = Logster::Message.new(severity, progname, message)
+      message = Logster::Message.new(severity, progname, message, (opts && opts[:timestamp]))
 
       if opts && backtrace = opts[:backtrace]
         message.backtrace = backtrace
@@ -109,9 +109,23 @@ module Logster
         protected = @redis.mapped_hmget(hash_key, *keys)
         @redis.del(hash_key)
         @redis.mapped_hmset(hash_key, protected)
+
+        sorted = protected
+          .values
+          .map { |string| Message.from_json(string) }
+          .sort
+          .map(&:key)
+
+        @redis.pipelined do
+          sorted.each do |message_key|
+            @redis.rpush(list_key, message_key)
+          end
+        end
       end
     end
 
+    # Delete everything, included protected messages
+    # (use in tests)
     def clear_all
       @redis.del(list_key)
       @redis.del(protected_key)

@@ -24,6 +24,4 @@ class TestLogger < Minitest::Test
     assert_match(/W,.*boom/, io.string)
 
   end
-
 end
-
