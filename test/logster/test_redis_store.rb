@@ -6,7 +6,7 @@ class TestRedisStore < Minitest::Test
 
   def setup
     @store = Logster::RedisStore.new(Redis.new)
-    @store.clear
+    @store.clear_all
   end
 
   def teardown
