@@ -19,4 +19,14 @@ class Logster::TestStore < Logster::BaseStore
   def count
     @reported.count
   end
+
+  def clear
+    @reported = []
+  end
+
+  def clear_all
+    @reported = []
+  end
+
+  # get, protect, unprotect: unimplemented
 end
