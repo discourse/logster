@@ -16,21 +16,29 @@ module Logster
     end
 
 
-    def report(severity, progname, message, opts = nil)
+    def report(severity, progname, message, opts = {})
       return if (!message || (String === message && message.empty?)) && skip_empty
       return if level && severity < level
       return if @ignore && @ignore.any?{|pattern| message =~ pattern}
 
-      message = Logster::Message.new(severity, progname, message, (opts && opts[:timestamp]))
+      message = Logster::Message.new(severity, progname, message, opts[:timestamp])
 
-      if opts && backtrace = opts[:backtrace]
+      env = opts[:env]
+      backtrace = opts[:backtrace]
+
+      if env
+        if env[:backtrace]
+          # Special - passing backtrace through env
+          backtrace = env.delete(:backtrace)
+        end
+
+        message.populate_from_env(env)
+      end
+
+      if backtrace
         message.backtrace = backtrace
       else
         message.backtrace = caller.join("\n")
-      end
-
-      if opts && env = opts[:env]
-        message.populate_from_env(env)
       end
 
       # multi for integrity
