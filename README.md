@@ -74,3 +74,9 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   - Feature: Able to share logs, at /logs/show/(hexdigits)
   - Add protecting logs, so they aren't deleted when old (for use with sharing)
   - Restructured Redis data model
+- 2014-07-17: Version 0.1.1
+  - Refactored report method into base_store.rb - will be easier to make a new log store
+  - Add link in UI to clear all (non-protected) logs
+  - Add example of submitting logs from Sidekiq jobs
+  - Show Protect/Share links on all tabs
+  - Render hashes provided via Logster.add_to_env
