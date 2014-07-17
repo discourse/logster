@@ -4,7 +4,7 @@ require 'minitest/autorun'
 require 'minitest/pride'
 require 'logster'
 require 'redis'
-
+require 'logster/base_store'
 
 class Logster::TestStore < Logster::BaseStore
   attr_accessor :reported
@@ -14,5 +14,9 @@ class Logster::TestStore < Logster::BaseStore
 
   def save(message)
     @reported << message
+  end
+
+  def count
+    @reported.count
   end
 end
