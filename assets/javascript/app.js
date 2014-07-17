@@ -92,10 +92,6 @@ App.Message = Ember.Object.extend({
     return message;
   }.property("message", "expanded"),
 
-  version: function() {
-    return "Latest";
-  }.property(),
-
   envDebug: function() {
     var env = this.get("env");
     if (env) {

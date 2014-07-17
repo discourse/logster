@@ -36,6 +36,9 @@ module Logster
       end
 
       if backtrace
+        if backtrace.respond_to? :join
+          backtrace = backtrace.join("\n")
+        end
         message.backtrace = backtrace
       else
         message.backtrace = caller.join("\n")
