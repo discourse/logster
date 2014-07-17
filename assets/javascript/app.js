@@ -45,7 +45,7 @@ App.preloadOrAjax = function(url, settings) {
   }
 };
 
-App.Router.map(function(){
+App.Router.map(function() {
   this.route("index", { path: "/" });
   this.route("show", { path: "/show/:id" });
 });
@@ -67,7 +67,7 @@ App.Message = Ember.Object.extend({
     return App.ajax("/unprotect/" + this.get('key'), { type: "DELETE" });
   },
 
-  hasMore: function(){
+  hasMore: function() {
     var message = this.get("message");
     var expanded = this.get("expanded");
 
@@ -82,32 +82,41 @@ App.Message = Ember.Object.extend({
     return Logger.rootPath + (this.get('protected') ? '/unprotect/' : '/protect/') + this.get('key');
   }.property("key"),
 
-  displayMessage: function(){
+  displayMessage: function() {
     var message = this.get("message");
     var expanded = this.get("expanded");
 
-    if(!expanded && message.length > this.MAX_LEN){
-      message = message.substr(0,this.MAX_LEN);
+    if (!expanded && message.length > this.MAX_LEN) {
+      message = message.substr(0, this.MAX_LEN);
     }
     return message;
-  }.property("message","expanded"),
+  }.property("message", "expanded"),
 
-  envDebug: function(){
+  version: function() {
+    return "Latest";
+  }.property(),
+
+  envDebug: function() {
     var env = this.get("env");
-    if(env){
-      var buffer = [];
-      _.each(env, function(v,k){
-        if(k !== "params"){
+    if (env) {
+      var buffer = [],
+          hashes = [];
+      _.each(env, function(v, k) {
+        if (typeof v === "object") {
+          hashes.push(k);
+        } else {
           buffer.push(k + ": " + v);
         }
       });
 
-      buffer.push("");
-      if(_.size(env.params) > 0){
-        buffer.push("Params:");
-        buffer.push("");
-        _.each(env.params, function(v,k){
-          buffer.push("  " + k + ": " + v);
+      if (_.size(hashes) > 0) {
+        _.each(hashes, function(k1) {
+          v1 = env[k1];
+          buffer.push("");
+          buffer.push(k1 + ":");
+          _.each(v1, function(v2, k2) {
+            buffer.push("  " + k2 + ": " + v2);
+          })
         });
       }
       return buffer.join("\n");
@@ -116,7 +125,7 @@ App.Message = Ember.Object.extend({
   }.property("env"),
 
   rowClass: function() {
-    switch(this.get("severity")){
+    switch (this.get("severity")) {
       case 0:
         return "debug";
       case 1:
@@ -130,8 +139,8 @@ App.Message = Ember.Object.extend({
     }
   }.property("severity"),
 
-  glyph: function(){
-    switch(this.get("severity")){
+  glyph: function() {
+    switch (this.get("severity")) {
       case 0:
         return "";
       case 1:
@@ -151,7 +160,7 @@ App.MessageCollection = Em.Object.extend({
   messages: Em.A(),
   total: 0,
 
-  load: function(opts){
+  load: function(opts) {
     var self = this;
     opts = opts || {};
 
