@@ -14,7 +14,7 @@ class TestReporter < Minitest::Test
     status, = reporter.call(env)
 
     assert_equal(200, status)
-    assert_equal(1, Logster.store.reported.length)
+    assert_equal(1, Logster.store.count)
   end
 
 end

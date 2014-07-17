@@ -1,49 +1,18 @@
 require 'json'
+require 'logster/base_store'
 
 module Logster
-  class RedisStore
+  class RedisStore < BaseStore
 
-    attr_accessor :level, :redis, :max_backlog,
-                  :dedup, :max_retention, :skip_empty,
-                  :ignore
+    attr_accessor :redis, :max_backlog
 
     def initialize(redis = nil)
+      super()
       @redis = redis || Redis.new
       @max_backlog = 1000
-      @dedup = false
-      @max_retention = 60 * 60 * 24 * 7
-      @skip_empty = true
     end
 
-
-    def report(severity, progname, message, opts = {})
-      return if (!message || (String === message && message.empty?)) && skip_empty
-      return if level && severity < level
-      return if @ignore && @ignore.any?{|pattern| message =~ pattern}
-
-      message = Logster::Message.new(severity, progname, message, opts[:timestamp])
-
-      env = opts[:env]
-      backtrace = opts[:backtrace]
-
-      if env
-        if env[:backtrace]
-          # Special - passing backtrace through env
-          backtrace = env.delete(:backtrace)
-        end
-
-        message.populate_from_env(env)
-      end
-
-      if backtrace
-        if backtrace.respond_to? :join
-          backtrace = backtrace.join("\n")
-        end
-        message.backtrace = backtrace
-      else
-        message.backtrace = caller.join("\n")
-      end
-
+    def save(message)
       # multi for integrity
       @redis.multi do
         @redis.hset(hash_key, message.key, message.to_json)
@@ -51,14 +20,12 @@ module Logster
       end
 
       # TODO make it atomic
-      if @redis.llen(list_key) > @max_backlog
+      if @redis.llen(list_key) > max_backlog
         removed_key = @redis.lpop(list_key)
         if removed_key && !@redis.sismember(protected_key, removed_key)
           @redis.hdel(hash_key, removed_key)
         end
       end
-
-      message
     end
 
     def count

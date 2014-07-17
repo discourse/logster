@@ -6,15 +6,13 @@ require 'logster'
 require 'redis'
 
 
-class Logster::TestStore
+class Logster::TestStore < Logster::BaseStore
   attr_accessor :reported
   def initialize
     @reported = []
   end
 
-  def report(severity, progname, message, opts = nil)
-    message = Logster::Message.new(severity, progname, message)
-
+  def save(message)
     @reported << message
   end
 end
