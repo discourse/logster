@@ -13,6 +13,11 @@ class TestRedisStore < Minitest::Test
     @store.clear_all
   end
 
+  def test_report
+    # TODO we need behavior tests for report()
+    # even better would be to refactor the method to a superclass and have it call save()
+  end
+
   def test_latest
     @store.report(Logger::WARN, "test", "IGNORE")
     @store.report(Logger::WARN, "test", "This is a warning")

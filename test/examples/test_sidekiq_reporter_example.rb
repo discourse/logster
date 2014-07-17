@@ -30,12 +30,16 @@ class TestSidekiqReporter < MiniTest::Test
 
     report = @store.latest[0]
 
+    # Message is right format
     assert_equal("Job exception: TypeError\n", report.message)
 
+    # A backtrace is joined()
     assert_equal(trace.join("\n"), report.backtrace)
+    # The backtrace is deleted from the env
     assert_nil(report.env['backtrace'])
     assert_nil(report.env[:backtrace])
 
+    # The env is in the report
     assert_equal("Test", report.env['code'])
     assert_equal(20, report.env['params']['article_id'])
   end
