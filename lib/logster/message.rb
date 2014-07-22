@@ -92,6 +92,21 @@ module Logster
       self.key <=> other.key
     end
 
+    def =~(pattern)
+      case pattern
+        when Hash
+          IgnorePattern.new(nil, pattern).matches? self
+        when String
+          IgnorePattern.new(pattern, nil).matches? self
+        when Regexp
+          IgnorePattern.new(pattern, nil).matches? self
+        when IgnorePattern
+          pattern.matches? self
+        else
+          nil
+      end
+    end
+
     protected
 
     def get_timestamp

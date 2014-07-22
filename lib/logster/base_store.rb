@@ -41,7 +41,6 @@ module Logster
     def report(severity, progname, msg, opts = {})
       return if (!msg || (String === msg && msg.empty?)) && skip_empty
       return if level && severity < level
-      return if ignore && ignore.any? { |pattern| msg =~ pattern}
 
       message = Logster::Message.new(severity, progname, msg, opts[:timestamp])
 
@@ -65,6 +64,8 @@ module Logster
       else
         message.backtrace = caller.join("\n")
       end
+
+      return if ignore && ignore.any? { |pattern| message =~ pattern}
 
       save message
 
