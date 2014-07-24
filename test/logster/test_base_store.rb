@@ -1,5 +1,6 @@
 require_relative '../test_helper'
 require 'logster/base_store'
+require 'logster/ignore_pattern'
 
 class TestBaseStore < Minitest::Test
 
@@ -48,6 +49,57 @@ class TestBaseStore < Minitest::Test
     @store.report(Logger::WARN, "test", "B")
 
     assert_equal(4, @store.count)
+  end
+
+  def test_ignore_pattern_basic
+    @store.ignore = [
+        Logster::IgnorePattern.new(nil, {username: 'CausingErrors'})
+    ]
+    @store.report(Logger::WARN, "test", "Foobar") #
+    @store.report(Logger::WARN, "test", "Foobar", { env: { username: 'CausingErrors' }})
+    @store.report(Logger::WARN, "test", "Something Else", { env: { username: 'CausingErrors' }})
+    @store.report(Logger::WARN, "test", "Something Else", { env: { 'username' => 'CausingErrors' }})
+    @store.report(Logger::WARN, "test", "Something Else", { env: { username: 'GoodPerson' }}) #
+    @store.report(Logger::WARN, "test", "Can't verify CSRF token authenticity") #
+
+    assert_equal(3, @store.count)
+  end
+
+  def test_ignore_pattern_real
+    @store.ignore = [
+        /^ActionController::RoutingError \(No route matches/,
+        Logster::IgnorePattern.new("Can't verify CSRF token authenticity", { REQUEST_URI: /\/trackback\/$/ })
+    ]
+    # blocked
+    @store.report(Logger::WARN, "whatever", "Can't verify CSRF token authenticity", {
+        env: {
+            HTTP_HOST: 'meta.discourse.org',
+            REQUEST_URI: '/t/use-more-standard-smiley-codes-instead-of-smile/1822/trackback/',
+            REQUEST_METHOD: 'POST',
+            HTTP_USER_AGENT: 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)',
+            params: {
+                title: 'Something Spammy',
+                url: 'http://spam.example.net/whatever/spam.html',
+                excerpt: 'http://spam.example.com/pdf/blahblah.html free viagra',
+                blog_name: 'get free spam for cheap'
+            }
+        }
+    })
+    # logged
+    @store.report(Logger::WARN, "whatever", "Can't verify CSRF token authenticity", {
+        env: {
+            HTTP_HOST: 'meta.discourse.org',
+            REQUEST_URI: '/session',
+            REQUEST_METHOD: 'POST',
+            HTTP_USER_AGENT: 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36',
+            params: {
+                username: 'user',
+                password: 'password',
+                form_authenticity_token: 'incorrect'
+            }
+        }
+    })
+    assert_equal(1, @store.count)
   end
 
   def test_timestamp

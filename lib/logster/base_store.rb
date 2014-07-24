@@ -38,12 +38,11 @@ module Logster
       not_implemented
     end
 
-    def report(severity, progname, message, opts = {})
-      return if (!message || (String === message && message.empty?)) && skip_empty
+    def report(severity, progname, msg, opts = {})
+      return if (!msg || (String === msg && msg.empty?)) && skip_empty
       return if level && severity < level
-      return if ignore && ignore.any? { |pattern| message =~ pattern}
 
-      message = Logster::Message.new(severity, progname, message, opts[:timestamp])
+      message = Logster::Message.new(severity, progname, msg, opts[:timestamp])
 
       env = opts[:env]
       backtrace = opts[:backtrace]
@@ -65,6 +64,8 @@ module Logster
       else
         message.backtrace = caller.join("\n")
       end
+
+      return if ignore && ignore.any? { |pattern| message =~ pattern}
 
       save message
 
