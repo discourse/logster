@@ -1,9 +1,18 @@
-(function(){
+(function() {
   var lastReport = null;
+
+  if (!window.Logster) {
+    window.Logster = {
+      enabled: true
+    };
+  }
 
   window.onerror = function(message, url, line, column, errorObj) {
     // never bother reporting more than once a minute
-    if(lastReport && new Date() - lastReport < 1000 * 60) {
+    if (lastReport && new Date() - lastReport < 1000 * 60) {
+      return;
+    }
+    if (!Logster.enabled) {
       return;
     }
 
@@ -17,11 +26,11 @@
       window_location: window.location && (window.location + "")
     };
 
-    if(errorObj && errorObj.stack) {
+    if (errorObj && errorObj.stack) {
       err.stacktrace = errorObj.stack;
     }
 
-    $.ajax("<%= Logster.config.subdirectory || '/logs' %>" + "/report_js_error",{
+    $.ajax("<%= Logster.config.subdirectory || '/logs' %>" + "/report_js_error", {
       data: err,
       type: "POST",
       cache: false
