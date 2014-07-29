@@ -308,9 +308,11 @@ App.IndexController = Em.Controller.extend({
 
     clear: function() {
       var self = this;
-      App.ajax("/clear", { type: "POST" }).success(function() {
-        self.get('model').reload();
-      });
+      if (confirm("Clear the logs?\n\nCancel = No, OK = Clear")) {
+        App.ajax("/clear", { type: "POST" }).success(function() {
+          self.get('model').reload();
+        });
+      }
     },
 
     protect: function(message) {
