@@ -2,6 +2,7 @@ require 'logster/logger'
 require 'logster/message'
 require 'logster/configuration'
 require 'logster/web'
+require 'logster/ignore_pattern'
 
 module Logster
   def self.logger=(logger)
