@@ -80,3 +80,5 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   - Add example of submitting logs from Sidekiq jobs
   - Show Protect/Share links on all tabs
   - Render hashes provided via Logster.add_to_env
+- 2014-08-05: Version 0.1.3
+  - Automatically include ignore filter
