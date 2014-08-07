@@ -57,12 +57,13 @@ class TestBaseStore < Minitest::Test
     ]
     @store.report(Logger::WARN, "test", "Foobar") #
     @store.report(Logger::WARN, "test", "Foobar", { env: { username: 'CausingErrors' }})
+    @store.report(Logger::WARN, "test", "Foobar", env: nil)
     @store.report(Logger::WARN, "test", "Something Else", { env: { username: 'CausingErrors' }})
     @store.report(Logger::WARN, "test", "Something Else", { env: { 'username' => 'CausingErrors' }})
     @store.report(Logger::WARN, "test", "Something Else", { env: { username: 'GoodPerson' }}) #
     @store.report(Logger::WARN, "test", "Can't verify CSRF token authenticity") #
 
-    assert_equal(3, @store.count)
+    assert_equal(4, @store.count)
   end
 
   def test_ignore_pattern_real

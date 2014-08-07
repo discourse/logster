@@ -29,17 +29,21 @@ module Logster
     private
 
     def compare(message, pattern)
+      return false unless message && pattern
+
       case pattern
         when Regexp
-          message =~ pattern
+          message.to_s =~ pattern
         when String
-          message.downcase =~ Regexp.new(pattern.downcase, Regexp::IGNORECASE)
+          message.to_s.downcase =~ Regexp.new(pattern.downcase, Regexp::IGNORECASE)
         when Hash
-          compare_hash(message, pattern)
-        when NilClass
-          true
+          if Hash === message
+            compare_hash(message, pattern)
+          else
+            false
+          end
         else
-          true
+          false
       end
     end
 
@@ -54,7 +58,7 @@ module Logster
     def get_indifferent(hash, key)
       return hash[key] if hash[key]
       return hash[key.to_s] if hash[key.to_s]
-      return hash[key.to_sym] if hash[key.to_sym]
+      # no key.to_sym please, memory leak in Ruby < 2.2
       nil
     end
   end

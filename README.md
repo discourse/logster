@@ -82,3 +82,5 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   - Render hashes provided via Logster.add_to_env
 - 2014-08-05: Version 0.1.3
   - Automatically include ignore filter
+- 2014-08-08: Version 0.1.4
+  - Fix crash in ignore filter
