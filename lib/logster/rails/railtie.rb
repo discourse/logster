@@ -31,7 +31,13 @@ module Logster::Rails
 
     if Logster::Logger === Rails.logger
       app.middleware.insert_before ActionDispatch::ShowExceptions, Logster::Middleware::Reporter
-      app.middleware.insert_before ActionDispatch::DebugExceptions, Logster::Middleware::DebugExceptions, Rails.application
+
+      if Rails::VERSION::MAJOR == 3
+        app.middleware.insert_before ActionDispatch::DebugExceptions, Logster::Middleware::DebugExceptions
+      else
+        app.middleware.insert_before ActionDispatch::DebugExceptions, Logster::Middleware::DebugExceptions, Rails.application
+      end
+
       app.middleware.delete ActionDispatch::DebugExceptions
       app.config.colorize_logging = false
     end
