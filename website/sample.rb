@@ -2,7 +2,6 @@ require 'redis'
 require 'logster'
 require 'logster/middleware/reporter'
 require 'logster/middleware/viewer'
-require 'logster/redis_store'
 require 'json'
 
 require 'sinatra'

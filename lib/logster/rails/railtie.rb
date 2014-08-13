@@ -7,22 +7,17 @@ module Logster::Rails
   def self.set_logger(config)
     return unless Rails.env.development? || Rails.env.production?
 
-    if defined?(Redis)
-      require 'logster/middleware/debug_exceptions'
-      require 'logster/middleware/reporter'
-      require 'logster/redis_store'
+    require 'logster/middleware/debug_exceptions'
+    require 'logster/middleware/reporter'
 
-      store = Logster.store ||= Logster::RedisStore.new
-      store.level = Logger::Severity::WARN if Rails.env.production?
+    store = Logster.store ||= Logster::RedisStore.new
+    store.level = Logger::Severity::WARN if Rails.env.production?
 
-      logger = Logster::Logger.new(store)
-      logger.chain(::Rails.logger)
-      logger.level = ::Rails.logger.level
+    logger = Logster::Logger.new(store)
+    logger.chain(::Rails.logger)
+    logger.level = ::Rails.logger.level
 
-      Logster.logger = ::Rails.logger = config.logger = logger
-    else
-      Rails.logger.warn "Not loading logster, Redis missing"
-    end
+    Logster.logger = ::Rails.logger = config.logger = logger
   end
 
 
@@ -46,9 +41,6 @@ module Logster::Rails
   class Railtie < ::Rails::Railtie
 
     config.before_initialize do
-      Logster.config.authorize_callback = lambda {|env|
-        Rails.env == "development"
-      }
       Logster::Rails.set_logger(config)
     end
 

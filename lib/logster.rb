@@ -4,6 +4,13 @@ require 'logster/configuration'
 require 'logster/web'
 require 'logster/ignore_pattern'
 
+if defined? Redis
+  require 'logster/redis_store'
+else
+  STDERR.puts "ERROR: Redis is not loaded, ensure redis gem is required before logster"
+  exit
+end
+
 module Logster
   def self.logger=(logger)
     @logger = logger
@@ -36,7 +43,6 @@ module Logster
 end
 
 Logster.config.current_context = lambda{ |env, &block| block.call }
-Logster.config.authorize_callback = lambda{ |env| true }
 
 if defined?(::Rails) && ::Rails::VERSION::MAJOR.to_i >= 3
   require 'logster/rails/railtie'

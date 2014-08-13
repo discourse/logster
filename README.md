@@ -17,18 +17,16 @@ And then execute:
 
     $ bundle
 
-Make Logster available in your development environment by adding the following to your routes.rb:
+Make logster web available add the following to your `routes.rb`:
 
 ```
-if Rails.env == "development"
-  mount Logster::Web => "/logs"
-end
+mount Logster::Web => "/logs", lambda { |req| req.session["admin"] }
 ```
 
-Logster will be available in your Rails app in **development** mode only. To wire up in production you will need to set
+Out of the box, logster will use the default redis connection, to customise, in `config/application.rb`
 
 ```
-Logster.config.authorize_callback = lambda{|env| your_own_can_see_logs? }
+Logster.store = Logster.RedisStore.new(redis_connection)
 ```
 
 ## Usage
@@ -84,3 +82,6 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   - Automatically include ignore filter
 - 2014-08-08: Version 0.1.4
   - Fix crash in ignore filter
+- 2014-08-13: Version 0.1.5
+  - Simplify install process
+  - Fix crash on 404 in /logs dir

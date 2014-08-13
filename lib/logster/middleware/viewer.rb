@@ -29,11 +29,6 @@ module Logster
 
         if resource = resolve_path(path)
 
-          # easier to debug, call per line
-          unless Logster.config.authorize_callback.call(env)
-            return @app.call(env)
-          end
-
           if resource =~ /\.js$|\.handlebars$|\.css$/
             env[PATH_INFO] = resource
             # accl redirect is going to be trouble, ensure its bypassed

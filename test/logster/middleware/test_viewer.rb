@@ -17,7 +17,6 @@ class TestViewer < Minitest::Test
 
   def teardown
     Logster.config.subdirectory = nil
-    Logster.config.authorize_callback = nil
     Logster.store = nil
   end
 
@@ -26,19 +25,6 @@ class TestViewer < Minitest::Test
                   Logster.config.subdirectory = "/logsie"
                   Logster::Middleware::Viewer.new(nil)
                 end
-  end
-
-  def test_authorize_callback
-    Logster.config.authorize_callback = lambda{ |env|
-      env["authorized"]
-    }
-
-    viewer = Logster::Middleware::Viewer.new(BrokenApp.new)
-    status, _  = viewer.call({"PATH_INFO" => "/logs"})
-    assert_equal(500, status)
-
-    status, _  = viewer.call({"PATH_INFO" => "/logs", "authorized" => true})
-    assert_equal(200, status)
   end
 
   def test_path_resolution
@@ -51,10 +37,6 @@ class TestViewer < Minitest::Test
   end
 
   def test_assets
-    Logster.config.authorize_callback = lambda{ |env|
-      true
-    }
-
     env = {}
     env["PATH_INFO"] = "/logsie/javascript/external/jquery.min.js"
     env["REQUEST_METHOD"] = "GET"

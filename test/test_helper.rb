@@ -2,8 +2,8 @@ require 'minitest'
 require 'minitest/unit'
 require 'minitest/autorun'
 require 'minitest/pride'
-require 'logster'
 require 'redis'
+require 'logster'
 require 'logster/base_store'
 
 class Logster::TestStore < Logster::BaseStore
