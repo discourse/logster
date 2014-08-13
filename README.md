@@ -82,6 +82,8 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   - Automatically include ignore filter
 - 2014-08-08: Version 0.1.4
   - Fix crash in ignore filter
-- 2014-08-13: Version 0.1.5
+- 2014-08-10: Version 0.1.5
+  - Fix crash in Rails 3
+- 2014-08-13: Version 0.1.6
   - Simplify install process
   - Fix crash on 404 in /logs dir
