@@ -62,8 +62,6 @@ module Logster
             end
 
           elsif resource =~ /\/clear$/
-            puts env
-            puts env[REQUEST_METHOD]
             if env[REQUEST_METHOD] != "POST"
               return [405, {}, ["GET not allowed for /clear"]]
             end
