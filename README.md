@@ -23,6 +23,17 @@ Make logster web available add the following to your `routes.rb`:
 mount Logster::Web => "/logs", lambda { |req| req.session["admin"] }
 ```
 
+### mount using warden (devise)
+```
+  admin_constraint = lambda do |request|
+    request.env['warden'].authenticate? and request.env['warden'].user.admin?
+  end
+
+  constraints admin_constraint do
+    mount Logster::Web, at: "/logs"
+  end
+```
+
 Out of the box, logster will use the default redis connection, to customise, in `config/application.rb`
 
 ```
@@ -34,6 +45,7 @@ Logster.store = Logster:RedisStore.new(redis_connection)
 The concept is to have an embedded "exception reporting service" admins can view on live sites.
 
 Logs will be visible by default at `http://sitename.com/logs`
+
 
 ## Thanks
 
