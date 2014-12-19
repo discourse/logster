@@ -37,7 +37,7 @@ mount Logster::Web => "/logs", lambda { |req| req.session["admin"] }
 Out of the box, logster will use the default redis connection, to customise, in `config/application.rb`
 
 ```
-Logster.store = Logster:RedisStore.new(redis_connection)
+Logster.store = Logster::RedisStore.new(redis_connection)
 ```
 
 ## Usage
