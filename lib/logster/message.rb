@@ -74,7 +74,7 @@ module Logster
             if k.include? "password"
               params[k] = "[redacted]"
             else
-              params[k] = v[0..100]
+              params[k] = v && v[0..100]
             end
           end
           scrubbed["params"] = params if params.length > 0
