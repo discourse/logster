@@ -99,3 +99,5 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 - 2014-08-13: Version 0.1.6
   - Simplify install process
   - Fix crash on 404 in /logs dir
+- 2015-02-27: Version 0.1.7
+  - Fix invalid request on ?test
