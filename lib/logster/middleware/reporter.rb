@@ -3,6 +3,7 @@ module Logster
     class Reporter
 
       PATH_INFO = "PATH_INFO".freeze
+      SCRIPT_NAME = "SCRIPT_NAME".freeze
 
       def initialize(app, config={})
         @app = app
@@ -12,7 +13,14 @@ module Logster
       def call(env)
         Thread.current[Logster::Logger::LOGSTER_ENV] = env
 
+
         path = env[PATH_INFO]
+        script_name = env[SCRIPT_NAME]
+
+        if script_name && script_name.length > 0
+          path = script_name + path
+        end
+
         if path == @error_path
           Logster.config.current_context.call(env) do
             report_js_error(env)
