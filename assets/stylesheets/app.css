@@ -87,8 +87,6 @@ tr.show-more {
   font-size: 12px;
 }
 
-
-
 #bottom-panel{
   position: fixed;
   bottom: 0;
@@ -102,8 +100,26 @@ tr.show-more {
 }
 
 #bottom-panel.full {
-    height: 90%;
-    border-top: 2px solid black;
+  height: 90%;
+  position: static;
+  background-color: inherit;
+}
+
+#bottom-panel.full .tabs {
+  display: none;
+}
+
+#bottom-panel.full .message-info {
+  position: static;
+}
+
+#bottom-panel.full .message-info .content {
+  display: block;
+  position: static;
+}
+
+#bottom-panel.full .save, #bottom-panel.full .share {
+  bottom: 10px;
 }
 
 .share {

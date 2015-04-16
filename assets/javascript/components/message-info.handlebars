@@ -1,13 +1,22 @@
 <div class="message-info">
   {{#tabbed-section}}
     {{#tab-contents name="info" hint="show info" currentMessage=currentMessage}}
+      {{#if showTitle}}
+      <h3>Message</h3>
+      {{/if}}
       <pre>{{currentMessage.message}}</pre>
     {{/tab-contents}}
     {{#tab-contents name="backtrace" hint="show backtrace" currentMessage=currentMessage}}
+      {{#if showTitle}}
+      <h3>Backtrace</h3>
+      {{/if}}
         <pre>{{currentMessage.backtrace}}</pre>
     {{/tab-contents}}
     {{#if currentMessage.env}}
       {{#tab-contents name="env" hint="show environment" currentMessage=currentMessage}}
+          {{#if showTitle}}
+          <h3>Env</h3>
+          {{/if}}
           <pre>{{currentMessage.envDebug}}</pre>
       {{/tab-contents}}
     {{/if}}
