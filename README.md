@@ -20,7 +20,9 @@ And then execute:
 Make logster web available add the following to your `routes.rb`:
 
 ```
-mount Logster::Web => "/logs", lambda { |req| req.session["admin"] }
+constraints lambda { |req| req.session["admin"] } do
+  mount Logster::Web => "/logs"
+end
 ```
 
 ### mount using warden (devise)
