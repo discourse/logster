@@ -106,3 +106,5 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 - 2015-04-16: Version 0.8.0
   - Improve formatting of /show page
   - Big version bump cause it is quite stable
+- 2015-05-01: Version 0.8.1
+  - Don't crash out logging routine if redis is down or stderr is closed

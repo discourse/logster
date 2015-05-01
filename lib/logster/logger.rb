@@ -27,7 +27,12 @@ module Logster
         # micro optimise for logging
         while i < @chained.length
           # TODO double yielding blocks
-          @chained[i].add(severity, message, progname, &block)
+          begin
+            @chained[i].add(severity, message, progname, &block)
+          rescue => e
+            # don't blow up if STDERR is somehow closed
+            STDERR.puts "Failed to report message to chained logger #{e}" rescue nil
+          end
           i += 1
         end
       end
@@ -48,6 +53,9 @@ module Logster
         env: Thread.current[LOGSTER_ENV]
       })
 
+    rescue => e
+      # don't blow up if STDERR is somehow closed
+      STDERR.puts "Failed to report error: #{e} #{severity} #{message} #{progname}" rescue nil
     end
   end
 end
