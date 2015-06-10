@@ -10,6 +10,8 @@ module Logster
       HTTP_REFERER
       HTTP_X_FORWARDED_FOR
       HTTP_X_REAL_IP
+      hostname
+      process_id
     }
 
     attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :count, :env, :protected
@@ -56,7 +58,14 @@ module Logster
       msg
     end
 
+    def self.hostname
+      @hostname ||= `hostname`.strip! rescue "<unknown>"
+    end
+
     def populate_from_env(env)
+      env ||= {}
+      env["hostname"] ||= self.class.hostname
+      env["process_id"] ||= Process.pid
       @env = Message.populate_from_env(env)
     end
 

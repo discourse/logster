@@ -108,3 +108,5 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
   - Big version bump cause it is quite stable
 - 2015-05-01: Version 0.8.1
   - Don't crash out logging routine if redis is down or stderr is closed
+- 2015-06-10: Version 0.8.2
+  - Add hostname and process_id to env on all messages

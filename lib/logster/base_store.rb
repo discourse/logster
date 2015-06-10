@@ -44,17 +44,15 @@ module Logster
 
       message = Logster::Message.new(severity, progname, msg, opts[:timestamp])
 
-      env = opts[:env]
+      env = opts[:env] || {}
       backtrace = opts[:backtrace]
 
-      if env
-        if env[:backtrace]
-          # Special - passing backtrace through env
-          backtrace = env.delete(:backtrace)
-        end
-
-        message.populate_from_env(env)
+      if env[:backtrace]
+        # Special - passing backtrace through env
+        backtrace = env.delete(:backtrace)
       end
+
+      message.populate_from_env(env)
 
       if backtrace
         if backtrace.respond_to? :join
