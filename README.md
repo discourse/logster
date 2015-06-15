@@ -25,6 +25,13 @@ constraints lambda { |req| req.session["admin"] } do
 end
 ```
 
+### Note
+If you are seeing error
+'No such middleware to insert before: ActionDispatch::DebugExceptions' after installing logster,
+then you are using a conflicting gem like better_errors.
+
+To avoid this error, make sure logster is added behind those conflicting gems in your Gemfile.
+
 ### mount using warden (devise)
 ```
   admin_constraint = lambda do |request|
