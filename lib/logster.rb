@@ -40,9 +40,14 @@ module Logster
     logster_env = Logster::Message.populate_from_env(env)
     logster_env[key] = value
   end
+
+  def self.set_environments(envs)
+    @config.environments = envs
+  end
 end
 
 Logster.config.current_context = lambda{ |env, &block| block.call }
+Logster.config.environments = [:development, :production]
 
 if defined?(::Rails) && ::Rails::VERSION::MAJOR.to_i >= 3
   require 'logster/rails/railtie'

@@ -5,7 +5,7 @@ module Logster::Rails
   end
 
   def self.set_logger(config)
-    return unless Rails.env.development? || Rails.env.production?
+    return unless Logster.config.environments.include?(Rails.env.to_sym)
 
     require 'logster/middleware/debug_exceptions'
     require 'logster/middleware/reporter'
@@ -22,7 +22,7 @@ module Logster::Rails
 
 
   def self.initialize!(app)
-    return unless Rails.env.development? || Rails.env.production?
+    return unless Logster.config.environments.include?(Rails.env.to_sym)
 
     if Logster::Logger === Rails.logger
       app.middleware.insert_before ActionDispatch::ShowExceptions, Logster::Middleware::Reporter
