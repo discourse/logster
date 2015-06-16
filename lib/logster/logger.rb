@@ -16,6 +16,21 @@ module Logster
       @chained << logger
     end
 
+    def add_to_chained(logger, severity, message, progname, &block)
+      old = nil
+      if logger.respond_to? :skip_store
+        old = logger.skip_store
+        logger.skip_store = @skip_store
+      end
+
+      logger.add(severity, message, progname, &block)
+
+    ensure
+      if logger.respond_to? :skip_store
+        logger.skip_store = old
+      end
+    end
+
 
     def add(severity, message, progname, &block)
       if severity < @level
@@ -28,7 +43,7 @@ module Logster
         while i < @chained.length
           # TODO double yielding blocks
           begin
-            @chained[i].add(severity, message, progname, &block)
+            add_to_chained(@chained[i], severity, message, progname, &block)
           rescue => e
             # don't blow up if STDERR is somehow closed
             STDERR.puts "Failed to report message to chained logger #{e}" rescue nil
