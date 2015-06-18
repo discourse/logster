@@ -25,6 +25,14 @@ constraints lambda { |req| req.session["admin"] } do
 end
 ```
 
+By default, logster will only run in development and production environments.
+
+To run logster in other environments, in `config/application.rb`
+
+```
+Logster.set_environments([:development, :staging, :production])
+```
+
 ### Note
 If you are seeing error
 'No such middleware to insert before: ActionDispatch::DebugExceptions' after installing logster,

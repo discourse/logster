@@ -1,5 +1,5 @@
 module Logster
   class Configuration
-    attr_accessor :subdirectory, :current_context
+    attr_accessor :subdirectory, :current_context, :environments
   end
 end
