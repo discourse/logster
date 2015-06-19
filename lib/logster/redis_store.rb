@@ -28,6 +28,20 @@ module Logster
       end
     end
 
+    def replace_and_bump(message)
+      # TODO make it atomic
+      exists = @redis.hexists(hash_key, message.key)
+      return false unless exists
+
+      @redis.multi do
+        @redis.hset(hash_key, message.key, message.to_json)
+        @redis.lrem(list_key, -1, message.key)
+        @redis.rpush(list_key, message.key)
+      end
+
+      true
+    end
+
     def count
       @redis.llen(list_key)
     end

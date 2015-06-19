@@ -10,7 +10,13 @@ module Logster
       @skip_empty = true
     end
 
+    # Save a new message at the front of the latest list
     def save(message)
+      not_implemented
+    end
+
+    # Modify the saved message to the given one (identified by message.key) and bump it to the top of the latest list
+    def replace_and_bump(message)
       not_implemented
     end
 
@@ -65,9 +71,19 @@ module Logster
 
       return if ignore && ignore.any? { |pattern| message =~ pattern}
 
-      save message
+      recent = latest(limit: 10, severity: [severity])
+      puts recent.length
+      similar = recent.find { |smessage| smessage.is_similar?(message) }
 
-      message
+      if similar
+        similar.count += 1
+
+        replace_and_bump similar
+        similar
+      else
+        save message
+        message
+      end
     end
 
     private

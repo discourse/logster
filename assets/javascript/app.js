@@ -67,6 +67,10 @@ App.Message = Ember.Object.extend({
     return App.ajax("/unprotect/" + this.get('key'), { type: "DELETE" });
   },
 
+  showCount: function() {
+    return this.get('count') > 1;
+  }.property('count'),
+
   hasMore: function() {
     var message = this.get("message");
     var expanded = this.get("expanded");
@@ -91,6 +95,11 @@ App.Message = Ember.Object.extend({
     }
     return message;
   }.property("message", "expanded"),
+
+  updateFromObject: function(other) {
+    // XXX Only updatable property is count right now
+    this.set('count', other.get('count'));
+  },
 
   envDebug: function() {
     var env = this.get("env");
@@ -190,6 +199,13 @@ App.MessageCollection = Em.Object.extend({
           if (opts.before) {
             messages.unshiftObjects(newRows);
           } else {
+            newRows.forEach(function(nmsg) {
+              messages.forEach(function(emsg, idx) {
+                if (emsg.key == nmsg.key) {
+                  messages.removeObject(emsg);
+                }
+              });
+            });
             messages.addObjects(newRows);
           }
         }

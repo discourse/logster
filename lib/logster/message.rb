@@ -69,6 +69,11 @@ module Logster
       @env = Message.populate_from_env(env)
     end
 
+    def is_similar?(other)
+      self.message == other.message &&
+          self.severity == other.severity &&
+          self.backtrace == other.backtrace
+    end
 
     def self.populate_from_env(env)
       env[LOGSTER_ENV] ||= begin
