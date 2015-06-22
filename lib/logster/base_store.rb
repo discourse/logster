@@ -71,9 +71,12 @@ module Logster
 
       return if ignore && ignore.any? { |pattern| message =~ pattern}
 
-      recent = latest(limit: 10, severity: [severity])
-      puts recent.length
-      similar = recent.find { |smessage| smessage.is_similar?(message) }
+      similar = nil
+
+      if Logster.config.allow_grouping
+        recent = latest(limit: 20, severity: [severity])
+        similar = recent.find { |smessage| smessage.is_similar?(message) }
+      end
 
       if similar
         similar.count += 1

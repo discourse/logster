@@ -11,7 +11,7 @@ module Logster
       def initialize(app)
         @app = app
 
-        @logs_path = Logster.config.subdirectory || "/logs"
+        @logs_path = Logster.config.subdirectory
         @path_regex = Regexp.new("^(#{@logs_path}$)|^(#{@logs_path}(/.*))$")
         @store = Logster.store or raise ArgumentError.new("store")
 
