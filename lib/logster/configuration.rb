@@ -14,9 +14,9 @@ module Logster
         @allow_grouping = true
       end
     end
-  end
 
-  def subdirectory
-    @subdirectory || '/logs'
+    def subdirectory
+      @subdirectory || '/logs'
+    end
   end
 end

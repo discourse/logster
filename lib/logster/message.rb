@@ -1,3 +1,5 @@
+require 'digest/sha1'
+
 module Logster
   class Message
     LOGSTER_ENV = "_logster_env".freeze
@@ -69,10 +71,20 @@ module Logster
       @env = Message.populate_from_env(env)
     end
 
+    # in its own method so it can be overridden
+    def grouping_hash
+      return { message: self.message, severity: self.severity, backtrace: self.backtrace }
+    end
+
+    # todo - memoize?
+    def grouping_key
+      gkey = Digest::SHA1.hexdigest JSON.fast_generate grouping_hash
+      puts gkey
+      gkey
+    end
+
     def is_similar?(other)
-      self.message == other.message &&
-          self.severity == other.severity &&
-          self.backtrace == other.backtrace
+      self.grouping_key == other.grouping_key
     end
 
     def self.populate_from_env(env)
