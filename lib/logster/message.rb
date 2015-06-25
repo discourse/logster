@@ -79,7 +79,6 @@ module Logster
     # todo - memoize?
     def grouping_key
       gkey = Digest::SHA1.hexdigest JSON.fast_generate grouping_hash
-      puts gkey
       gkey
     end
 
