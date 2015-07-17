@@ -36,7 +36,7 @@ td.time {
   vertical-align: top;
 }
 .message {
-  font-family: Consolas, mono;
+  font-family: Consolas, Monaco, Ubuntu Mono, monospace;
   font-size: 13px;
   overflow: hidden;
   white-space: nowrap;
