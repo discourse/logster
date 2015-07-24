@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["sam.saffron@gmail.com"]
   spec.summary       = %q{UI for viewing logs in Rack}
   spec.description   = %q{UI for viewing logs in Rack}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/discourse/logster"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject{|f| f.start_with?("bower_components") || f.start_with?("website") || f.start_with?("bin") }
