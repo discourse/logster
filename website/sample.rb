@@ -57,9 +57,12 @@ class SampleLoader
 
   def load_error
     # 2 = Severity.WARN
-    $store.report(2, '', 'Message message messgae', {
+    params = {}
+    params["always_present"] = "some_value_#{rand(3)}"
+    params["key_#{rand(3)}"] = "some_value_#{rand(3)}"
+    $store.report(2, '', "Message message message", {
       backtrace: 'Backtrace backtrace backtrace',
-      env: {something: :foo}
+      env: {something: :foo, random: rand(3), array: [1,2,3], rand_array: [10, 11, rand(3)], params: params}
     })
   end
 end

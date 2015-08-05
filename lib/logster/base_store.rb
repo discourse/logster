@@ -92,6 +92,7 @@ module Logster
 
       if similar
         similar.count += 1
+        similar.merge_similar_message(message)
 
         replace_and_bump similar
         similar

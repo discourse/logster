@@ -50,6 +50,49 @@ App.Router.map(function() {
   this.route("show", { path: "/show/:id" });
 });
 
+function buildArrayString(array) {
+  var buffer = [];
+  _.each(array, function(v) {
+    if (v === null) {
+      buffer.push('null');
+    } else if (Object.prototype.toString.call(v) === '[object Array]') {
+      buffer.push(buildArrayString(v));
+    } else {
+      buffer.push(v.toString());
+    }
+  });
+  return '[' + buffer.join(', ') + ']';
+}
+
+function buildHashString(hash, indent) {
+  if (!hash) return '';
+  if (!indent) indent = "";
+
+  var buffer = [],
+      hashes = [];
+  _.each(hash, function(v, k) {
+    if (v === null) {
+      buffer.push('null');
+    } else if (Object.prototype.toString.call(v) === '[object Array]') {
+      buffer.push(k + ": " + buildArrayString(v));
+    } else if (typeof v === "object") {
+      hashes.push(k);
+    } else {
+      buffer.push(k + ": " + v);
+    }
+  });
+
+  if (_.size(hashes) > 0) {
+    _.each(hashes, function(k1) {
+      var v = hash[k1];
+      buffer.push("");
+      buffer.push(k1 + ":");
+      buffer.push(buildHashString(v, indent + "  "));
+    });
+  }
+  return indent + buffer.join("\n" + indent);
+}
+
 App.Message = Ember.Object.extend({
 
   MAX_LEN: 200,
@@ -102,31 +145,7 @@ App.Message = Ember.Object.extend({
   },
 
   envDebug: function() {
-    var env = this.get("env");
-    if (env) {
-      var buffer = [],
-          hashes = [];
-      _.each(env, function(v, k) {
-        if (typeof v === "object") {
-          hashes.push(k);
-        } else {
-          buffer.push(k + ": " + v);
-        }
-      });
-
-      if (_.size(hashes) > 0) {
-        _.each(hashes, function(k1) {
-          v1 = env[k1];
-          buffer.push("");
-          buffer.push(k1 + ":");
-          _.each(v1, function(v2, k2) {
-            buffer.push("  " + k2 + ": " + v2);
-          })
-        });
-      }
-      return buffer.join("\n");
-    }
-
+    return buildHashString(this.get('env'));
   }.property("env"),
 
   rowClass: function() {
@@ -163,6 +182,7 @@ App.Message = Ember.Object.extend({
 App.MessageCollection = Em.Object.extend({
 
   messages: Em.A(),
+  currentMessage: null,
   total: 0,
 
   load: function(opts) {
@@ -203,6 +223,11 @@ App.MessageCollection = Em.Object.extend({
               messages.forEach(function(emsg, idx) {
                 if (emsg.key == nmsg.key) {
                   messages.removeObject(emsg);
+                  if (self.get('currentMessage') === emsg) {
+                    // TODO would updateFromJson() work here?
+                    self.set('currentMessage', nmsg);
+                    nmsg.set('selected', emsg.get('selected'));
+                  }
                 }
               });
             });
@@ -309,9 +334,16 @@ App.ShowRoute = Em.Route.extend({
 });
 
 App.IndexController = Em.Controller.extend({
+
+  currentMessage: Em.computed.alias('model.currentMessage'),
+
   actions: {
     expandMessage: function(message){
       message.expand();
+    },
+
+    selectMessage: function(message) {
+      this.set('currentMessage', message);
     },
 
     showMoreBefore: function(){
@@ -484,9 +516,9 @@ App.MessageView = Em.View.extend({
 
   classNameBindings: ["context.rowClass", ":message-row", "context.selected:selected"],
 
-  click: function(){
+  click: function() {
     var old = this.get("controller.currentMessage");
-    if(old){
+    if (old) {
       old.set("selected",false);
     }
     this.set("context.selected", true);

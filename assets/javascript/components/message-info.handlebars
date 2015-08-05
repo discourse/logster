@@ -2,7 +2,11 @@
   {{#tabbed-section}}
     {{#tab-contents name="info" hint="show info" currentMessage=currentMessage}}
       {{#if showTitle}}
-      <h3>Message</h3>
+      <h3>Message
+        {{#if currentMessage.showCount}}
+          ({{currentMessage.count}} copies reported)
+        {{/if}}
+      </h3>
       {{/if}}
       <pre>{{currentMessage.message}}</pre>
     {{/tab-contents}}
