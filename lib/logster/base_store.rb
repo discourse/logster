@@ -85,7 +85,7 @@ module Logster
 
       similar = nil
 
-      if Logster.config.allow_grouping || true
+      if Logster.config.allow_grouping
         key = self.similar_key(message)
         similar = get key if key
       end
