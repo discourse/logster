@@ -45,7 +45,7 @@ td.time {
 }
 
 th.severity{
-  width: 30px;
+  width: 35px;
 }
 
 th.time{
@@ -55,17 +55,37 @@ th.time{
 .fatal{
   color: #E00;
 }
+.fatal .count {
+  background-color: #E00;
+}
 
 .error {
   color: #9F6000;
 }
-
-.warn{
-  color: #66000C;
+.error .count {
+  background-color: #9F6000;
 }
 
-.debug{
+.warn {
+  color: #66000C;
+}
+.warn .count {
+  background-color: #66000C;
+}
+
+.debug {
   color: #777;
+}
+.debug .count {
+  background-color: #666;
+}
+
+.count {
+  color: #FFF;
+  border-radius: 3px;
+  padding: 0 4px;
+  float: right;
+  margin-right: 6px;
 }
 
 .action-panel .search input {

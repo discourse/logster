@@ -1,4 +1,8 @@
-<td class="severity">{{{glyph}}}</td>
+<td class="severity">{{{glyph}}}
+{{#if showCount}}
+<span class='count'>{{count}}</span>
+{{/if}}
+</td>
 <td class="message-body">
   <div class="message">
     {{displayMessage}}

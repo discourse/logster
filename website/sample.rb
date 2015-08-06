@@ -1,3 +1,5 @@
+# Run with 'bundle exec rackup'
+
 require 'redis'
 require 'logster'
 require 'logster/middleware/reporter'
@@ -52,14 +54,27 @@ class SampleLoader
       env: message["env"]
     })
   end
+
+  def load_error
+    # 2 = Severity.WARN
+    params = {}
+    params["always_present"] = "some_value_#{rand(3)}"
+    params["key_#{rand(3)}"] = "some_value_#{rand(3)}"
+    $store.report(2, '', "Message message message", {
+      backtrace: 'Backtrace backtrace backtrace',
+      env: {something: :foo, random: rand(3), array: [1,2,3], rand_array: [10, 11, rand(300)], params: params}
+    })
+  end
 end
 
 $loader = SampleLoader.new
 $loader.ensure_samples_loaded
 $loader.load_samples
+Logster.config.allow_grouping = true
 
 class Sample < Sinatra::Base
   use Logster::Middleware::Viewer
+  use Logster::Middleware::Reporter
 
   get '/' do
 
@@ -80,7 +95,8 @@ HTML
   end
 
   get '/report_error' do
-    boom
+    $loader.load_next_sample
+    $loader.load_error
   end
 
 end

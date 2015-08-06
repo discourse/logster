@@ -13,19 +13,39 @@ module Logster
     end
 
     def save(message)
-      # multi for integrity
+      # TODO this whole method should be atomic lol, but it hasn't bitten me yet
       @redis.multi do
         @redis.hset(hash_key, message.key, message.to_json)
+        @redis.hset(grouping_key, message.grouping_key, message.key)
         @redis.rpush(list_key, message.key)
       end
 
-      # TODO make it atomic
       if @redis.llen(list_key) > max_backlog
         removed_key = @redis.lpop(list_key)
         if removed_key && !@redis.sismember(protected_key, removed_key)
-          @redis.hdel(hash_key, removed_key)
+          rmsg = get removed_key
+          @redis.hdel(hash_key, rmsg.key)
+          @redis.hdel(grouping_key, rmsg.grouping_key)
         end
       end
+    end
+
+    def replace_and_bump(message)
+      # TODO make it atomic
+      exists = @redis.hexists(hash_key, message.key)
+      return false unless exists
+
+      @redis.multi do
+        @redis.hset(hash_key, message.key, message.to_json)
+        @redis.lrem(list_key, -1, message.key)
+        @redis.rpush(list_key, message.key)
+      end
+
+      true
+    end
+
+    def similar_key(message)
+      @redis.hget(grouping_key, message.grouping_key)
     end
 
     def count
@@ -108,6 +128,7 @@ module Logster
       @redis.del(list_key)
       @redis.del(protected_key)
       @redis.del(hash_key)
+      @redis.del(grouping_key)
     end
 
     def get(message_key)
@@ -232,6 +253,10 @@ module Logster
 
     def protected_key
       @saved_key ||= "__LOGSTER__SAVED"
+    end
+
+    def grouping_key
+      @grouping_key ||= "__LOGSTER__GMAP"
     end
   end
 end

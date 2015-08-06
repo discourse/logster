@@ -1,7 +1,7 @@
 PATH
   remote: ../
   specs:
-    logster (0.1.1)
+    logster (0.8.3)
 
 GEM
   remote: https://rubygems.org/
@@ -26,3 +26,6 @@ DEPENDENCIES
   puma
   redis
   sinatra
+
+BUNDLED WITH
+   1.10.4

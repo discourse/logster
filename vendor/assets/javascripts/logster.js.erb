@@ -30,7 +30,7 @@
       err.stacktrace = errorObj.stack;
     }
 
-    $.ajax("<%= Logster.config.subdirectory || '/logs' %>" + "/report_js_error", {
+    $.ajax("<%= Logster.config.subdirectory %>" + "/report_js_error", {
       data: err,
       type: "POST",
       cache: false

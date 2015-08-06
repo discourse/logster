@@ -7,7 +7,7 @@ module Logster
 
       def initialize(app, config={})
         @app = app
-        @error_path = (Logster.config.subdirectory || '/logs') + '/report_js_error'
+        @error_path = Logster.config.subdirectory + '/report_js_error'
       end
 
       def call(env)

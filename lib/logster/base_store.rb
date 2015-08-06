@@ -10,30 +10,48 @@ module Logster
       @skip_empty = true
     end
 
+    # Save a new message at the front of the latest list.
     def save(message)
       not_implemented
     end
 
+    # Modify the saved message to the given one (identified by message.key) and bump it to the top of the latest list
+    def replace_and_bump(message)
+      not_implemented
+    end
+
+    # Check if another message with the same grouping_key is already stored.
+    # Returns the similar message's message.key
+    def similar_key(message)
+      not_implemented
+    end
+
+    # The number of messages currently stored.
     def count
       not_implemented
     end
 
+    # Delete all unprotected messages in the store.
     def clear
       not_implemented
     end
 
+    # Delete all messages, including protected messages.
     def clear_all
       not_implemented
     end
 
+    # Get a message by its message_key
     def get(message_key)
       not_implemented
     end
 
+    # Mark a message as protected; i.e. it is not deleted by the #clear method
     def protect(message_key)
       not_implemented
     end
 
+    # Clear the protected mark for a message.
     def unprotect(message_key)
       not_implemented
     end
@@ -65,9 +83,23 @@ module Logster
 
       return if ignore && ignore.any? { |pattern| message =~ pattern}
 
-      save message
+      similar = nil
 
-      message
+      if Logster.config.allow_grouping
+        key = self.similar_key(message)
+        similar = get key if key
+      end
+
+      if similar
+        similar.count += 1
+        similar.merge_similar_message(message)
+
+        replace_and_bump similar
+        similar
+      else
+        save message
+        message
+      end
     end
 
     private

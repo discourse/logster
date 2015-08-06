@@ -46,8 +46,8 @@ module Logster
   end
 end
 
-Logster.config.current_context = lambda{ |env, &block| block.call }
-Logster.config.environments = [:development, :production]
+# check logster/configuration.rb for config options
+# Logster.config.environments << :staging
 
 if defined?(::Rails) && ::Rails::VERSION::MAJOR.to_i >= 3
   require 'logster/rails/railtie'
