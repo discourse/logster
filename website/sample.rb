@@ -62,7 +62,7 @@ class SampleLoader
     params["key_#{rand(3)}"] = "some_value_#{rand(3)}"
     $store.report(2, '', "Message message message", {
       backtrace: 'Backtrace backtrace backtrace',
-      env: {something: :foo, random: rand(3), array: [1,2,3], rand_array: [10, 11, rand(3)], params: params}
+      env: {something: :foo, random: rand(3), array: [1,2,3], rand_array: [10, 11, rand(300)], params: params}
     })
   end
 end
@@ -70,6 +70,7 @@ end
 $loader = SampleLoader.new
 $loader.ensure_samples_loaded
 $loader.load_samples
+Logster.config.allow_grouping = true
 
 class Sample < Sinatra::Base
   use Logster::Middleware::Viewer

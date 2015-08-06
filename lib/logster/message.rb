@@ -1,6 +1,9 @@
 require 'digest/sha1'
 
 module Logster
+
+  MAX_GROUPING_LENGTH = 50
+
   class Message
     LOGSTER_ENV = "_logster_env".freeze
     ALLOWED_ENV = %w{
@@ -162,7 +165,7 @@ module Logster
         self_value
       elsif self_value.is_a?(Array) && !other_value.is_a?(Array)
         # Already have grouped data, so append to array (it's actually a set)
-        self_value << other_value unless self_value.include? other_value
+        self_value << other_value unless self_value.include?(other_value) || self_value.length >= Logster::MAX_GROUPING_LENGTH
         self_value
       elsif !self_value.is_a?(Array)
         if self_value == other_value
@@ -177,7 +180,7 @@ module Logster
         # self = [] and other = [1,2,4] -> make into array of array
         # self = [[1,2,3], [1,2,5]] and other = [1,2,4] -> append to array
         if self_value.length > 0 && self_value[0].is_a?(Array)
-          self_value << other_value unless self_value.include? other_value
+          self_value << other_value unless self_value.include?(other_value) || self_value.length >= Logster::MAX_GROUPING_LENGTH
           self_value
         else
           if self_value == other_value
