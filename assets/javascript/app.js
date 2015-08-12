@@ -125,10 +125,6 @@ App.Message = Ember.Object.extend({
     return Logger.rootPath + "/show/" + this.get('key');
   }.property("key"),
 
-  protectUrl: function() {
-    return Logger.rootPath + (this.get('protected') ? '/unprotect/' : '/protect/') + this.get('key');
-  }.property("key"),
-
   displayMessage: function() {
     var message = this.get("message");
     var expanded = this.get("expanded");
@@ -170,11 +166,11 @@ App.Message = Ember.Object.extend({
       case 1:
         return "";
       case 2:
-        return "x";
+        return "<i class='fa fa-exclamation-circle'></i>";
       case 3:
-        return "!";
+        return "<i class='fa fa-times-circle'></i>";
       case 4:
-        return "!!";
+        return "<i class='fa fa-times-circle'></i>";
     }
   }.property("severity")
 });
@@ -265,7 +261,7 @@ App.MessageCollection = Em.Object.extend({
 
   totalBefore: function() {
     return this.get("total") - this.get("messages").length;
-  }.property("total", "messages.@each"),
+  }.property("total", "messages.[]"),
 
   showMoreBefore: function() {
     var messages = this.get("messages");
@@ -319,6 +315,14 @@ App.IndexRoute = Em.Route.extend({
     });
     controller.set("initialized", true);
     model.reload();
+
+    this.refreshInterval = setInterval(function(){
+      model.loadMore();
+    }, 3000);
+  },
+
+  deactivate: function(){
+    clearInterval(this.refreshInterval);
   }
 });
 
@@ -343,6 +347,12 @@ App.IndexController = Em.Controller.extend({
     },
 
     selectMessage: function(message) {
+      var old = this.get("currentMessage");
+      if (old) {
+        old.set("selected",false);
+      }
+
+      message.set('selected', true);
       this.set('currentMessage', message);
     },
 
@@ -362,16 +372,6 @@ App.IndexController = Em.Controller.extend({
         });
       }
     },
-
-    protect: function(message) {
-      this.get('currentMessage').protect().success(function() {
-        self.transitionToRoute("show", {id: self.get('key')});
-      });
-    },
-
-    unprotect: function(message) {
-      this.get('currentMessage').unprotect();
-    }
   },
 
   filterChanged: function(){
@@ -408,23 +408,8 @@ App.IndexController = Em.Controller.extend({
     }
   }.observes(
       "search"
-    ),
+    )
 
-
-  checkIfAtBottom: function(){
-    if (this.checkedBottom) {
-      return;
-    }
-
-    var $topPanel = $("#top-panel");
-
-    var scrollTop = $topPanel.scrollTop();
-    var height = $topPanel.height();
-    var scrollHeight = $topPanel[0].scrollHeight;
-
-    this.stickToBottom = scrollHeight - 20 < height + scrollTop;
-    this.checkedBottom = true;
-  }
 });
 
 App.ShowController = Em.Controller.extend({
@@ -439,7 +424,8 @@ App.ShowController = Em.Controller.extend({
   }
 });
 
-App.IndexView = Em.View.extend({
+App.PanelResizerComponent = Em.Component.extend({
+  classNames: ['divider'],
   divideView: function(fromTop, win){
     var $win = win || $(window);
     var height = $win.height();
@@ -456,13 +442,10 @@ App.IndexView = Em.View.extend({
 
   didInsertElement: function(){
     var self = this;
-    this.refreshInterval = setInterval(function(){
-      self.get('controller').send("loadMore");
-    }, 3000);
 
     // inspired by http://plugins.jquery.com/misc/textarea.js
     this.topPanel = $("#top-panel");
-    this.divider = $("#divider");
+    this.divider = $(".divider");
     this.bottomPanel = $("#bottom-panel");
 
     var $win = $(window),
@@ -504,46 +487,51 @@ App.IndexView = Em.View.extend({
   },
 
   willDestroyElement: function(){
-    $("#divider").off("mousedown");
-    clearInterval(this.refreshInterval);
+    $(".divider").off("mousedown");
   }
 });
 
-App.MessageView = Em.View.extend({
-  templateName: "message",
+
+App.MessageRowComponent = Em.Component.extend({
 
   tagName: "tr",
 
-  classNameBindings: ["context.rowClass", ":message-row", "context.selected:selected"],
+  classNameBindings: ["model.rowClass", ":message-row", "model.selected:selected"],
 
   click: function() {
-    var old = this.get("controller.currentMessage");
-    if (old) {
-      old.set("selected",false);
-    }
-    this.set("context.selected", true);
-    this.set("controller.currentMessage", this.get("context"));
+    this.sendAction('selectedMessage', this.get('model'));
   },
 
   willInsertElement: function(){
-    this.get("controller").checkIfAtBottom();
+    if (App.MessageRowComponent._checkedBottom) {
+      return;
+    }
+
+    var $topPanel = $("#top-panel");
+
+    var scrollTop = $topPanel.scrollTop();
+    var height = $topPanel.height();
+    var scrollHeight = $topPanel[0].scrollHeight;
+
+    App.MessageRowComponent._stickToBottom = scrollHeight - 20 < height + scrollTop;
+    App.MessageRowComponent._checkedBottom = true;
   },
 
   didInsertElement: function(){
     var self = this;
     var $topPanel = $("#top-panel");
     Em.run.next(function(){
-      self.set("controller.checkedBottom", false);
+      App.MessageRowComponent._checkedBottom = false;
 
-      if (self.get("controller.stickToBottom")){
-        self.set("controller.stickToBottom", false);
+      if (App.MessageRowComponent._stickToBottom){
+        App.MessageRowComponent._stickToBottom = false;
         $topPanel.scrollTop($topPanel[0].scrollHeight - $topPanel.height());
       }
     });
   }
 });
 
-App.ApplicationView = Em.View.extend({
+App.UpdateTimeComponent = Em.Component.extend({
   didInsertElement: function(){
     var updateTimes = function(){
       $('.auto-update-time').each(function(){
@@ -564,13 +552,35 @@ App.ApplicationView = Em.View.extend({
   }
 });
 
-Handlebars.registerHelper('timeAgo', function(prop, options){
-  var timestamp = Ember.Handlebars.get(this, prop, options);
-  var parsed = moment(timestamp);
-  var formatted = "<span data-timestamp='" + timestamp + "' class='auto-update-time' title='" + parsed.format() +  "'>" + parsed.fromNow() + "</span>";
+App.TimeAgoComponent = Ember.Component.extend({
+  tagName: 'span',
+  classNames: 'auto-update-time',
+  attributeBindings: ['data-timestamp', 'title'],
 
-  return new Handlebars.SafeString(formatted);
+  title: function(){
+    return this.get('moment').format();
+  }.property(),
+
+  "data-timestamp": function(){
+    return this.get('timestamp');
+  }.property(),
+
+  moment: function(){
+    return moment(this.get("timestamp"));
+  }.property(),
+
+  fromNow: function(){
+    return this.get("moment").fromNow();
+  }.property().volatile()
 });
+
+// Em.HTMLBars._registerHelper('timeAgo', function(prop, options){
+//   var timestamp = Ember.Handlebars.get(this, prop, options);
+//   var parsed = moment(timestamp);
+//   var formatted = "<span data-timestamp='" + timestamp + "' class='auto-update-time' title='" + parsed.format() +  "'>" + parsed.fromNow() + "</span>";
+//
+//   return new Handlebars.SafeString(formatted);
+// });
 
 App.TabbedSectionComponent = Ember.Component.extend({
   tabs: Em.A(),
@@ -620,6 +630,15 @@ App.TabContentsComponent = Ember.Component.extend({
   },
   willDestroyElement: function() {
     this.invokeParent("removeTab");
+  },
+
+  actions: {
+    protect: function(){
+      this.get('currentMessage').protect();
+    },
+    unprotect: function(){
+      this.get('currentMessage').unprotect();
+    }
   }
 });
 

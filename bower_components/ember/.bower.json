@@ -1,22 +1,22 @@
 {
   "name": "ember",
-  "version": "1.5.1",
+  "version": "1.13.7",
   "main": [
-    "./ember.js"
+    "./ember.debug.js",
+    "./ember-template-compiler.js"
   ],
   "dependencies": {
-    "jquery": ">= 1.7.0 <= 2.1.0",
-    "handlebars": ">= 1.0.0 < 2.0.0"
+    "jquery": ">= 1.7.0 < 2.2.0"
   },
   "homepage": "https://github.com/components/ember",
-  "_release": "1.5.1",
+  "_release": "1.13.7",
   "_resolution": {
     "type": "version",
-    "tag": "1.5.1",
-    "commit": "a99cd4130c00d7b9e2d9292d00162a1c8bd37e7b"
+    "tag": "1.13.7",
+    "commit": "1f138b493a8d21e8a1a62c51013429f740a8839f"
   },
   "_source": "git://github.com/components/ember.git",
-  "_target": "~1.5.1",
+  "_target": "~1.13.7",
   "_originalSource": "ember",
   "_direct": true
 }

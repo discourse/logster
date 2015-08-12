@@ -1,0 +1,6 @@
+{{yield}}
+<ul class="tabs">
+  {{#each tabs as |tab|}}
+  <li><a title="{{unbound tab.hint}}" href="#" class="{{if tab.active 'active'}}" {{action selectTab tab}}>{{unbound tab.name}}</a></li>
+  {{/each}}
+</ul>

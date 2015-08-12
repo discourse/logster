@@ -29,7 +29,7 @@ module Logster
 
         if resource = resolve_path(path)
 
-          if resource =~ /\.js$|\.handlebars$|\.css$/
+          if resource =~ /\.js$|\.handlebars$|\.css$|\.woff$|\.ttf$\.woff2$|\.svg$|\.otf$|\.eot$/
             env[PATH_INFO] = resource
             # accl redirect is going to be trouble, ensure its bypassed
             env['sendfile.type'] = ''
@@ -158,12 +158,12 @@ module Logster
         ember_template("components/#{name}", "components/" << name)
       end
 
-      def handlebars(name)
+      def template(name)
         ember_template("templates/#{name}", name)
       end
 
       def ember_template(location, name)
-        val = File.read("#{@assets_path}/javascript/#{location}.handlebars")
+        val = File.read("#{@assets_path}/javascript/#{location}.hbs")
 <<JS
       <script>
         Ember.TEMPLATES[#{name.inspect}] = Ember.Handlebars.compile(#{val.inspect});
@@ -176,19 +176,22 @@ JS
 <html>
 <head>
   #{css("app.css")}
+  #{css("font-awesome.min.css")}
   #{script("external/moment.min.js")}
   #{script("external/jquery.min.js")}
-  #{script("external/handlebars.min.js")}
   #{script("external/lodash.min.js")}
+  #{script("external/ember-template-compiler.js")}
   #{script("external/ember.min.js", "external/ember.js")}
-  #{handlebars("application")}
-  #{handlebars("index")}
-  #{handlebars("message")}
-  #{handlebars("show")}
+  #{template("application")}
+  #{component("time-ago")}
+  #{component("message-row")}
   #{component("message-info")}
   #{component("tabbed-section")}
   #{component("tab-contents")}
   #{component("tab-link")}
+  #{component("panel-resizer")}
+  #{template("index")}
+  #{template("show")}
   <script>
     window.Logger = {
        rootPath: "#{@logs_path}",

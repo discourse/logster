@@ -1,0 +1,17 @@
+<td class="count">
+{{#if model.showCount}}
+<span>{{model.count}}</span>
+{{/if}}
+</td>
+<td class="severity">{{{model.glyph}}}</td>
+<td class="message-body">
+  <div class="message">
+    {{model.displayMessage}}
+    {{#if model.protected}}
+    <span class='protected'>
+      <i class='fa fa-lock'></i>
+    </span>
+    {{/if}}
+  </div>
+</td>
+<td class="time">{{time-ago timestamp=model.timestamp}}</td>

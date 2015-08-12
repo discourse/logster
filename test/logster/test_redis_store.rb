@@ -92,7 +92,7 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_save_unsave
-    @store.max_backlog = 2
+    @store.max_backlog = 3
     @store.report(Logger::WARN, "test", "A")
     b_message = @store.report(Logger::WARN, "test", "B")
     @store.protect b_message.key
@@ -102,9 +102,11 @@ class TestRedisStore < Minitest::Test
 
     latest = @store.latest
 
-    assert_equal(2, latest.length)
-    assert_equal("C", latest[0].message)
-    assert_equal("D", latest[1].message)
+    assert_equal(3, latest.length)
+    assert_equal("B", latest[0].message)
+    assert_equal("C", latest[1].message)
+    assert_equal(true, latest[1].protected)
+    assert_equal("D", latest[2].message)
 
     # Saved messages still accessible by key
     assert_equal("B", @store.get(b_message.key).message)
@@ -114,10 +116,6 @@ class TestRedisStore < Minitest::Test
     @store.unprotect c_message.key
     assert_equal("C", @store.get(c_message.key).message)
     assert_equal(false, @store.get(c_message.key).protected)
-
-    # Unsave *does* delete message if not recent
-    @store.unprotect b_message.key
-    assert_nil(@store.get(b_message.key))
   end
 
   def test_clear

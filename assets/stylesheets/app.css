@@ -9,7 +9,7 @@ tbody tr {
 }
 
 tbody tr td {
-  border-top: 1px #ddd solid;
+  border-top: 1px #e9e9e9 solid;
   line-height: 25px;
 }
 
@@ -44,48 +44,42 @@ td.time {
   padding-right: 10px;
 }
 
+th.count {
+  width: 20px
+}
+
 th.severity{
-  width: 35px;
+  width: 15px;
 }
 
 th.time{
   width: 90px;
 }
 
-.fatal{
+.fatal .severity .fa{
+  color: #900;
+}
+
+.error .severity .fa {
   color: #E00;
 }
-.fatal .count {
-  background-color: #E00;
+
+.warn .severity .fa {
+  color: #FEB800;
 }
 
-.error {
-  color: #9F6000;
-}
-.error .count {
-  background-color: #9F6000;
-}
-
-.warn {
-  color: #66000C;
-}
-.warn .count {
-  background-color: #66000C;
+.message .protected {
+  float: right;
+  margin-top: 7px;
 }
 
 .debug {
   color: #777;
 }
-.debug .count {
-  background-color: #666;
-}
 
-.count {
-  color: #FFF;
-  border-radius: 3px;
-  padding: 0 4px;
-  float: right;
-  margin-right: 6px;
+.count span {
+  font-size: 11px;
+  font-weight: bold;
 }
 
 .action-panel .search input {
@@ -142,18 +136,13 @@ tr.show-more {
   bottom: 10px;
 }
 
-.share {
+.message-actions {
     position: fixed;
     bottom: 70px;
     right: 10px;
 }
-.save {
-    position: fixed;
-    bottom: 70px;
-    right: 50px;
-}
 
-#divider {
+.divider {
   position: fixed;
   bottom: 310px;
   left: 0;
@@ -166,7 +155,7 @@ tr.show-more {
   z-index: 1;
 }
 
-#divider div {
+.divider div {
   margin: auto;
   width: 24px;
   height: 1px;
@@ -174,15 +163,15 @@ tr.show-more {
   position: relative;
 }
 
-#divider .line-1 {
+.divider .line-1 {
   top: 3px;
 }
 
-#divider .line-2 {
+.divider .line-2 {
   top: 4px;
 }
 
-#divider .line-3 {
+.divider .line-3 {
   top: 5px;
 }
 

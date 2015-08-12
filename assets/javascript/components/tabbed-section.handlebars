@@ -1,6 +1,0 @@
-{{yield}}
-<ul class="tabs">
-  {{#each tab in tabs}}
-    <li><a title="{{unbound tab.hint}}" href="#" {{bind-attr class="tab.active"}} {{action selectTab tab}}>{{unbound tab.name}}</a></li>
-  {{/each}}
-</ul>

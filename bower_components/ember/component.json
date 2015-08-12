@@ -1,13 +1,12 @@
 {
   "name": "ember",
   "repo": "components/ember",
-  "version": "1.5.1",
-  "main": "ember.js",
+  "version": "1.13.7",
+  "main": "ember.debug.js",
   "scripts": [
-    "ember.js"
+    "ember.debug.js"
   ],
   "dependencies": {
-    "component/jquery": ">= 1.7.0 <= 2.1.0",
-    "components/handlebars.js": ">= 1.0.0 < 2.0.0"
+    "components/jquery": ">= 1.7.0 < 2.2.0"
   }
 }

@@ -12,22 +12,17 @@ module Logster
       @max_backlog = 1000
     end
 
+
     def save(message)
-      # TODO this whole method should be atomic lol, but it hasn't bitten me yet
       @redis.multi do
-        @redis.hset(hash_key, message.key, message.to_json)
         @redis.hset(grouping_key, message.grouping_key, message.key)
         @redis.rpush(list_key, message.key)
+        update_message(message)
       end
 
-      if @redis.llen(list_key) > max_backlog
-        removed_key = @redis.lpop(list_key)
-        if removed_key && !@redis.sismember(protected_key, removed_key)
-          rmsg = get removed_key
-          @redis.hdel(hash_key, rmsg.key)
-          @redis.hdel(grouping_key, rmsg.grouping_key)
-        end
-      end
+      trim
+
+      true
     end
 
     def replace_and_bump(message)
@@ -136,37 +131,55 @@ module Logster
       return nil unless json
 
       message = Message.from_json(json)
-      message.protected = @redis.sismember(protected_key, message_key)
+      # message.protected = @redis.sismember(protected_key, message_key)
       message
     end
 
     def protect(message_key)
-      json = @redis.hget(hash_key, message_key)
-      # Message already lost
-      return false unless json
-
-      @redis.sadd(protected_key, message_key)
-
-      true
+      if message = get(message_key)
+        message.protected = true
+        update_message(message)
+      end
     end
 
     def unprotect(message_key)
-      value = @redis.hget(hash_key, message_key)
-      # this is a failure of retention
-      raise "Message already deleted?" unless value
-
-      @redis.srem(protected_key, message_key)
-
-      index = find_message(list_key, message_key)
-      if index == nil
-        # Message fell off list - delete
-        @redis.hdel(hash_key, message_key)
+      if message = get(message_key)
+        message.protected = false
+        update_message(message)
+      else
+        raise "Message already deleted"
       end
-
-      true
     end
 
     protected
+
+    def trim
+      if @redis.llen(list_key) > max_backlog
+        removed_keys = []
+        while removed_key = @redis.lpop(list_key)
+          unless @redis.sismember(protected_key, removed_key)
+            rmsg = get removed_key
+            @redis.hdel(hash_key, rmsg.key)
+            @redis.hdel(grouping_key, rmsg.grouping_key)
+            break
+          else
+            removed_keys << removed_key
+          end
+        end
+        removed_keys.reverse.each do |key|
+          @redis.lpush(list_key, key)
+        end
+      end
+    end
+
+    def update_message(message)
+      @redis.hset(hash_key, message.key, message.to_json)
+      if message.protected
+        @redis.sadd(protected_key, message.key)
+      else
+        @redis.srem(protected_key, message.key)
+      end
+    end
 
     def find_message(list, message_key)
       limit = 50

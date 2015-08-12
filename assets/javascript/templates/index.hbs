@@ -2,6 +2,7 @@
   <table id='log-table'>
     <thead>
       <tr>
+        <th class="count"></th>
         <th class="severity"></th>
         <th class="info">Info</th>
         <th class="time">Time</th>
@@ -9,15 +10,17 @@
     </thead>
     <tbody>
     {{#if model.moreBefore}}
-      <tr {{action showMoreBefore}} class="show-more">
-        <td colspan=3>{{model.totalBefore}} more</td>
+      <tr {{action "showMoreBefore"}} class="show-more">
+        <td colspan=4>{{model.totalBefore}} more</td>
       </tr>
     {{/if}}
-    {{each model.messages itemViewClass="App.MessageView"}}
+    {{#each model.messages as |message|}}
+      {{message-row model=message selectedMessage="selectMessage"}}
+    {{/each}}
     </tbody>
   </table>
 </div>
-<div id="divider"></div>
+{{panel-resizer}}
 <div id="bottom-panel">
   {{message-info currentMessage=currentMessage}}
 
@@ -45,6 +48,6 @@
     <label class="search">
       {{input type="textfield" placeholder="Search" value=search}}
     </label>
-    <a class="clear" href {{action clear}}>Clear logs</a>
+    <a class="clear" href {{action "clear"}}>Clear logs</a>
   </div>
 </div>

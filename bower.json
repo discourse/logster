@@ -16,7 +16,8 @@
     "tests"
   ],
   "dependencies": {
-    "ember": "~1.5.1",
+    "components-font-awesome": "~4.4",
+    "ember": "~1.13.7",
     "lodash": "~2.4.1",
     "moment": "~2.6.0",
     "qunit": "~1.14.0"

@@ -60,6 +60,7 @@ module Logster
       msg.backtrace = parsed["backtrace"]
       msg.env = parsed["env"]
       msg.count = parsed["count"]
+      msg.protected = parsed["protected"]
       msg
     end
 

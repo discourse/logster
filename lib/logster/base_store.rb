@@ -5,7 +5,6 @@ module Logster
     attr_accessor :level, :max_retention, :skip_empty, :ignore
 
     def initialize
-      @dedup = false
       @max_retention = 60 * 60 * 24 * 7
       @skip_empty = true
     end
