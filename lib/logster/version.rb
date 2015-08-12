@@ -1,3 +1,3 @@
 module Logster
-  VERSION = "0.8.4.1.pre"
+  VERSION = "0.8.4.2.pre"
 end
