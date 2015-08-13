@@ -50,6 +50,10 @@ module Logster
       not_implemented
     end
 
+    def delete(message_key)
+      not_implemented
+    end
+
     # Clear the protected mark for a message.
     def unprotect(message_key)
       not_implemented

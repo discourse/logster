@@ -25,6 +25,14 @@ module Logster
       true
     end
 
+    def delete(msg)
+      @redis.multi do
+        @redis.hdel(hash_key, msg.key)
+        @redis.hdel(grouping_key, msg.grouping_key)
+        @redis.lrem(list_key, -1, msg.key)
+      end
+    end
+
     def replace_and_bump(message)
       # TODO make it atomic
       exists = @redis.hexists(hash_key, message.key)
@@ -130,9 +138,7 @@ module Logster
       json = @redis.hget(hash_key, message_key)
       return nil unless json
 
-      message = Message.from_json(json)
-      # message.protected = @redis.sismember(protected_key, message_key)
-      message
+      Message.from_json(json)
     end
 
     def protect(message_key)

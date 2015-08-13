@@ -23,7 +23,7 @@
 </div>
 {{panel-resizer}}
 <div id="bottom-panel">
-  {{message-info currentMessage=currentMessage}}
+  {{message-info currentMessage=currentMessage removeMessage="removeMessage"}}
 
   <div class="action-panel">
     <label class="debug">
@@ -52,6 +52,6 @@
     <label class="search">
       {{input type="textfield" placeholder="Search" value=search}}
     </label>
-    <a class="clear" href {{action "clear"}}>Clear logs</a>
+    <a class="clear btn danger" href {{action "clear"}}><i class='fa fa-trash-o'></i> Clear logs</a>
   </div>
 </div>

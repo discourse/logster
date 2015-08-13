@@ -25,4 +25,19 @@
       {{/tab-contents}}
     {{/if}}
   {{/tabbed-section}}
+
+  {{#if currentMessage}}
+    <div class='message-actions'>
+
+    {{#unless currentMessage.protected}}
+      <button {{action 'remove'}} class="delete btn"><i class='fa fa-trash-o'></i>Delete</button>
+
+      <button {{action 'protect'}} class="protect btn"><i class='fa fa-lock'></i>Protect</button>
+    {{else}}
+      <button {{action 'unprotect'}} class="unprotect btn"><i class='fa fa-unlock'></i>Unprotect</button>
+    {{/unless}}
+      <a href="{{currentMessage.shareUrl}}" class="share btn">Share</a>
+    </div>
+
+  {{/if}}
 </div>

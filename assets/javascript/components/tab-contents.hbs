@@ -1,15 +1,1 @@
 {{yield}}
-{{#if currentMessage}}
-  <div class='message-actions'>
-
-  {{#unless currentMessage.protected}}
-    <i class='fa fa-lock'></i>
-    <a href {{action 'protect'}} class="protect">Protect</a>
-  {{else}}
-    <i class='fa fa-unlock'></i>
-    <a href {{action 'unprotect'}} class="protect">Unprotect</a>
-  {{/unless}}
-    <a href="{{currentMessage.shareUrl}}" class="share">Share</a>
-  </div>
-
-{{/if}}

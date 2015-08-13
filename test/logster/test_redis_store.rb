@@ -13,6 +13,14 @@ class TestRedisStore < Minitest::Test
     @store.clear_all
   end
 
+  def test_delete
+    msg = @store.report(Logger::WARN, "test", "testing")
+    @store.delete(msg)
+    latest = @store.latest
+
+    assert_equal(0,latest.length)
+  end
+
   def test_latest
     @store.report(Logger::WARN, "test", "IGNORE")
     @store.report(Logger::WARN, "test", "This is a warning")

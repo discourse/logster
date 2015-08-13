@@ -145,15 +145,40 @@ tr.show-more {
   bottom: 10px;
 }
 
-.message-actions {
-    position: fixed;
-    bottom: 45px;
-    right: 10px;
+#bottom-panel.full button.delete {
+  display: none;
 }
 
-.message-actions a {
-  z-index: 10000;
-  padding-right: 7px;
+#bottom-panel.full .message-actions {
+  position: fixed;
+  height: 40px;
+  width: 100%;
+  left: 0;
+  bottom: 0;
+  background-color: #eee;
+  border-top: 1px solid #dfdfdf;
+  padding-left: 10px;
+}
+
+#bottom-panel.full .message-actions button {
+  margin-top: 10px;
+}
+
+
+
+.message-actions {
+    position: absolute;
+    bottom: 3px;
+    right: 30px;
+}
+
+.message-actions button {
+  margin-right: 7px;
+}
+
+.message-actions .share {
+  text-decoration: none;
+  color: #333;
 }
 
 .divider {
@@ -224,9 +249,8 @@ tr.show-more {
 }
 
 .action-panel .clear {
-  position: relative;
-  top: -1px;
-  margin-left: 50px;
+  position: absolute;
+  right: 30px;
   vertical-align: middle;
 }
 
@@ -305,4 +329,40 @@ tr.show-more {
 .tabs a.active{
   border-top: 1px solid #f1f1f1;
   background-color: #f1f1f1;
+}
+
+
+.btn {
+  display: inline-block;
+  margin: 0;
+  padding: 2px 12px;
+  font-weight: 500;
+  font-size: 1em;
+  line-height: 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .25s;
+  background-color: #DDD;
+  text-decoration: none;
+  border: none;
+  color: #333;
+  font-weight: normal;
+}
+
+.btn:hover {
+  color: #000;
+  background-color: #ccc;
+}
+
+.btn .fa {
+  margin-right: 7px;
+}
+
+.btn:active {
+  text-shadow: none;
+}
+
+.btn.danger:hover {
+  background-color: #c63c1b;
+  color: #EEE;
 }

@@ -38,6 +38,20 @@ module Logster
           elsif resource.start_with?("/messages.json")
             serve_messages(Rack::Request.new(env))
 
+          elsif resource =~ /\/message\/([0-9a-f]+)$/
+            if env[REQUEST_METHOD] != "DELETE"
+              return [405, {}, ["GET not allowed for /clear"]]
+            end
+
+            key = $1
+            message = Logster.store.get(key)
+            unless message
+              return [404, {}, ["Message not found"]]
+            end
+
+            Logster.store.delete(message)
+            return [301, {"Location" => "#{@logs_path}/"}, []]
+
           elsif resource =~ /\/(un)?protect\/([0-9a-f]+)$/
             off = $1 == "un"
             key = $2

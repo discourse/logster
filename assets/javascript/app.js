@@ -101,6 +101,10 @@ App.Message = Ember.Object.extend({
     this.set("expanded", true);
   },
 
+  "delete": function() {
+    return App.ajax("/message/" + this.get('key'), { type: "DELETE" });
+  },
+
   protect: function() {
     this.set('protected', true);
     return App.ajax("/protect/" + this.get('key'), { type: "PUT" });
@@ -180,6 +184,13 @@ App.MessageCollection = Em.Object.extend({
   messages: Em.A(),
   currentMessage: null,
   total: 0,
+
+  "delete": function(message){
+    message.delete();
+    this.get('messages').removeObject(message);
+    this.set('currentMessage', null);
+    this.set('total', this.get('total')-1);
+  },
 
   load: function(opts) {
     var self = this;
@@ -372,6 +383,11 @@ App.IndexController = Em.Controller.extend({
         });
       }
     },
+
+    removeMessage: function(msg) {
+      var messages = this.get('model');
+      messages.delete(msg);
+    }
   },
 
   filterChanged: function(){
@@ -650,12 +666,18 @@ App.TabContentsComponent = Ember.Component.extend({
     this.invokeParent("removeTab");
   },
 
+});
+
+App.MessageInfoComponent = Ember.Component.extend({
   actions: {
     protect: function(){
       this.get('currentMessage').protect();
     },
     unprotect: function(){
       this.get('currentMessage').unprotect();
+    },
+    "remove": function(){
+      this.sendAction("removeMessage", this.get('currentMessage'));
     }
   }
 });
