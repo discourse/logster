@@ -4,15 +4,15 @@
       <tr>
         <th class="count"></th>
         <th class="severity"></th>
-        <th class="info">Info</th>
+        <th class="info"></th>
         <th class="protected"></th>
-        <th class="time">Time</th>
+        <th class="time"></th>
       </tr>
     </thead>
     <tbody>
     {{#if model.moreBefore}}
       <tr {{action "showMoreBefore"}} class="show-more">
-        <td colspan=5>{{model.totalBefore}} more</td>
+        <td colspan=5>select to see {{model.totalBefore}} more</td>
       </tr>
     {{/if}}
     {{#each model.messages as |message|}}
@@ -52,6 +52,6 @@
     <label class="search">
       {{input type="textfield" placeholder="Search" value=search}}
     </label>
-    <a class="clear btn danger" href {{action "clear"}}><i class='fa fa-trash-o'></i> Clear logs</a>
+    <a class="clear btn danger" href {{action "clear"}}><i class='fa fa-times'></i> Clear logs</a>
   </div>
 </div>

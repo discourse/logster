@@ -186,10 +186,21 @@ App.MessageCollection = Em.Object.extend({
   total: 0,
 
   "delete": function(message){
+    var messages = this.get('messages');
+    var idx = messages.indexOf(message);
     message.delete();
-    this.get('messages').removeObject(message);
-    this.set('currentMessage', null);
+    message.set('selected', false);
     this.set('total', this.get('total')-1);
+    this.get('messages').removeObject(message);
+
+    if (idx > 0) {
+      message = messages[idx-1];
+      message.set('selected', true);
+      this.set('currentMessage', message);
+    } else {
+      this.set('currentMessage', null);
+    }
+
   },
 
   load: function(opts) {
