@@ -19,7 +19,7 @@ module Logster
       process_id
     }
 
-    attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :count, :env, :protected
+    attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :count, :env, :protected, :first_timestamp
 
     def initialize(severity, progname, message, timestamp = nil, key = nil)
       @timestamp = timestamp || get_timestamp
@@ -33,7 +33,7 @@ module Logster
     end
 
     def to_h
-      {
+      h = {
         message: @message,
         progname: @progname,
         severity: @severity,
@@ -44,6 +44,12 @@ module Logster
         env: @env,
         protected: @protected
       }
+
+      if @first_timestamp
+        h[:first_timestamp] = @first_timestamp
+      end
+
+      h
     end
 
     def to_json(opts = nil)
@@ -61,6 +67,7 @@ module Logster
       msg.env = parsed["env"]
       msg.count = parsed["count"]
       msg.protected = parsed["protected"]
+      msg.first_timestamp = parsed["first_timestamp"]
       msg
     end
 
@@ -90,6 +97,8 @@ module Logster
     end
 
     def merge_similar_message(other)
+      self.first_timestamp ||= self.timestamp
+      self.timestamp = [self.timestamp,other.timestamp].max
       other_env = JSON.load JSON.fast_generate other.env
       other_env.keys.each do |env_key|
         self.env[env_key] = Message.env_merge_helper(self.env[env_key], other_env[env_key])
