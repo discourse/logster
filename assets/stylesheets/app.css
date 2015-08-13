@@ -71,11 +71,11 @@ th.protected {
 }
 
 i.fatal {
-  color: #900;
+  color: #E00;
 }
 
 i.error {
-  color: #E00;
+  color: #900;
 }
 
 i.warning {
@@ -84,6 +84,10 @@ i.warning {
 
 .debug {
   color: #777;
+}
+
+td.count {
+  text-align: right;
 }
 
 .count span {
@@ -123,11 +127,14 @@ tr.show-more {
 }
 
 #bottom-panel.full {
-  height: 90%;
   position: static;
   background-color: inherit;
+  height: 90%;
 }
 
+#bottom-panel.full > div {
+  padding-bottom: 40px;
+}
 #bottom-panel.full .tabs {
   display: none;
 }
