@@ -536,24 +536,24 @@ App.UpdateTimeComponent = Em.Component.extend({
   didInsertElement: function(){
     var updateTimes = function(){
       $('.auto-update-time').each(function(){
-        var newTime = moment(
-            parseInt(this.getAttribute('data-timestamp'),10)
-          ).fromNow(),
-            elem = this;
+        var timestamp = parseInt(this.getAttribute('data-timestamp'),10);
+        var elem = this;
 
-        if(newTime != elem.innerText) {
-          elem.innerText = newTime;
+        var text = App.formatTime(timestamp);
+
+        if(text !== elem.innerText) {
+          elem.innerText = text;
         }
 
       });
-      Em.run.later(updateTimes, 10000);
+      Em.run.later(updateTimes, 60000);
     };
 
-    Em.run.later(updateTimes, 10000);
+    Em.run.later(updateTimes, 60000);
   }
 });
 
-App.TimeAgoComponent = Ember.Component.extend({
+App.TimeFormatterComponent = Ember.Component.extend({
   tagName: 'span',
   classNames: 'auto-update-time',
   attributeBindings: ['data-timestamp', 'title'],
@@ -570,18 +570,32 @@ App.TimeAgoComponent = Ember.Component.extend({
     return moment(this.get("timestamp"));
   }.property(),
 
-  fromNow: function(){
-    return this.get("moment").fromNow();
-  }.property().volatile()
+  render: function(buffer){
+    buffer.push(App.formatTime(this.get('timestamp')));
+  },
 });
 
-// Em.HTMLBars._registerHelper('timeAgo', function(prop, options){
-//   var timestamp = Ember.Handlebars.get(this, prop, options);
-//   var parsed = moment(timestamp);
-//   var formatted = "<span data-timestamp='" + timestamp + "' class='auto-update-time' title='" + parsed.format() +  "'>" + parsed.fromNow() + "</span>";
-//
-//   return new Handlebars.SafeString(formatted);
-// });
+App.formatTime = function(timestamp){
+  var formatted;
+  var time = moment(timestamp);
+  var now = moment();
+
+  if (time.diff(now.startOf('day')) > 0) {
+    formatted = time.format('h:mm a');
+  } else {
+    if (time.diff(now.startOf('week')) > 0) {
+      formatted = time.format('dd h:mm a');
+    } else {
+      if (time.diff(now.startOf('year')) > 0) {
+        formatted = time.format('D MMM h:mm a');
+      } else {
+        formatted = time.format('D MMM YY');
+      }
+    }
+  }
+
+  return formatted;
+};
 
 App.TabbedSectionComponent = Ember.Component.extend({
   tabs: Em.A(),
@@ -628,6 +642,9 @@ App.TabContentsComponent = Ember.Component.extend({
 
   didInsertElement: function() {
     this.invokeParent("addTab");
+    if (this.get("defaultTab")) {
+      this.invokeParent("selectTab");
+    }
   },
   willDestroyElement: function() {
     this.invokeParent("removeTab");

@@ -186,7 +186,6 @@ JS
   #{script("external/ember-template-compiler.js")}
   #{script("external/ember.min.js", "external/ember.js")}
   #{template("application")}
-  #{component("time-ago")}
   #{component("message-row")}
   #{component("message-info")}
   #{component("tabbed-section")}

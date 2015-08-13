@@ -10,7 +10,7 @@
       {{/if}}
       <pre>{{currentMessage.message}}</pre>
     {{/tab-contents}}
-    {{#tab-contents name="backtrace" hint="show backtrace" currentMessage=currentMessage}}
+    {{#tab-contents name="backtrace" defaultTab="true" hint="show backtrace" currentMessage=currentMessage}}
       {{#if showTitle}}
       <h3>Backtrace</h3>
       {{/if}}
