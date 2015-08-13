@@ -173,8 +173,11 @@ JS
 
       def body(preload)
 <<HTML
+<!doctype html>
 <html>
 <head>
+  <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
   #{css("app.css")}
   #{css("font-awesome.min.css")}
   #{script("external/moment.min.js")}

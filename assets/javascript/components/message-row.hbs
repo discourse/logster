@@ -7,11 +7,11 @@
 <td class="message-body">
   <div class="message">
     {{model.displayMessage}}
-    {{#if model.protected}}
-    <span class='protected'>
-      <i class='fa fa-lock'></i>
-    </span>
-    {{/if}}
   </div>
+</td>
+<td class='protected'>
+  {{#if model.protected}}
+    <i title="message is protected, clearing will not remove it" class='fa fa-lock'></i>
+  {{/if}}
 </td>
 <td class="time">{{time-ago timestamp=model.timestamp}}</td>

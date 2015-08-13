@@ -166,11 +166,11 @@ App.Message = Ember.Object.extend({
       case 1:
         return "";
       case 2:
-        return "<i class='fa fa-exclamation-circle'></i>";
+        return "<i class='fa fa-exclamation-circle warning'></i>";
       case 3:
-        return "<i class='fa fa-times-circle'></i>";
+        return "<i class='fa fa-times-circle error'></i>";
       case 4:
-        return "<i class='fa fa-times-circle'></i>";
+        return "<i class='fa fa-times-circle fatal'></i>";
     }
   }.property("severity")
 });
@@ -434,6 +434,7 @@ App.PanelResizerComponent = Em.Component.extend({
     if (fromTop < 100 || fromTop + 100 > height) {
       return;
     }
+
 
     this.topPanel.css("bottom", fromBottom + 5);
     this.bottomPanel.css("height", fromBottom - 15);

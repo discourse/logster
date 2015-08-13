@@ -5,13 +5,14 @@
         <th class="count"></th>
         <th class="severity"></th>
         <th class="info">Info</th>
+        <th class="protected"></th>
         <th class="time">Time</th>
       </tr>
     </thead>
     <tbody>
     {{#if model.moreBefore}}
       <tr {{action "showMoreBefore"}} class="show-more">
-        <td colspan=4>{{model.totalBefore}} more</td>
+        <td colspan=5>{{model.totalBefore}} more</td>
       </tr>
     {{/if}}
     {{#each model.messages as |message|}}
@@ -35,14 +36,17 @@
     </label>
     <label class="warn">
       {{input type="checkbox" checked=showWarn}}
+      <i class='fa fa-exclamation-circle warning'></i>
       Warning
     </label>
     <label class="error">
       {{input type="checkbox" checked=showErr}}
+      <i class='fa fa-times-circle error'></i>
       Error
     </label>
     <label class="fatal">
       {{input type="checkbox" checked=showFatal}}
+      <i class='fa fa-times-circle fatal'></i>
       Fatal
     </label>
     <label class="search">

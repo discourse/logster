@@ -1,6 +1,10 @@
 body {
-  font-family: Arial, 'Liberation Sans', 'DejaVu Sans', sans-serif;
+  font-family: 'Roboto', Arial, 'Liberation Sans', 'DejaVu Sans', sans-serif;
   font-size: 12px;
+}
+
+pre {
+   font-family: 'Roboto Mono', Consolas, Monaco, Ubuntu Mono, monospace;
 }
 
 
@@ -36,7 +40,6 @@ td.time {
   vertical-align: top;
 }
 .message {
-  font-family: Consolas, Monaco, Ubuntu Mono, monospace;
   font-size: 13px;
   overflow: hidden;
   white-space: nowrap;
@@ -56,21 +59,20 @@ th.time{
   width: 90px;
 }
 
-.fatal .severity .fa{
+th.protected {
+  width: 10px;
+}
+
+i.fatal {
   color: #900;
 }
 
-.error .severity .fa {
+i.error {
   color: #E00;
 }
 
-.warn .severity .fa {
+i.warning {
   color: #FEB800;
-}
-
-.message .protected {
-  float: right;
-  margin-top: 7px;
 }
 
 .debug {
@@ -138,8 +140,13 @@ tr.show-more {
 
 .message-actions {
     position: fixed;
-    bottom: 70px;
+    bottom: 45px;
     right: 10px;
+}
+
+.message-actions a {
+  z-index: 10000;
+  padding-right: 7px;
 }
 
 .divider {
@@ -246,10 +253,10 @@ tr.show-more {
 
 .message-info .content {
   position: absolute;
-  top: 5;
-  bottom: 40;
-  left: 5;
-  right: 5;
+  top: 5px;
+  bottom: 35px;
+  left: 5px;
+  right: 5px;
   overflow: auto;
   display: none;
 }
@@ -261,7 +268,7 @@ tr.show-more {
 
 .tabs {
   position: absolute;
-  bottom: 10;
+  bottom: 10px;
   left: 0;
   right: 0;
   list-style-type: none;
