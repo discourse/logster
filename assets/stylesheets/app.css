@@ -48,7 +48,7 @@ td.time {
 }
 
 th.count {
-  width: 20px
+  width: 20px;
 }
 
 th.severity{
@@ -88,6 +88,7 @@ i.warning {
 
 td.count {
   text-align: right;
+  padding-right: 4px;
 }
 
 .count span {
