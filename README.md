@@ -2,6 +2,8 @@
 
 A web log viewer and logging framework for Rack applications
 
+![logster logo](https://raw.githubusercontent.com/discourse/logster/master/assets/images/logster-logo.png)
+
 ## [Live Demo](http://logster.info/logs)
 
 ![logster](http://i.imgur.com/cvfcQpv.png)
