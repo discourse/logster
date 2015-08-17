@@ -1,12 +1,10 @@
-# Logster
-
-A web log viewer and logging framework for Rack applications
-
 ![logster logo](https://raw.githubusercontent.com/discourse/logster/master/assets/images/logster-logo.png)
+
+Logster is a web log viewer and logging framework for Rack applications
 
 ## [Live Demo](http://logster.info/logs)
 
-![logster](http://i.imgur.com/cvfcQpv.png)
+![Screenshot](https://raw.githubusercontent.com/discourse/logster/master/assets/images/logster-screenshot.png)
 
 ## Installation
 
