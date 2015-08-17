@@ -18,7 +18,17 @@ class TestMessage < MiniTest::Test
 
     assert_equal(20, msg1.timestamp)
     assert_equal(10, msg1.first_timestamp)
+  end
 
+  def test_adds_application_version
+    Logster.config.application_version = "abc"
+    msg = Logster::Message.new(0, '', 'test', 10)
+    msg.populate_from_env({})
+
+    assert_equal("abc", msg.env["application_version"])
+
+  ensure
+    Logster.config.application_version = nil
   end
 
 end

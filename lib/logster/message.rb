@@ -17,6 +17,7 @@ module Logster
       HTTP_X_REAL_IP
       hostname
       process_id
+      application_version
     }
 
     attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :count, :env, :protected, :first_timestamp
@@ -79,6 +80,7 @@ module Logster
       env ||= {}
       env["hostname"] ||= self.class.hostname
       env["process_id"] ||= Process.pid
+      env["application_version"] ||= Logster.config.application_version if Logster.config.application_version
       @env = Message.populate_from_env(env)
     end
 
