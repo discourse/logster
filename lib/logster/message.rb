@@ -78,7 +78,7 @@ module Logster
 
     def populate_from_env(env)
       env ||= {}
-      @env = Message.populate_from_env(env.merge self.class.default_env)
+      @env = Message.populate_from_env(self.class.default_env.merge env)
     end
 
     def self.default_env

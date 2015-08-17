@@ -289,7 +289,13 @@ class TestRedisStore < Minitest::Test
     end
 
     @store.report(Logger::INFO, "test", "test",  env: env)
-    assert_equal(orig, @store.latest.last.env)
+
+    env = @store.latest.last.env
+
+    env.delete "hostname"
+    env.delete "process_id"
+
+    assert_equal(orig, env)
   end
 
 end
