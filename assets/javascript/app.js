@@ -58,7 +58,7 @@ function buildArrayString(array) {
     } else if (Object.prototype.toString.call(v) === '[object Array]') {
       buffer.push(buildArrayString(v));
     } else {
-      buffer.push(v.toString());
+      buffer.push(escape(v.toString()));
     }
   });
   return '[' + buffer.join(', ') + ']';
@@ -73,7 +73,7 @@ function buildHashString(hash, recurse) {
     if (v === null) {
       buffer.push('null');
     } else if (Object.prototype.toString.call(v) === '[object Array]') {
-      buffer.push("<tr><td>" + escape(k) + "</td><td>" + escape(buildArrayString(v)) + "</td></tr>");
+      buffer.push("<tr><td>" + escape(k) + "</td><td>" + buildArrayString(v) + "</td></tr>");
     } else if (typeof v === "object") {
       hashes.push(k);
     } else {
