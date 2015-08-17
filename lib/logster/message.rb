@@ -94,6 +94,14 @@ module Logster
       Digest::SHA1.hexdigest JSON.fast_generate grouping_hash
     end
 
+    # todo - memoize?
+    def solved_key
+      if  (version=env["application_version"]) &&
+          (backtrace && backtrace.length > 0)
+        Digest::SHA1.hexdigest "#{version} #{backtrace}"
+      end
+    end
+
     def is_similar?(other)
       self.grouping_key == other.grouping_key
     end

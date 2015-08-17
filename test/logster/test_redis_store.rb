@@ -235,6 +235,38 @@ class TestRedisStore < Minitest::Test
     assert_equal(1, @store.latest.count)
   end
 
+  def test_solve
+    Logster.config.application_version = "abc"
+
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1")
+    m = @store.report(Logger::WARN, "application", "test error2", backtrace: "backtrace1")
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace2")
+
+    assert_equal(3, @store.latest.count)
+
+    @store.solve(m.key)
+
+    assert_equal(1, @store.latest.count)
+
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1")
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz"})
+
+    assert_equal(2, @store.latest.count)
+
+  ensure
+    Logster.config.application_version = nil
+  end
+
+  def test_clears_solved
+    m = @store.report(Logger::WARN, "application", "test error2", backtrace: "backtrace1", env: {"application_version" => "abc"})
+    @store.solve(m.key)
+
+    assert_equal(1, @store.solved.length)
+
+    @store.clear
+    assert_equal(0, @store.solved.length)
+  end
+
   def test_env
     env = Rack::MockRequest.env_for("/test").merge({
       "HTTP_HOST" => "www.site.com",

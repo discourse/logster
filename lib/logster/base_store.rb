@@ -59,6 +59,12 @@ module Logster
       not_implemented
     end
 
+    # Solve a particular message, causing all old messages with matching version and backtrace
+    # to be deleted (report should delete any solved messages when called)
+    def solve(message_key)
+      not_implemented
+    end
+
     def report(severity, progname, msg, opts = {})
       return if (!msg || (String === msg && msg.empty?)) && skip_empty
       return if level && severity < level

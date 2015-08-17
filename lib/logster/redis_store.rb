@@ -14,6 +14,10 @@ module Logster
 
 
     def save(message)
+      if solved=message.solved_key
+        return true if @redis.hget(solved_key, solved)
+      end
+
       @redis.multi do
         @redis.hset(grouping_key, message.grouping_key, message.key)
         @redis.rpush(list_key, message.key)
@@ -53,6 +57,14 @@ module Logster
 
     def count
       @redis.llen(list_key)
+    end
+
+    def solve(message_key)
+      if (message = get(message_key)) && (key = message.solved_key)
+        # add a time so we can expire it
+        @redis.hset(solved_key, key, Time.now.to_f.to_i)
+      end
+      clear_solved
     end
 
     def latest(opts={})
@@ -102,6 +114,7 @@ module Logster
     end
 
     def clear
+      @redis.del(solved_key)
       @redis.del(list_key)
       keys = @redis.smembers(protected_key) || []
       if keys.empty?
@@ -132,6 +145,7 @@ module Logster
       @redis.del(protected_key)
       @redis.del(hash_key)
       @redis.del(grouping_key)
+      @redis.del(solved_key)
     end
 
     def get(message_key)
@@ -157,7 +171,28 @@ module Logster
       end
     end
 
+    def solved
+      @redis.hkeys(solved_key) || []
+    end
+
     protected
+
+    def clear_solved(count = nil)
+
+      ignores = Set.new(@redis.hkeys(solved_key) || [])
+
+      if ignores.length > 0
+        start = count ? 0 - count : 0
+        message_keys = @redis.lrange(list_key, start, -1 ) || []
+
+        @redis.hmget(hash_key, message_keys).each do |json|
+          message =  Message.from_json(json)
+          if ignores.include? message.solved_key
+            delete message
+          end
+        end
+      end
+    end
 
     def trim
       if @redis.llen(list_key) > max_backlog
@@ -261,6 +296,9 @@ module Logster
 
     end
 
+    def solved_key
+      @solved_key ||= "__LOGSTER__SOLVED_MAP"
+    end
 
     def list_key
       @list_key ||= "__LOGSTER__LATEST"
