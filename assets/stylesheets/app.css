@@ -7,6 +7,20 @@ pre {
    font-family: 'Roboto Mono', Consolas, Monaco, Ubuntu Mono, monospace;
 }
 
+table.env-table tbody tr td {
+  border-top: none;
+  line-height: 18px;
+  vertical-align: top;
+}
+
+table.env-table, table.env-table table {
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+table.env-table td {
+  padding-right: 5px;
+}
 
 tbody tr {
   width: 98%;

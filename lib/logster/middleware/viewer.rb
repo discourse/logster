@@ -75,6 +75,18 @@ module Logster
               end
             end
 
+          elsif resource =~ /\/solve\/([0-9a-f]+)$/
+            key = $1
+
+            message = Logster.store.get(key)
+            unless message
+              return [404, {}, ["Message not found"]]
+            end
+
+            Logster.store.solve(key)
+
+            return [301, {"Location" => "#{@logs_path}"}, []]
+
           elsif resource =~ /\/clear$/
             if env[REQUEST_METHOD] != "POST"
               return [405, {}, ["GET not allowed for /clear"]]

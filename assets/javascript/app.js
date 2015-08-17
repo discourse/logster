@@ -64,9 +64,8 @@ function buildArrayString(array) {
   return '[' + buffer.join(', ') + ']';
 }
 
-function buildHashString(hash, indent) {
+function buildHashString(hash, recurse) {
   if (!hash) return '';
-  if (!indent) indent = "";
 
   var buffer = [],
       hashes = [];
@@ -74,23 +73,24 @@ function buildHashString(hash, indent) {
     if (v === null) {
       buffer.push('null');
     } else if (Object.prototype.toString.call(v) === '[object Array]') {
-      buffer.push(k + ": " + buildArrayString(v));
+      buffer.push("<tr><td>" + escape(k) + "</td><td>" + escape(buildArrayString(v)) + "</td></tr>");
     } else if (typeof v === "object") {
       hashes.push(k);
     } else {
-      buffer.push(k + ": " + v);
+      buffer.push("<tr><td>" + k + "</td><td>" + v + "</td></tr>");
     }
   });
 
   if (_.size(hashes) > 0) {
     _.each(hashes, function(k1) {
       var v = hash[k1];
-      buffer.push("");
-      buffer.push(k1 + ":");
-      buffer.push(buildHashString(v, indent + "  "));
+      buffer.push("<tr><td></td><td><table>");
+      buffer.push("<td>" + k1 + "</td><td>" + buildHashString(v, true) + "</td>");
+      buffer.push("</table></td></tr>");
     });
   }
-  return indent + buffer.join("\n" + indent);
+  var className = recurse?"": "env-table";
+  return "<table class='"+ className +"'>" + buffer.join("\n") + "</table>";
 }
 
 App.Message = Ember.Object.extend({
@@ -99,6 +99,10 @@ App.Message = Ember.Object.extend({
 
   expand: function() {
     this.set("expanded", true);
+  },
+
+  solve: function() {
+    return App.ajax("/solve/" + this.get('key'), { type: "PUT" });
   },
 
   "delete": function() {
@@ -144,9 +148,15 @@ App.Message = Ember.Object.extend({
     this.set('count', other.get('count'));
   },
 
-  envDebug: function() {
+  canSolve: function() {
+    var backtrace = this.get("backtrace");
+    return this.get("env.application_version") && backtrace && (backtrace.length > 0);
+  }.property(),
+
+  envTable: function() {
     return buildHashString(this.get('env'));
   }.property("env"),
+
 
   rowClass: function() {
     switch (this.get("severity")) {
@@ -184,6 +194,13 @@ App.MessageCollection = Em.Object.extend({
   messages: Em.A(),
   currentMessage: null,
   total: 0,
+
+  solve: function(message) {
+    var self = this;
+    message.solve().then(function(){
+      self.reload();
+    });
+  },
 
   "delete": function(message){
     var messages = this.get('messages');
@@ -319,6 +336,23 @@ App.MessageCollection = Em.Object.extend({
 });
 
 
+(function(){
+  $.each(["","webkit","ms","moz","ms"], function(index, prefix){
+      var check = prefix + (prefix === "" ? "hidden" : "Hidden");
+      if(document[check] !== undefined ){
+        hiddenProperty = check;
+      }
+    });
+
+  App.isHidden = function() {
+    if (hiddenProperty !== undefined){
+      return document[hiddenProperty];
+    } else {
+      return !document.hasFocus;
+    }
+  };
+})();
+
 App.IndexRoute = Em.Route.extend({
   model: function(){
     // TODO from preload json?
@@ -338,8 +372,13 @@ App.IndexRoute = Em.Route.extend({
     controller.set("initialized", true);
     model.reload();
 
+    var times = 0;
     this.refreshInterval = setInterval(function(){
-      model.loadMore();
+      times += 1;
+      // refresh a lot less aggressively in background
+      if (!App.isHidden() || (times % 20 === 0)) {
+        model.loadMore();
+      }
     }, 3000);
   },
 
@@ -398,6 +437,11 @@ App.IndexController = Em.Controller.extend({
     removeMessage: function(msg) {
       var messages = this.get('model');
       messages.delete(msg);
+    },
+
+    solveMessage: function(msg) {
+      var messages = this.get('model');
+      messages.solve(msg);
     }
   },
 
@@ -689,6 +733,9 @@ App.MessageInfoComponent = Ember.Component.extend({
     },
     "remove": function(){
       this.sendAction("removeMessage", this.get('currentMessage'));
+    },
+    solve: function() {
+      this.sendAction("solveMessage", this.get('currentMessage'));
     }
   }
 });

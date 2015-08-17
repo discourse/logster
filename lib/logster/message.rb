@@ -78,10 +78,16 @@ module Logster
 
     def populate_from_env(env)
       env ||= {}
-      env["hostname"] ||= self.class.hostname
-      env["process_id"] ||= Process.pid
-      env["application_version"] ||= Logster.config.application_version if Logster.config.application_version
-      @env = Message.populate_from_env(env)
+      @env = Message.populate_from_env(env.merge self.class.default_env)
+    end
+
+    def self.default_env
+      env = {
+        "hostname" => hostname,
+        "process_id" => Process.pid
+      }
+      env["application_version"] = Logster.config.application_version if Logster.config.application_version
+      env
     end
 
     # in its own method so it can be overridden
@@ -121,7 +127,7 @@ module Logster
             # Not a web request
             return env
           end
-          scrubbed = {}
+          scrubbed = default_env
           request = Rack::Request.new(env)
           params = {}
           request.params.each do |k,v|
