@@ -1,10 +1,12 @@
 ![logster logo](https://raw.githubusercontent.com/discourse/logster/master/assets/images/logster-logo.png)
 
-Logster is a web log viewer and logging framework for Rack applications
+Logster is an embedded Ruby "exception reporting service" admins can view on live websites, at `http://example.com/logs`
 
-## [Live Demo](http://logster.info/logs)
+## Interface
 
 ![Screenshot](https://raw.githubusercontent.com/discourse/logster/master/assets/images/logster-screenshot.png)
+
+Play with a live demo at [logster.info/logs](http://logster.info/logs).
 
 ## Installation
 
@@ -34,13 +36,12 @@ Logster.set_environments([:development, :staging, :production])
 ```
 
 ### Note
-If you are seeing error
-'No such middleware to insert before: ActionDispatch::DebugExceptions' after installing logster,
-then you are using a conflicting gem like better_errors.
+If you are seeing the error `No such middleware to insert before: ActionDispatch::DebugExceptions` after installing logster,
+then you are using a conflicting gem like `better_errors`.
 
 To avoid this error, make sure logster is added behind those conflicting gems in your Gemfile.
 
-### mount using warden (devise)
+### Mount using warden (devise)
 ```
   admin_constraint = lambda do |request|
     request.env['warden'].authenticate? and request.env['warden'].user.admin?
@@ -56,13 +57,6 @@ Out of the box, logster will use the default redis connection, to customise, in 
 ```
 Logster.store = Logster::RedisStore.new(redis_connection)
 ```
-
-## Usage
-
-The concept is to have an embedded "exception reporting service" admins can view on live sites.
-
-Logs will be visible by default at `http://sitename.com/logs`
-
 
 ## Thanks
 
