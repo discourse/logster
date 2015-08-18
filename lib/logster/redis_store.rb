@@ -191,7 +191,7 @@ module Logster
 
         @redis.hmget(hash_key, message_keys).each do |json|
           message =  Message.from_json(json)
-          unless (ignores & message.solved_keys).empty?
+          unless (ignores & (message.solved_keys || [])).empty?
             delete message
           end
         end

@@ -102,7 +102,7 @@ module Logster
 
     # todo - memoize?
     def solved_keys
-      if  (versions=env["application_version"]) &&
+      if (versions=env["application_version"]) &&
           (backtrace && backtrace.length > 0)
         versions = [versions] if String === versions
 

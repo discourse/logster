@@ -285,6 +285,16 @@ class TestRedisStore < Minitest::Test
     assert_equal(0, @store.solved.length)
   end
 
+  def test_solving_with_some_missing_version
+
+    m=@store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz"})
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1")
+
+    @store.solve(m.key)
+
+    assert_equal(1, @store.latest.count)
+  end
+
   def test_env
     env = Rack::MockRequest.env_for("/test").merge({
       "HTTP_HOST" => "www.site.com",
