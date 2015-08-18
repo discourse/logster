@@ -32,7 +32,7 @@ module Logster
     end
 
 
-    def add(severity, message, progname, &block)
+    def add(severity, message, progname, opts=nil, &block)
       if severity < @level
         return true
       end
@@ -64,9 +64,10 @@ module Logster
 
       return if @skip_store
 
-      @store.report(severity, progname, message, {
-        env: Thread.current[LOGSTER_ENV]
-      })
+      opts ||= {}
+      opts[:env] ||= Thread.current[LOGSTER_ENV]
+
+      @store.report(severity, progname, message, opts)
 
     rescue => e
       # don't blow up if STDERR is somehow closed
