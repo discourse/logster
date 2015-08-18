@@ -1,7 +1,7 @@
 PATH
   remote: ../
   specs:
-    logster (0.8.4.1.pre)
+    logster (0.8.4.8.pre)
 
 GEM
   remote: https://rubygems.org/
@@ -28,4 +28,4 @@ DEPENDENCIES
   sinatra
 
 BUNDLED WITH
-   1.10.4
+   1.10.6

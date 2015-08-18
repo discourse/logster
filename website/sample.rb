@@ -69,7 +69,7 @@ end
 
 $loader = SampleLoader.new
 $loader.ensure_samples_loaded
-$loader.load_samples
+$loader.load_samples unless ENV['NO_DATA']
 Logster.config.allow_grouping = true
 
 class Sample < Sinatra::Base
