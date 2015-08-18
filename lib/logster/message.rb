@@ -101,10 +101,14 @@ module Logster
     end
 
     # todo - memoize?
-    def solved_key
-      if  (version=env["application_version"]) &&
+    def solved_keys
+      if  (versions=env["application_version"]) &&
           (backtrace && backtrace.length > 0)
-        Digest::SHA1.hexdigest "#{version} #{backtrace}"
+        versions = [versions] if String === versions
+
+        versions.map do |version|
+          Digest::SHA1.hexdigest "#{version} #{backtrace}"
+        end
       end
     end
 

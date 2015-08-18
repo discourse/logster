@@ -257,6 +257,24 @@ class TestRedisStore < Minitest::Test
     Logster.config.application_version = nil
   end
 
+  def test_solve_grouped
+    Logster.config.allow_grouping = true
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz"})
+    m = @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "efg"})
+
+    assert_equal(1, @store.latest.count)
+
+    @store.solve(m.key)
+
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz"})
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "efg"})
+
+    assert_equal(0, @store.latest.count)
+
+  ensure
+    Logster.config.allow_grouping = false
+  end
+
   def test_clears_solved
     m = @store.report(Logger::WARN, "application", "test error2", backtrace: "backtrace1", env: {"application_version" => "abc"})
     @store.solve(m.key)

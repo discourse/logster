@@ -14,8 +14,10 @@ module Logster
 
 
     def save(message)
-      if solved=message.solved_key
-        return true if @redis.hget(solved_key, solved)
+      if keys=message.solved_keys
+        keys.each do |solved|
+          return true if @redis.hget(solved_key, solved)
+        end
       end
 
       @redis.multi do
@@ -60,9 +62,11 @@ module Logster
     end
 
     def solve(message_key)
-      if (message = get(message_key)) && (key = message.solved_key)
+      if (message = get(message_key)) && (keys = message.solved_keys)
         # add a time so we can expire it
-        @redis.hset(solved_key, key, Time.now.to_f.to_i)
+        keys.each do |s_key|
+          @redis.hset(solved_key, s_key, Time.now.to_f.to_i)
+        end
       end
       clear_solved
     end
@@ -187,7 +191,7 @@ module Logster
 
         @redis.hmget(hash_key, message_keys).each do |json|
           message =  Message.from_json(json)
-          if ignores.include? message.solved_key
+          unless (ignores & message.solved_keys).empty?
             delete message
           end
         end
