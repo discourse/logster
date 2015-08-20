@@ -29,7 +29,7 @@ module Logster
 
         if resource = resolve_path(path)
 
-          if resource =~ /\.js$|\.handlebars$|\.css$|\.woff$|\.ttf$|\.woff2$|\.svg$|\.otf$|\.eot$/
+          if resource =~ /\.ico$|\.js$|\.handlebars$|\.css$|\.woff$|\.ttf$|\.woff2$|\.svg$|\.otf$|\.eot$/
             env[PATH_INFO] = resource
             # accl redirect is going to be trouble, ensure its bypassed
             env['sendfile.type'] = ''
@@ -202,6 +202,8 @@ JS
 <!doctype html>
 <html>
 <head>
+  <link rel="shortcut icon" href="#{@logs_path}/images/favicon.ico">
+  <title>#{Logster.config.web_title || "Logs"}</title>
   <link href='//fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
   <link href='//fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
   #{css("app.css")}

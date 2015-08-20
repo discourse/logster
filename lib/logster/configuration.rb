@@ -1,6 +1,6 @@
 module Logster
   class Configuration
-    attr_accessor :current_context, :allow_grouping, :environments, :application_version
+    attr_accessor :current_context, :allow_grouping, :environments, :application_version, :web_title
     attr_writer :subdirectory
 
     def initialize

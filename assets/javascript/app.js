@@ -231,7 +231,13 @@ App.MessageCollection = Em.Object.extend({
       message.set('selected', true);
       this.set('currentMessage', message);
     } else {
-      this.set('currentMessage', null);
+      if (this.get('total') > 0) {
+        message = messages[0];
+        message.set('selected', true);
+        this.set('currentMessage', message);
+      } else {
+        this.reload();
+      }
     }
 
   },
@@ -283,6 +289,9 @@ App.MessageCollection = Em.Object.extend({
               });
             });
             messages.addObjects(newRows);
+            if (newRows.length > 0) {
+              App.increaseTitleCount(newRows.length);
+            }
           }
         }
         self.set("total", data.total);
@@ -351,12 +360,20 @@ App.MessageCollection = Em.Object.extend({
   }
 });
 
+App.resetTitleCount = function() {
+  App.titleCount = 0;
+  document.title = App.title || document.title;
+};
 
 (function(){
+  var hiddenProperty;
+  var visibilitychange;
+
   $.each(["","webkit","ms","moz","ms"], function(index, prefix){
       var check = prefix + (prefix === "" ? "hidden" : "Hidden");
-      if(document[check] !== undefined ){
+      if(document[check] !== undefined && !hiddenProperty ){
         hiddenProperty = check;
+        visibilitychange = prefix + "visibilitychange";
       }
     });
 
@@ -367,7 +384,26 @@ App.MessageCollection = Em.Object.extend({
       return !document.hasFocus;
     }
   };
+
+  console.log(visibilitychange);
+  document.addEventListener(visibilitychange, function(){
+    console.log("BLA +" + App.isHidden());
+    if (!App.isHidden()) {
+      App.resetTitleCount();
+    }
+  }, false);
 })();
+
+
+App.increaseTitleCount = function(increment){
+  if (!App.isHidden()){
+    return;
+  }
+  App.title = App.title || document.title;
+  App.titleCount = App.titleCount || 0;
+  App.titleCount += increment;
+  document.title = App.title + " (" + App.titleCount + ")";
+};
 
 App.IndexRoute = Em.Route.extend({
   model: function(){
@@ -389,12 +425,27 @@ App.IndexRoute = Em.Route.extend({
     model.reload();
 
     var times = 0;
+    var backoff = 1;
+
     this.refreshInterval = setInterval(function(){
       times += 1;
-      // refresh a lot less aggressively in background
-      if (!App.isHidden() || (times % 20 === 0)) {
-        model.loadMore();
+      var hidden = App.isHidden();
+      var load = !hidden;
+
+      if (hidden) {
+        if (times % backoff === 0) {
+          load = true;
+          if (backoff<20) { backoff++; }
+        }
       }
+      // refresh a lot less aggressively in background
+      if (load) {
+        model.loadMore();
+        if (!hidden) {
+          backoff = 1;
+        }
+      }
+
     }, 3000);
   },
 
