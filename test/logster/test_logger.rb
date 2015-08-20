@@ -2,18 +2,24 @@ require_relative '../test_helper'
 require 'logster/logger'
 require 'logger'
 
-class NullStore
-  def report(severity,progname,message,options=nil)
+class TestStore
+  attr_accessor :calls
+
+  def report(*args)
+    (@calls ||= []) << args
   end
 end
 
 class TestLogger < Minitest::Test
 
   def setup
-    @logger = Logster::Logger.new(NullStore.new)
+    @store = TestStore.new
+    @logger = Logster::Logger.new(@store)
   end
 
-  def teardown
+  def test_backtrace
+    @logger.add(0, "test", "prog", backtrace: "backtrace", env: {a: "x"})
+    assert_equal "backtrace", @store.calls[0][3][:backtrace]
   end
 
   def test_chain

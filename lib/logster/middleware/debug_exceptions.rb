@@ -8,7 +8,7 @@ class Logster::Middleware::DebugExceptions < ActionDispatch::DebugExceptions
       location = exception.backtrace[0]
       exception_string = exception.to_s
 
-      Rails.logger.add(::Logger::Severity::FATAL,
+      Logster.logger.add_with_opts(::Logger::Severity::FATAL,
                         exception.class.to_s << " (" << exception_string << ")\n#{location}",
                         "web-exception",
                         backtrace: exception.backtrace.join("\n"),

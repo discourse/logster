@@ -31,8 +31,12 @@ module Logster
       end
     end
 
+    def add(*args, &block)
+      add_with_opts(*args,&block)
+    end
 
-    def add(severity, message, progname, opts=nil, &block)
+
+    def add_with_opts(severity, message, progname, opts=nil, &block)
       if severity < @level
         return true
       end
