@@ -58,6 +58,14 @@ Out of the box, logster will use the default redis connection, to customise, in 
 Logster.store = Logster::RedisStore.new(redis_connection)
 ```
 
+### Heroku Deployment
+In case you may be using the `rails_12factor` gem in a production deployment on Heroku, the standard `Rails.logger` will not cooperate properly with Logster. Extend Rails.logger in your `config/application.rb` or `config/initializers/logster.rb` with: 
+```
+if Rails.env.production?
+    Rails.logger.extend(ActiveSupport::Logger.broadcast(Logster.logger))
+end
+```
+
 ## Thanks
 
 Logster UI is built using [Ember.js](http://emberjs.com/)
