@@ -1,4 +1,4 @@
-![logster logo](https://raw.githubusercontent.com/discourse/logster/master/assets/images/logster-logo.png)
+![logster logo](https://raw.githubusercontent.com/discourse/logster/master/assets/images/logo-logster-cropped.png)
 
 Logster is an embedded Ruby "exception reporting service" admins can view on live websites, at `http://example.com/logs`
 
