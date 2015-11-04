@@ -202,7 +202,8 @@ JS
 <!doctype html>
 <html>
 <head>
-  <link rel="shortcut icon" href="#{@logs_path}/images/favicon.ico">
+  <link rel="shortcut icon" href="#{@logs_path}/images/icon_64x64.png">
+  <link rel="apple-touch-icon" href="#{@logs_path}/images/icon_144x144.png" />
   <title>#{Logster.config.web_title || "Logs"}</title>
   <link href='//fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
   <link href='//fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
