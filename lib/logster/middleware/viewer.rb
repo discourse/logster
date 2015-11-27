@@ -29,7 +29,7 @@ module Logster
 
         if resource = resolve_path(path)
 
-          if resource =~ /\.ico$|\.js$|\.handlebars$|\.css$|\.woff$|\.ttf$|\.woff2$|\.svg$|\.otf$|\.eot$/
+          if resource =~ /\.ico$|\.js$|\.png|\.handlebars$|\.css$|\.woff$|\.ttf$|\.woff2$|\.svg$|\.otf$|\.eot$/
             env[PATH_INFO] = resource
             # accl redirect is going to be trouble, ensure its bypassed
             env['sendfile.type'] = ''

@@ -80,6 +80,12 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 
 # CHANGELOG
 
+- 2015-11-27: Version 1.0.1
+  - New assets and logster logo
+  - Added favicon
+  - Added title
+  - Use rails logger instead of invoking store
+
 - 2015-08-18: Version 0.9.9
   - This marks the largest release of Logster to date, it has been in production use for quite a while, hence the version bump.
   - Feature: automatically group errors in production mode, can be manually controlled via Logster.config.allow_grouping
