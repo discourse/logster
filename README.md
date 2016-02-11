@@ -1,10 +1,10 @@
-![logster logo](https://raw.githubusercontent.com/discourse/logster/master/assets/images/logo-logster-cropped-small.png)
+![logster logo](https://raw.githubusercontent.com/discourse/logster/master/website/images/logo-logster-cropped-small.png)
 
 Logster is an embedded Ruby "exception reporting service" admins can view on live websites, at `http://example.com/logs`
 
 ## Interface
 
-![Screenshot](https://raw.githubusercontent.com/discourse/logster/master/assets/images/logster-screenshot.png)
+![Screenshot](https://raw.githubusercontent.com/discourse/logster/master/website/images/logster-screenshot.png)
 
 Play with a live demo at [logster.info/logs](http://logster.info/logs).
 
@@ -59,7 +59,7 @@ Logster.store = Logster::RedisStore.new(redis_connection)
 ```
 
 ### Heroku Deployment
-In case you may be using the `rails_12factor` gem in a production deployment on Heroku, the standard `Rails.logger` will not cooperate properly with Logster. Extend Rails.logger in your `config/application.rb` or `config/initializers/logster.rb` with: 
+In case you may be using the `rails_12factor` gem in a production deployment on Heroku, the standard `Rails.logger` will not cooperate properly with Logster. Extend Rails.logger in your `config/application.rb` or `config/initializers/logster.rb` with:
 ```
 if Rails.env.production?
     Rails.logger.extend(ActiveSupport::Logger.broadcast(Logster.logger))
