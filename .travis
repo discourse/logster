@@ -13,12 +13,3 @@ services:
   - redis-server
 
 sudo: false
-
-cache:
-  directories:
-    - vendor/bundle
-
-install:
-  - bundle install
-
-script: 'bundle rake test'
