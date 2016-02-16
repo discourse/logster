@@ -1,0 +1,24 @@
+language: ruby
+
+matrix:
+  fast_finish: true
+
+rvm:
+  - 2.0.0
+  - 2.1
+  - 2.2
+  - 2.3.0
+
+services:
+  - redis-server
+
+sudo: false
+
+cache:
+  directories:
+    - vendor/bundle
+
+install:
+  - bundle install
+
+script: 'bundle rake test'
