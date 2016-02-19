@@ -7,12 +7,12 @@ module Logster
 
     attr_reader :key, :set_key, :callback_key
 
-    def initialize(redis, severities, limit, duration, block = nil)
+    def initialize(redis, severities, limit, duration, callback = nil)
       @redis = use_raw_connection? ? Logster.config.redis_raw_connection : redis
       @severities = severities
       @limit = limit
       @duration = duration
-      @block = block
+      @callback = callback
 
       # "_LOGSTER_RATE_LIMIT:012:20:30"
       # Triggers callback when log levels of :debug, :info and :warn occurs 20 times within 30 secs
@@ -26,14 +26,8 @@ module Logster
       return unless @severities.include?(severity)
       time = Time.now.to_i
       redis_key = "#{@key}:#{bucket_number(time)}"
-      current_rate = retrieve_rate
 
-      if !@redis.get(@callback_key) && (current_rate >= @limit)
-        @block.call(current_rate)
-        @redis.set(@callback_key, 1)
-      end
-
-      @redis.eval <<-LUA
+      current_rate = @redis.eval <<-LUA
         if redis.call("EXISTS", "#{redis_key}") == 0 then
           redis.call("INCR", "#{redis_key}")
           redis.call("EXPIRE", "#{redis_key}", "#{bucket_expiry(time)}")
@@ -42,17 +36,29 @@ module Logster
         else
           redis.call("INCR", "#{redis_key}")
         end
+
+        local function retrieve_rate ()
+          local keys = redis.call("SMEMBERS", "#{set_key}")
+
+          if table.getn(keys) == 0 then
+            return 0
+          else
+            local sum = 0
+            local values = redis.call("MGET", unpack(keys))
+            for index, value in ipairs(values) do sum = sum + value end
+            return sum
+          end
+        end
+
+        return retrieve_rate()
       LUA
-    end
 
-    def retrieve_rate
-      keys = @redis.smembers(set_key)
-
-      if !keys.empty?
-        @redis.mget(*keys).reduce(0) { |sum, value| sum += value.to_i }
-      else
-        0
+      if !@redis.get(@callback_key) && (current_rate >= @limit)
+        @callback.call(current_rate) if @callback
+        @redis.set(@callback_key, 1)
       end
+
+      current_rate
     end
 
     private
@@ -412,10 +418,9 @@ module Logster
 
     private
 
-    def register_rate_limit(severities, limit, duration, block)
-      raise 'no block given' unless block
+    def register_rate_limit(severities, limit, duration, callback)
       severities = [severities] unless severities.is_a?(Array)
-      rate_limiter = RedisRateLimiter.new(@redis, severities, limit, duration, block)
+      rate_limiter = RedisRateLimiter.new(@redis, severities, limit, duration, callback)
       rate_limits << rate_limiter
       rate_limiter
     end

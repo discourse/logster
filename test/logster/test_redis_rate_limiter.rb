@@ -17,77 +17,66 @@ class TestRedisRateLimiter < Minitest::Test
     called = 0
 
     @rate_limiter = Logster::RedisRateLimiter.new(
-      @redis, [Logger::WARN], 7, 60, Proc.new { called += 1 }
+      @redis, [Logger::WARN], 8, 60, Proc.new { called += 1 }
     )
 
-    @rate_limiter.check(Logger::WARN)
+    assert_equal(1, @rate_limiter.check(Logger::WARN))
     assert_redis_key(60, 0)
-    assert_equal(1, @rate_limiter.retrieve_rate)
     assert_equal(1, number_of_buckets)
 
     Timecop.freeze(time + 10) do
-      @rate_limiter.check(Logger::WARN)
+      assert_equal(2, @rate_limiter.check(Logger::WARN))
       assert_redis_key(60, 1)
-      @rate_limiter.check(Logger::WARN)
-      assert_equal(3, @rate_limiter.retrieve_rate)
+      assert_equal(3, @rate_limiter.check(Logger::WARN))
       assert_equal(2, number_of_buckets)
     end
 
     Timecop.freeze(time + 20) do
-      @rate_limiter.check(Logger::WARN)
+      assert_equal(4, @rate_limiter.check(Logger::WARN))
       assert_redis_key(60, 2)
-      assert_equal(4, @rate_limiter.retrieve_rate)
       assert_equal(3, number_of_buckets)
     end
 
     Timecop.freeze(time + 30) do
-      @rate_limiter.check(Logger::WARN)
+      assert_equal(5, @rate_limiter.check(Logger::WARN))
       assert_redis_key(60, 3)
-      assert_equal(5, @rate_limiter.retrieve_rate)
       assert_equal(4, number_of_buckets)
     end
 
     Timecop.freeze(time + 40) do
-      @rate_limiter.check(Logger::WARN)
+      assert_equal(6, @rate_limiter.check(Logger::WARN))
       assert_redis_key(60, 4)
-      assert_equal(6, @rate_limiter.retrieve_rate)
       assert_equal(5, number_of_buckets)
     end
 
     Timecop.freeze(time + 50) do
-      @rate_limiter.check(Logger::WARN)
+      assert_equal(7, @rate_limiter.check(Logger::WARN))
       assert_redis_key(60, 5)
-      assert_equal(7, @rate_limiter.retrieve_rate)
       assert_equal(6, number_of_buckets)
     end
 
     Timecop.freeze(time + 60) do
       @redis.del("#{key}:0")
-      assert_equal(6, @rate_limiter.retrieve_rate)
       assert_equal(6, number_of_buckets) # Keys are not removed from the set once added but that is fine
 
-      @rate_limiter.check(Logger::WARN)
+      assert_equal(7, @rate_limiter.check(Logger::WARN))
       assert_redis_key(60, 0)
-      assert_equal(7, @rate_limiter.retrieve_rate)
       assert_equal(6, number_of_buckets)
 
-      @rate_limiter.check(Logger::WARN)
+      assert_equal(8, @rate_limiter.check(Logger::WARN))
       assert_equal(1, called)
-      assert_equal(8, @rate_limiter.retrieve_rate)
       assert_equal(6, number_of_buckets)
       assert_equal("1", @redis.get(@rate_limiter.callback_key))
     end
 
     Timecop.freeze(time + 70) do
       @redis.del("#{key}:1")
-      assert_equal(6, @rate_limiter.retrieve_rate)
-      @rate_limiter.check(Logger::WARN)
-      assert_equal(7, @rate_limiter.retrieve_rate)
+      assert_equal(7, @rate_limiter.check(Logger::WARN))
       assert_equal(nil, @redis.get(@rate_limiter.callback_key))
     end
   end
 
-  def test_perform_with_multiple_severities
+  def test_check_with_multiple_severities
     time = Time.new(2015, 1, 1, 1, 1)
     Timecop.freeze(time)
     called = 0
@@ -96,32 +85,17 @@ class TestRedisRateLimiter < Minitest::Test
       @redis, [Logger::WARN, Logger::ERROR], 4, 60, Proc.new { called += 1 }
     )
 
-    @rate_limiter.check(Logger::WARN)
-    assert_equal(1, @rate_limiter.retrieve_rate)
-    @rate_limiter.check(Logger::ERROR)
-    assert_equal(2, @rate_limiter.retrieve_rate)
+    assert_equal(1, @rate_limiter.check(Logger::WARN))
+    assert_equal(2, @rate_limiter.check(Logger::ERROR))
 
     Timecop.freeze(time + 50) do
-      @rate_limiter.check(Logger::WARN)
-      assert_equal(3, @rate_limiter.retrieve_rate)
-      @rate_limiter.check(Logger::ERROR)
-      assert_equal(4, @rate_limiter.retrieve_rate)
+      assert_equal(3, @rate_limiter.check(Logger::WARN))
+      assert_equal(4, @rate_limiter.check(Logger::ERROR))
       assert_equal(2, number_of_buckets)
     end
 
-    @rate_limiter.check(Logger::ERROR)
+    assert_equal(5, @rate_limiter.check(Logger::ERROR))
     assert_equal(1, called)
-  end
-
-  def test_retrieve_rate
-    @rate_limiter = Logster::RedisRateLimiter.new(@redis, [Logger::WARN], 1, 5)
-    (1..5).each { |value| set_key(value, value) }
-    assert_equal(15, @rate_limiter.retrieve_rate)
-  end
-
-  def test_retrieve_rate_with_no_keys
-    @rate_limiter = Logster::RedisRateLimiter.new(@redis, [Logger::WARN], 1, 5)
-    assert_equal(0, @rate_limiter.retrieve_rate)
   end
 
   def test_bucket_number_per_minute
@@ -168,23 +142,16 @@ class TestRedisRateLimiter < Minitest::Test
     Logster.config.redis_raw_connection = @redis
 
     @rate_limiter = Logster::RedisRateLimiter.new(nil, [Logger::WARN], 1, 60)
-    @rate_limiter.check(Logger::WARN)
 
+    assert_equal(1, @rate_limiter.check(Logger::WARN))
     assert_includes(key, "lobster")
     assert_redis_key(60, 0)
-    assert_equal(1, @rate_limiter.retrieve_rate)
   end
 
   private
 
   def key
     @rate_limiter.key
-  end
-
-  def set_key(postfix, value)
-    new_key = "#{key}:#{postfix}"
-    @redis.set(new_key, value)
-    @redis.sadd(@rate_limiter.set_key, new_key)
   end
 
   def number_of_buckets
