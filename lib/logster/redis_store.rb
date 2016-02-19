@@ -22,7 +22,7 @@ module Logster
       @bucket_range = @duration / BUCKETS
     end
 
-    def perform(severity)
+    def check(severity)
       return unless @severities.include?(severity)
       time = Time.now.to_i
       redis_key = "#{@key}:#{bucket_number(time)}"
@@ -387,7 +387,7 @@ module Logster
     end
 
     def check_rate_limits(severity)
-      rate_limits.each { |rate_limit| rate_limit.perform(severity) }
+      rate_limits.each { |rate_limit| rate_limit.check(severity) }
     end
 
     def solved_key

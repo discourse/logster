@@ -11,7 +11,7 @@ class TestRedisRateLimiter < Minitest::Test
     @redis.flushall
   end
 
-  def test_perform
+  def test_check
     time = Time.new(2015, 1, 1, 1, 1)
     Timecop.freeze(time)
     called = 0
@@ -20,42 +20,42 @@ class TestRedisRateLimiter < Minitest::Test
       @redis, [Logger::WARN], 7, 60, Proc.new { called += 1 }
     )
 
-    @rate_limiter.perform(Logger::WARN)
+    @rate_limiter.check(Logger::WARN)
     assert_redis_key(60, 0)
     assert_equal(1, @rate_limiter.retrieve_rate)
     assert_equal(1, number_of_buckets)
 
     Timecop.freeze(time + 10) do
-      @rate_limiter.perform(Logger::WARN)
+      @rate_limiter.check(Logger::WARN)
       assert_redis_key(60, 1)
-      @rate_limiter.perform(Logger::WARN)
+      @rate_limiter.check(Logger::WARN)
       assert_equal(3, @rate_limiter.retrieve_rate)
       assert_equal(2, number_of_buckets)
     end
 
     Timecop.freeze(time + 20) do
-      @rate_limiter.perform(Logger::WARN)
+      @rate_limiter.check(Logger::WARN)
       assert_redis_key(60, 2)
       assert_equal(4, @rate_limiter.retrieve_rate)
       assert_equal(3, number_of_buckets)
     end
 
     Timecop.freeze(time + 30) do
-      @rate_limiter.perform(Logger::WARN)
+      @rate_limiter.check(Logger::WARN)
       assert_redis_key(60, 3)
       assert_equal(5, @rate_limiter.retrieve_rate)
       assert_equal(4, number_of_buckets)
     end
 
     Timecop.freeze(time + 40) do
-      @rate_limiter.perform(Logger::WARN)
+      @rate_limiter.check(Logger::WARN)
       assert_redis_key(60, 4)
       assert_equal(6, @rate_limiter.retrieve_rate)
       assert_equal(5, number_of_buckets)
     end
 
     Timecop.freeze(time + 50) do
-      @rate_limiter.perform(Logger::WARN)
+      @rate_limiter.check(Logger::WARN)
       assert_redis_key(60, 5)
       assert_equal(7, @rate_limiter.retrieve_rate)
       assert_equal(6, number_of_buckets)
@@ -66,12 +66,12 @@ class TestRedisRateLimiter < Minitest::Test
       assert_equal(6, @rate_limiter.retrieve_rate)
       assert_equal(6, number_of_buckets) # Keys are not removed from the set once added but that is fine
 
-      @rate_limiter.perform(Logger::WARN)
+      @rate_limiter.check(Logger::WARN)
       assert_redis_key(60, 0)
       assert_equal(7, @rate_limiter.retrieve_rate)
       assert_equal(6, number_of_buckets)
 
-      @rate_limiter.perform(Logger::WARN)
+      @rate_limiter.check(Logger::WARN)
       assert_equal(1, called)
       assert_equal(8, @rate_limiter.retrieve_rate)
       assert_equal(6, number_of_buckets)
@@ -81,7 +81,7 @@ class TestRedisRateLimiter < Minitest::Test
     Timecop.freeze(time + 70) do
       @redis.del("#{key}:1")
       assert_equal(6, @rate_limiter.retrieve_rate)
-      @rate_limiter.perform(Logger::WARN)
+      @rate_limiter.check(Logger::WARN)
       assert_equal(7, @rate_limiter.retrieve_rate)
       assert_equal(nil, @redis.get(@rate_limiter.callback_key))
     end
@@ -96,20 +96,20 @@ class TestRedisRateLimiter < Minitest::Test
       @redis, [Logger::WARN, Logger::ERROR], 4, 60, Proc.new { called += 1 }
     )
 
-    @rate_limiter.perform(Logger::WARN)
+    @rate_limiter.check(Logger::WARN)
     assert_equal(1, @rate_limiter.retrieve_rate)
-    @rate_limiter.perform(Logger::ERROR)
+    @rate_limiter.check(Logger::ERROR)
     assert_equal(2, @rate_limiter.retrieve_rate)
 
     Timecop.freeze(time + 50) do
-      @rate_limiter.perform(Logger::WARN)
+      @rate_limiter.check(Logger::WARN)
       assert_equal(3, @rate_limiter.retrieve_rate)
-      @rate_limiter.perform(Logger::ERROR)
+      @rate_limiter.check(Logger::ERROR)
       assert_equal(4, @rate_limiter.retrieve_rate)
       assert_equal(2, number_of_buckets)
     end
 
-    @rate_limiter.perform(Logger::ERROR)
+    @rate_limiter.check(Logger::ERROR)
     assert_equal(1, called)
   end
 
@@ -168,7 +168,7 @@ class TestRedisRateLimiter < Minitest::Test
     Logster.config.redis_raw_connection = @redis
 
     @rate_limiter = Logster::RedisRateLimiter.new(nil, [Logger::WARN], 1, 60)
-    @rate_limiter.perform(Logger::WARN)
+    @rate_limiter.check(Logger::WARN)
 
     assert_includes(key, "lobster")
     assert_redis_key(60, 0)
