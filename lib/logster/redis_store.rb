@@ -5,7 +5,7 @@ module Logster
   class RedisRateLimiter
     BUCKETS = 6
 
-    attr_reader :key, :set_key, :callback_key
+    attr_reader :key, :callback_key
 
     def initialize(redis, severities, limit, duration, callback = nil)
       @redis = use_raw_connection? ? Logster.config.redis_raw_connection : redis
@@ -17,7 +17,6 @@ module Logster
       # "_LOGSTER_RATE_LIMIT:012:20:30"
       # Triggers callback when log levels of :debug, :info and :warn occurs 20 times within 30 secs
       @key = "#{key_prefix}#{@severities.join("")}:#{@limit}:#{@duration}"
-      @set_key = "#{@key}:set"
       @callback_key = "#{@key}:callback_triggered"
       @bucket_range = @duration / BUCKETS
     end
@@ -25,32 +24,28 @@ module Logster
     def check(severity)
       return unless @severities.include?(severity)
       time = Time.now.to_i
-      redis_key = "#{@key}:#{bucket_number(time)}"
+      num = bucket_number(time)
+      redis_key = "#{@key}:#{num}"
 
       current_rate = @redis.eval <<-LUA
-        if redis.call("EXISTS", "#{redis_key}") == 0 then
-          redis.call("INCR", "#{redis_key}")
+        local bucket_number = #{num}
+        local bucket_count = redis.call("INCR", "#{redis_key}")
+
+        if bucket_count == 1 then
           redis.call("EXPIRE", "#{redis_key}", "#{bucket_expiry(time)}")
-          redis.call("SADD", "#{set_key}", "#{redis_key}")
           redis.call("DEL", "#{callback_key}")
-        else
-          redis.call("INCR", "#{redis_key}")
         end
 
         local function retrieve_rate ()
-          local keys = redis.call("SMEMBERS", "#{set_key}")
-
-          if table.getn(keys) == 0 then
-            return 0
-          else
-            local sum = 0
-            local values = redis.call("MGET", unpack(keys))
-            for index, value in ipairs(values) do sum = sum + value end
-            return sum
+          local sum = 0
+          local values = redis.call("MGET", #{mget_keys(num)})
+          for index, value in ipairs(values) do
+            if value ~= false then sum = sum + value end
           end
+          return sum
         end
 
-        return retrieve_rate()
+        return (retrieve_rate() + bucket_count)
       LUA
 
       if !@redis.get(@callback_key) && (current_rate >= @limit)
@@ -67,6 +62,13 @@ module Logster
       prefix = "__LOGSTER__RATE_LIMIT:".freeze
       prefix = "#{Logster.config.redis_prefix}:#{prefix}" if use_raw_connection?
       prefix
+    end
+
+    def mget_keys(bucket_num)
+      @mget_keys ||= (0..(BUCKETS - 1)).map { |i| "\"#{key}:#{i}\"" }
+      keys = @mget_keys.dup
+      keys.delete_at(bucket_num)
+      keys.join(", ")
     end
 
     def bucket_number(time)

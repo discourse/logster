@@ -57,7 +57,7 @@ class TestRedisRateLimiter < Minitest::Test
 
     Timecop.freeze(time + 60) do
       @redis.del("#{key}:0")
-      assert_equal(6, number_of_buckets) # Keys are not removed from the set once added but that is fine
+      assert_equal(5, number_of_buckets)
 
       assert_equal(7, @rate_limiter.check(Logger::WARN))
       assert_redis_key(60, 0)
@@ -155,7 +155,7 @@ class TestRedisRateLimiter < Minitest::Test
   end
 
   def number_of_buckets
-    @redis.scard(@rate_limiter.set_key)
+    @redis.keys("#{key}:[0-#{Logster::RedisRateLimiter::BUCKETS}]").size
   end
 
   def assert_bucket_number(expected, time)
