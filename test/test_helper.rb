@@ -5,6 +5,7 @@ require 'minitest/pride'
 require 'redis'
 require 'logster'
 require 'logster/base_store'
+require 'timecop'
 
 class Logster::TestStore < Logster::BaseStore
   attr_accessor :reported
@@ -26,6 +27,10 @@ class Logster::TestStore < Logster::BaseStore
 
   def clear_all
     @reported = []
+  end
+
+  def check_rate_limits(severity)
+    # Do nothing
   end
 
   # get, protect, unprotect: unimplemented

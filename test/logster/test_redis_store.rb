@@ -326,4 +326,19 @@ class TestRedisStore < Minitest::Test
     assert_equal(orig, env)
   end
 
+  %w{minute hour}.each do |duration|
+    define_method "test_register_rate_limit_per_#{duration}" do
+      called = false
+
+      assert_instance_of(
+        Logster::RedisRateLimiter,
+        @store.public_send("register_rate_limit_per_#{duration}", Logger::WARN, 0) do
+          called = true
+        end
+      )
+
+      @store.report(Logger::WARN, "test", "test")
+      assert called
+    end
+  end
 end

@@ -2,6 +2,88 @@ require 'json'
 require 'logster/base_store'
 
 module Logster
+  class RedisRateLimiter
+    BUCKETS = 6
+
+    attr_reader :key, :callback_key
+
+    def initialize(redis, severities, limit, duration, callback = nil)
+      @redis = use_raw_connection? ? Logster.config.redis_raw_connection : redis
+      @severities = severities
+      @limit = limit
+      @duration = duration
+      @callback = callback
+
+      # "_LOGSTER_RATE_LIMIT:012:20:30"
+      # Triggers callback when log levels of :debug, :info and :warn occurs 20 times within 30 secs
+      @key = "#{key_prefix}#{@severities.join("")}:#{@limit}:#{@duration}"
+      @callback_key = "#{@key}:callback_triggered"
+      @bucket_range = @duration / BUCKETS
+    end
+
+    def check(severity)
+      return unless @severities.include?(severity)
+      time = Time.now.to_i
+      num = bucket_number(time)
+      redis_key = "#{@key}:#{num}"
+
+      current_rate = @redis.eval <<-LUA
+        local bucket_number = #{num}
+        local bucket_count = redis.call("INCR", "#{redis_key}")
+
+        if bucket_count == 1 then
+          redis.call("EXPIRE", "#{redis_key}", "#{bucket_expiry(time)}")
+          redis.call("DEL", "#{callback_key}")
+        end
+
+        local function retrieve_rate ()
+          local sum = 0
+          local values = redis.call("MGET", #{mget_keys(num)})
+          for index, value in ipairs(values) do
+            if value ~= false then sum = sum + value end
+          end
+          return sum
+        end
+
+        return (retrieve_rate() + bucket_count)
+      LUA
+
+      if !@redis.get(@callback_key) && (current_rate >= @limit)
+        @callback.call(current_rate) if @callback
+        @redis.set(@callback_key, 1)
+      end
+
+      current_rate
+    end
+
+    private
+
+    def key_prefix
+      prefix = "__LOGSTER__RATE_LIMIT:".freeze
+      prefix = "#{Logster.config.redis_prefix}:#{prefix}" if use_raw_connection?
+      prefix
+    end
+
+    def mget_keys(bucket_num)
+      @mget_keys ||= (0..(BUCKETS - 1)).map { |i| "\"#{key}:#{i}\"" }
+      keys = @mget_keys.dup
+      keys.delete_at(bucket_num)
+      keys.join(", ")
+    end
+
+    def bucket_number(time)
+      (time % @duration) / @bucket_range
+    end
+
+    def bucket_expiry(time)
+      @duration - ((time % @duration) % @bucket_range)
+    end
+
+    def use_raw_connection?
+      Logster.config.redis_prefix && Logster.config.redis_raw_connection
+    end
+  end
+
   class RedisStore < BaseStore
 
     attr_accessor :redis, :max_backlog
@@ -179,7 +261,19 @@ module Logster
       @redis.hkeys(solved_key) || []
     end
 
+    def register_rate_limit_per_minute(severities, limit, &block)
+      register_rate_limit(severities, limit, 60, block)
+    end
+
+    def register_rate_limit_per_hour(severities, limit, &block)
+      register_rate_limit(severities, limit, 3600, block)
+    end
+
     protected
+
+    def rate_limits
+      @rate_limits ||= []
+    end
 
     def clear_solved(count = nil)
 
@@ -300,6 +394,10 @@ module Logster
 
     end
 
+    def check_rate_limits(severity)
+      rate_limits.each { |rate_limit| rate_limit.check(severity) }
+    end
+
     def solved_key
       @solved_key ||= "__LOGSTER__SOLVED_MAP"
     end
@@ -318,6 +416,15 @@ module Logster
 
     def grouping_key
       @grouping_key ||= "__LOGSTER__GMAP"
+    end
+
+    private
+
+    def register_rate_limit(severities, limit, duration, callback)
+      severities = [severities] unless severities.is_a?(Array)
+      rate_limiter = RedisRateLimiter.new(@redis, severities, limit, duration, callback)
+      rate_limits << rate_limiter
+      rate_limiter
     end
   end
 end

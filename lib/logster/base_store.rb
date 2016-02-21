@@ -65,9 +65,21 @@ module Logster
       not_implemented
     end
 
+    # Registers a rate limit on the given severities of logs
+    def register_rate_limit(severities, limit, duration, &block)
+      not_implemented
+    end
+
+    # Checks all the existing rate limiters to check if any has been exceeded
+    def check_rate_limits(severity)
+      not_implemented
+    end
+
     def report(severity, progname, msg, opts = {})
       return if (!msg || (String === msg && msg.empty?)) && skip_empty
       return if level && severity < level
+
+      check_rate_limits(severity)
 
       message = Logster::Message.new(severity, progname, msg, opts[:timestamp])
 
