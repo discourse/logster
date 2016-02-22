@@ -35,6 +35,23 @@ To run logster in other environments, in `config/application.rb`
 Logster.set_environments([:development, :staging, :production])
 ```
 
+### Tracking Error Rate
+Logster allows you to register a callback when the rate of errors has exceeded
+a given limit.
+
+Tracking buckets available are one minute and an hour.
+
+Example:
+```
+Logster.register_rate_limit_per_minute(Logger::WARN, 60) do |rate|
+  puts "O no! The error rate is now #{rate} errors/min"
+end
+
+Logster.register_rate_limit_per_hour([Logger::WARN, Logger::ERROR, Logger::FATAL], 60) do |rate|
+  puts "O no! The error rate is now #{rate} errors/hour"
+end
+```
+
 ### Note
 If you are seeing the error `No such middleware to insert before: ActionDispatch::DebugExceptions` after installing logster,
 then you are using a conflicting gem like `better_errors`.
@@ -79,6 +96,9 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 5. Create a new Pull Request
 
 # CHANGELOG
+
+- 2015-02-11: Version 1.1.1
+  - Feature: Error rate can now be tracked in one minute and one hour buckets.
 
 - 2015-11-27: Version 1.0.1
   - New assets and logster logo
