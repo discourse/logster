@@ -17,7 +17,7 @@ class TestRedisRateLimiter < Minitest::Test
     called = 0
 
     @rate_limiter = Logster::RedisRateLimiter.new(
-      @redis, [Logger::WARN], 8, 60, Proc.new { called += 1 }
+      @redis, [Logger::WARN], 8, 60, nil, Proc.new { called += 1 }
     )
 
     assert_equal(1, @rate_limiter.check(Logger::WARN))
@@ -82,7 +82,7 @@ class TestRedisRateLimiter < Minitest::Test
     called = 0
 
     @rate_limiter = Logster::RedisRateLimiter.new(
-      @redis, [Logger::WARN, Logger::ERROR], 4, 60, Proc.new { called += 1 }
+      @redis, [Logger::WARN, Logger::ERROR], 4, 60, nil, Proc.new { called += 1 }
     )
 
     assert_equal(1, @rate_limiter.check(Logger::WARN))
@@ -138,14 +138,19 @@ class TestRedisRateLimiter < Minitest::Test
   def test_raw_connection
     time = Time.new(2015, 1, 1, 1, 1)
     Timecop.freeze(time)
-    Logster.config.redis_prefix = "lobster"
-    Logster.config.redis_raw_connection = @redis
-
-    @rate_limiter = Logster::RedisRateLimiter.new(nil, [Logger::WARN], 1, 60)
+    @rate_limiter = Logster::RedisRateLimiter.new(@redis, [Logger::WARN], 1, 60, Proc.new { "lobster" })
 
     assert_equal(1, @rate_limiter.check(Logger::WARN))
-    assert_includes(key, "lobster")
     assert_redis_key(60, 0)
+
+    array = ['lobster1', 'lobster2']
+
+    @rate_limiter = Logster::RedisRateLimiter.new(
+      @redis, [Logger::WARN], 1, 60, Proc.new { array.delete_at(0) }
+    )
+
+    assert_includes(key, "lobster1")
+    assert_includes(key, "lobster2")
   end
 
   private
@@ -172,7 +177,7 @@ class TestRedisRateLimiter < Minitest::Test
 
   def assert_redis_key(expected_ttl, expected_bucket_number)
     redis_key = "#{key}:#{expected_bucket_number}"
-    assert(@redis.get(redis_key))
+    assert(@redis.get(redis_key), "the right bucket should be created")
     assert_equal(expected_ttl, @redis.ttl(redis_key))
   end
 end
