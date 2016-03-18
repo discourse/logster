@@ -1,7 +1,7 @@
 module Logster
   class Configuration
     attr_accessor :current_context, :allow_grouping, :environments,
-      :application_version, :web_title, :redis_prefix, :redis_raw_connection
+      :application_version, :web_title
 
     attr_writer :subdirectory
 

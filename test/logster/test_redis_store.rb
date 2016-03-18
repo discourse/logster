@@ -326,19 +326,61 @@ class TestRedisStore < Minitest::Test
     assert_equal(orig, env)
   end
 
-  %w{minute hour}.each do |duration|
-    define_method "test_register_rate_limit_per_#{duration}" do
-      called = false
+  def test_rate_limits
+    %w{minute hour}.each do |duration|
+      begin
+        called = false
 
-      assert_instance_of(
-        Logster::RedisRateLimiter,
-        @store.public_send("register_rate_limit_per_#{duration}", Logger::WARN, 0) do
-          called = true
-        end
-      )
+        assert_instance_of(
+          Logster::RedisRateLimiter,
+          @store.public_send("register_rate_limit_per_#{duration}", Logger::WARN, 0) do
+            called = true
+          end
+        )
 
-      @store.report(Logger::WARN, "test", "test")
-      assert called
+        @store.report(Logger::WARN, "test", "test")
+        assert called
+      ensure
+        reset_redis
+      end
     end
+  end
+
+  def test_rate_limits_with_prefix
+    begin
+      time = Time.now
+      Timecop.freeze(time)
+      current_namespace = 'first'
+      @store.redis_prefix = Proc.new { current_namespace }
+
+      called_first = 0
+      called_second = 0
+
+      @store.register_rate_limit_per_minute(Logger::WARN, 0) { called_first += 1 }
+      @store.report(Logger::WARN, "test", "test")
+      assert_equal(1, called_first)
+
+      current_namespace = 'second'
+      @store.register_rate_limit_per_minute(Logger::WARN, 0) { called_second += 1 }
+      @store.report(Logger::WARN, "test", "test")
+      assert_equal(1, called_first)
+      assert_equal(1, called_second)
+
+      Timecop.freeze(time + 10) do
+        current_namespace = 'first'
+        @store.report(Logger::WARN, "test", "test")
+
+        assert_equal(2, called_first)
+        assert_equal(1, called_second)
+      end
+    ensure
+      reset_redis
+    end
+  end
+
+  private
+
+  def reset_redis
+    @store.redis.flushall
   end
 end

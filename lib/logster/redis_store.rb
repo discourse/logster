@@ -4,20 +4,15 @@ require 'logster/base_store'
 module Logster
   class RedisRateLimiter
     BUCKETS = 6
+    PREFIX = "__LOGSTER__RATE_LIMIT".freeze
 
-    attr_reader :key, :callback_key
-
-    def initialize(redis, severities, limit, duration, callback = nil)
-      @redis = use_raw_connection? ? Logster.config.redis_raw_connection : redis
+    def initialize(redis, severities, limit, duration, redis_prefix = nil, callback = nil)
       @severities = severities
       @limit = limit
       @duration = duration
       @callback = callback
-
-      # "_LOGSTER_RATE_LIMIT:012:20:30"
-      # Triggers callback when log levels of :debug, :info and :warn occurs 20 times within 30 secs
-      @key = "#{key_prefix}#{@severities.join("")}:#{@limit}:#{@duration}"
-      @callback_key = "#{@key}:callback_triggered"
+      @redis_prefix = redis_prefix
+      @redis = redis
       @bucket_range = @duration / BUCKETS
     end
 
@@ -25,7 +20,7 @@ module Logster
       return unless @severities.include?(severity)
       time = Time.now.to_i
       num = bucket_number(time)
-      redis_key = "#{@key}:#{num}"
+      redis_key = "#{key}:#{num}"
 
       current_rate = @redis.eval <<-LUA
         local bucket_number = #{num}
@@ -48,20 +43,32 @@ module Logster
         return (retrieve_rate() + bucket_count)
       LUA
 
-      if !@redis.get(@callback_key) && (current_rate >= @limit)
+      if !@redis.get(callback_key) && (current_rate >= @limit)
         @callback.call(current_rate) if @callback
-        @redis.set(@callback_key, 1)
+        @redis.set(callback_key, 1)
       end
 
       current_rate
     end
 
+    def key
+      # "_LOGSTER_RATE_LIMIT:012:20:30"
+      # Triggers callback when log levels of :debug, :info and :warn occurs 20 times within 30 secs
+      "#{key_prefix}:#{@severities.join("")}:#{@limit}:#{@duration}"
+    end
+
+    def callback_key
+      "#{@key}:callback_triggered"
+    end
+
     private
 
     def key_prefix
-      prefix = "__LOGSTER__RATE_LIMIT:".freeze
-      prefix = "#{Logster.config.redis_prefix}:#{prefix}" if use_raw_connection?
-      prefix
+      if @redis_prefix
+        "#{@redis_prefix.call}:#{PREFIX}"
+      else
+        PREFIX
+      end
     end
 
     def mget_keys(bucket_num)
@@ -78,15 +85,12 @@ module Logster
     def bucket_expiry(time)
       @duration - ((time % @duration) % @bucket_range)
     end
-
-    def use_raw_connection?
-      Logster.config.redis_prefix && Logster.config.redis_raw_connection
-    end
   end
 
   class RedisStore < BaseStore
 
-    attr_accessor :redis, :max_backlog
+    attr_accessor :redis, :max_backlog, :redis_raw_connection
+    attr_writer :redis_prefix
 
     def initialize(redis = nil)
       super()
@@ -269,10 +273,16 @@ module Logster
       register_rate_limit(severities, limit, 3600, block)
     end
 
+    def redis_prefix
+      return 'default'.freeze if !@redis_prefix
+      @prefix_is_proc ||= @redis_prefix.respond_to?(:call)
+      @prefix_is_proc ? @redis_prefix.call : @redis_prefix
+    end
+
     protected
 
     def rate_limits
-      @rate_limits ||= []
+      @rate_limits ||= {}
     end
 
     def clear_solved(count = nil)
@@ -395,7 +405,9 @@ module Logster
     end
 
     def check_rate_limits(severity)
-      rate_limits.each { |rate_limit| rate_limit.check(severity) }
+      rate_limits_to_check = rate_limits[self.redis_prefix]
+      return if !rate_limits_to_check
+      rate_limits_to_check.each { |rate_limit| rate_limit.check(severity) }
     end
 
     def solved_key
@@ -422,8 +434,14 @@ module Logster
 
     def register_rate_limit(severities, limit, duration, callback)
       severities = [severities] unless severities.is_a?(Array)
-      rate_limiter = RedisRateLimiter.new(@redis, severities, limit, duration, callback)
-      rate_limits << rate_limiter
+      redis = (@redis_raw_connection && @redis_prefix) ? @redis_raw_connection : @redis
+
+      rate_limiter = RedisRateLimiter.new(
+        redis, severities, limit, duration, Proc.new { redis_prefix }, callback
+      )
+
+      rate_limits[self.redis_prefix] ||= []
+      rate_limits[self.redis_prefix] << rate_limiter
       rate_limiter
     end
   end
