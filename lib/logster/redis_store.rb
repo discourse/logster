@@ -6,6 +6,8 @@ module Logster
     BUCKETS = 6
     PREFIX = "__LOGSTER__RATE_LIMIT".freeze
 
+    attr_reader :duration, :callback
+
     def initialize(redis, severities, limit, duration, redis_prefix = nil, callback = nil)
       @severities = severities
       @limit = limit
@@ -14,6 +16,11 @@ module Logster
       @redis_prefix = redis_prefix
       @redis = redis
       @bucket_range = @duration / BUCKETS
+      @mget_keys = (0..(BUCKETS - 1)).map { |i| "#{key}:#{i}" }
+    end
+
+    def retrieve_rate
+      @redis.mget(@mget_keys).reduce(0) { |sum, value| sum + value.to_i }
     end
 
     def check(severity)
@@ -72,10 +79,9 @@ module Logster
     end
 
     def mget_keys(bucket_num)
-      @mget_keys ||= (0..(BUCKETS - 1)).map { |i| "\"#{key}:#{i}\"" }
       keys = @mget_keys.dup
       keys.delete_at(bucket_num)
-      keys.join(", ")
+      keys.map { |key| "'#{key}'" }.join(', ')
     end
 
     def bucket_number(time)
@@ -91,6 +97,7 @@ module Logster
 
     attr_accessor :redis, :max_backlog, :redis_raw_connection
     attr_writer :redis_prefix
+    attr_reader :rate_limits
 
     def initialize(redis = nil)
       super()
