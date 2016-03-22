@@ -9,6 +9,7 @@ class TestRedisRateLimiter < Minitest::Test
 
   def teardown
     @redis.flushall
+    Timecop.return
   end
 
   def test_check
@@ -153,6 +154,21 @@ class TestRedisRateLimiter < Minitest::Test
 
     toggle = false
     assert_includes(key, "lobster2")
+  end
+
+  def test_retrieve_rate
+    time = Time.new(2015, 1, 1, 1 , 1)
+    Timecop.freeze(time)
+
+    @rate_limiter = Logster::RedisRateLimiter.new(@redis, [Logger::WARN], 1, 60)
+
+    @rate_limiter.check(Logger::WARN)
+    assert_equal(@rate_limiter.retrieve_rate, 1)
+
+    Timecop.freeze(time + 50) do
+      @rate_limiter.check(Logger::WARN)
+      assert_equal(@rate_limiter.retrieve_rate, 2)
+    end
   end
 
   private
