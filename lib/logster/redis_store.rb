@@ -6,6 +6,8 @@ module Logster
     BUCKETS = 6
     PREFIX = "__LOGSTER__RATE_LIMIT".freeze
 
+    attr_reader :duration
+
     def initialize(redis, severities, limit, duration, redis_prefix = nil, callback = nil)
       @severities = severities
       @limit = limit
