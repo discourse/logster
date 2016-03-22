@@ -97,11 +97,16 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 
 # CHANGELOG
 
-- 2015-03-18: Version 1.2.0
+- 2016-03-22: Version 1.2.1
+  - Feature: Add method to retrieve current rate from rate limiters.
+  - Feature: Make `RedisStore#rate_limits` readable.
+  - Feature: Make `RedisRateLimiter#callback` and `RedisRateLimiter#duration` readable.
+
+- 2016-03-18: Version 1.2.0
   - Fix: Move Redis configuration into RedisStore.
   - Feature: Allow `RedisStore#redis_prefix` to either be a String or a Proc.
 
-- 2015-02-11: Version 1.1.1
+- 2016-02-11: Version 1.1.1
   - Feature: Error rate can now be tracked in one minute and one hour buckets.
 
 - 2015-11-27: Version 1.0.1
