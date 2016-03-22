@@ -95,6 +95,7 @@ module Logster
 
     attr_accessor :redis, :max_backlog, :redis_raw_connection
     attr_writer :redis_prefix
+    attr_reader :rate_limits
 
     def initialize(redis = nil)
       super()
