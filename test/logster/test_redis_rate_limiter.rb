@@ -143,13 +143,15 @@ class TestRedisRateLimiter < Minitest::Test
     assert_equal(1, @rate_limiter.check(Logger::WARN))
     assert_redis_key(60, 0)
 
-    array = ['lobster1', 'lobster2']
+    toggle = true
 
     @rate_limiter = Logster::RedisRateLimiter.new(
-      @redis, [Logger::WARN], 1, 60, Proc.new { array.delete_at(0) }
+      @redis, [Logger::WARN], 1, 60, Proc.new { toggle ? 'lobster1' : 'lobster2' }
     )
 
     assert_includes(key, "lobster1")
+
+    toggle = false
     assert_includes(key, "lobster2")
   end
 

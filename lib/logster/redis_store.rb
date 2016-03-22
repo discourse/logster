@@ -14,6 +14,7 @@ module Logster
       @redis_prefix = redis_prefix
       @redis = redis
       @bucket_range = @duration / BUCKETS
+      @mget_keys = (0..(BUCKETS - 1)).map { |i| "\"#{key}:#{i}\"" }
     end
 
     def check(severity)
@@ -72,7 +73,6 @@ module Logster
     end
 
     def mget_keys(bucket_num)
-      @mget_keys ||= (0..(BUCKETS - 1)).map { |i| "\"#{key}:#{i}\"" }
       keys = @mget_keys.dup
       keys.delete_at(bucket_num)
       keys.join(", ")
