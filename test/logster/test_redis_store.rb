@@ -346,6 +346,34 @@ class TestRedisStore < Minitest::Test
     end
   end
 
+  def test_rate_limits_only_checks_when_message_is_bumped_or_saved
+    Logster.config.allow_grouping = true
+    Logster.config.application_version = 'abc'
+
+    @store.ignore = [/^ActiveRecord::RecordNotFound/]
+    rate_limit = @store.register_rate_limit_per_minute(Logger::WARN, 0)
+
+    message = @store.report(Logger::WARN, 'message 1', "Error!", backtrace: 'here')
+    assert_equal(1, rate_limit.retrieve_rate)
+
+    @store.report(Logger::WARN, 'message 1', "Error!", backtrace: 'here')
+    assert_equal(2, rate_limit.retrieve_rate)
+
+    @store.solve(message.key)
+    @store.report(Logger::WARN, 'message 1', "Error!", backtrace: 'here')
+    assert_equal(2, rate_limit.retrieve_rate)
+
+    @store.report(Logger::WARN, 'message 2', "Error!")
+    assert_equal(3, rate_limit.retrieve_rate)
+
+    @store.report(Logger::WARN, 'message 3', "ActiveRecord::RecordNotFound")
+    assert_equal(3, rate_limit.retrieve_rate)
+  ensure
+    Logster.config.allow_grouping = false
+    Logster.config.application_version = nil
+    reset_redis
+  end
+
   def test_rate_limits_with_prefix
     begin
       time = Time.now

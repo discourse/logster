@@ -120,6 +120,7 @@ module Logster
       end
 
       trim
+      check_rate_limits(message.severity)
 
       true
     end
@@ -142,6 +143,8 @@ module Logster
         @redis.lrem(list_key, -1, message.key)
         @redis.rpush(list_key, message.key)
       end
+
+      check_rate_limits(message.severity)
 
       true
     end
