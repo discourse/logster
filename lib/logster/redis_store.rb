@@ -97,7 +97,6 @@ module Logster
 
     attr_accessor :redis, :max_backlog, :redis_raw_connection
     attr_writer :redis_prefix
-    attr_reader :rate_limits
 
     def initialize(redis = nil)
       super()
@@ -289,11 +288,11 @@ module Logster
       @prefix_is_proc ? @redis_prefix.call : @redis_prefix
     end
 
-    protected
-
     def rate_limits
       @rate_limits ||= {}
     end
+
+    protected
 
     def clear_solved(count = nil)
 
