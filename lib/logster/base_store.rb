@@ -79,8 +79,6 @@ module Logster
       return if (!msg || (String === msg && msg.empty?)) && skip_empty
       return if level && severity < level
 
-      check_rate_limits(severity)
-
       message = Logster::Message.new(severity, progname, msg, opts[:timestamp])
 
       env = opts[:env] || {}
