@@ -96,6 +96,9 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 5. Create a new Pull Request
 
 # CHANGELOG
+- 2016-03-22: Version 1.2.2
+  - Fix: Conflicting attributes and method name for `Logster::RedisStore#rate_limits`.
+  - Fix: Rate limit checker was tracking limits too early. It should only track when a message has been bumped or saved.
 
 - 2016-03-22: Version 1.2.1
   - Feature: Add method to retrieve current rate from rate limiters.
