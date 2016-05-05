@@ -8,6 +8,17 @@ module Logster
 
     attr_reader :duration, :callback
 
+    def self.clear_all(redis, redis_prefix=nil)
+      prefix = key_prefix(redis_prefix)
+
+      redis.eval "
+      local keys = redis.call('keys', '*#{prefix}*')
+      if (table.getn(keys) > 0) then
+        redis.call('del', unpack(keys))
+      end
+      "
+    end
+
     def initialize(redis, severities, limit, duration, redis_prefix = nil, callback = nil)
       @severities = severities
       @limit = limit
@@ -70,12 +81,17 @@ module Logster
 
     private
 
-    def key_prefix
-      if @redis_prefix
-        "#{@redis_prefix.call}:#{PREFIX}"
+    def self.key_prefix(redis_prefix)
+      if redis_prefix
+        "#{redis_prefix.call}:#{PREFIX}"
       else
         PREFIX
       end
+
+    end
+
+    def key_prefix
+      self.class.key_prefix(@redis_prefix)
     end
 
     def mget_keys(bucket_num)
@@ -213,6 +229,7 @@ module Logster
     end
 
     def clear
+      RedisRateLimiter.clear_all(@redis)
       @redis.del(solved_key)
       @redis.del(list_key)
       keys = @redis.smembers(protected_key) || []
@@ -225,7 +242,10 @@ module Logster
 
         sorted = protected
           .values
-          .map { |string| Message.from_json(string) }
+          .map { |string|
+            Message.from_json(string) rescue nil
+          }
+          .compact
           .sort
           .map(&:key)
 

@@ -12,6 +12,35 @@ class TestRedisRateLimiter < Minitest::Test
     Timecop.return
   end
 
+  def test_clear_all
+    called = 0
+
+    @redis.set("dont_nuke", "1")
+
+    @rate_limiter = Logster::RedisRateLimiter.new(
+      @redis, [Logger::WARN], 8, 60, Proc.new { "prefix" }, Proc.new { called += 1 }
+    )
+
+    9.times do
+      @rate_limiter.check(Logger::WARN)
+    end
+
+    assert_equal 10, @rate_limiter.check(Logger::WARN)
+
+    Logster::RedisRateLimiter.clear_all(@redis, Proc.new { "prefix" })
+
+    assert_equal 1, @rate_limiter.check(Logger::WARN)
+
+    # also clears when prefix missing
+    Logster::RedisRateLimiter.clear_all(@redis)
+
+    assert_equal 1, @rate_limiter.check(Logger::WARN)
+
+    assert_equal "1", @redis.get("dont_nuke")
+    @redis.del("dont_nuke")
+
+  end
+
   def test_check
     time = Time.new(2015, 1, 1, 1, 1)
     Timecop.freeze(time)
