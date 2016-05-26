@@ -54,7 +54,7 @@ end
 
 ### Note
 If you are seeing the error `No such middleware to insert before: ActionDispatch::DebugExceptions` after installing logster,
-then you are using a conflicting gem like `better_errors`.
+then you are using a conflicting gem like `better_errors` or `web-console`.
 
 To avoid this error, make sure logster is added behind those conflicting gems in your Gemfile.
 
