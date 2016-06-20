@@ -96,7 +96,10 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 5. Create a new Pull Request
 
 # CHANGELOG
-- 2016-05-05: Version 1.2.3h
+- 2016-05-05: Version 1.2.4
+  - Fix: XSS in log message show if attacker can inject script into ENV
+
+- 2016-05-05: Version 1.2.3
   - Fix: clear_all now also clears rate limits
   - Fix: protect against corrupt data in redis during clear
 

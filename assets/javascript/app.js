@@ -93,7 +93,7 @@ function buildHashString(hash, recurse) {
     } else if (typeof v === "object") {
       hashes.push(k);
     } else {
-      buffer.push("<tr><td>" + k + "</td><td>" + v + "</td></tr>");
+      buffer.push("<tr><td>" + escapeHtml(k) + "</td><td>" + escapeHtml(v) + "</td></tr>");
     }
   });
 
@@ -101,7 +101,7 @@ function buildHashString(hash, recurse) {
     _.each(hashes, function(k1) {
       var v = hash[k1];
       buffer.push("<tr><td></td><td><table>");
-      buffer.push("<td>" + k1 + "</td><td>" + buildHashString(v, true) + "</td>");
+      buffer.push("<td>" + escapeHtml(k1) + "</td><td>" + buildHashString(v, true) + "</td>");
       buffer.push("</table></td></tr>");
     });
   }

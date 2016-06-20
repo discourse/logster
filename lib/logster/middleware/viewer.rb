@@ -226,7 +226,7 @@ JS
   <script>
     window.Logger = {
        rootPath: "#{@logs_path}",
-       preload: #{JSON.fast_generate(preload)}
+       preload: #{JSON.fast_generate(preload).gsub("</", "<\\/")}
     };
   </script>
 </head>
