@@ -96,6 +96,9 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 5. Create a new Pull Request
 
 # CHANGELOG
+- 2016-07-11: Version 1.2.5
+  - Fix: Chained `Logster::Logger` logger now receives backtrace as well.
+
 - 2016-05-05: Version 1.2.4
   - Fix: XSS in log message show if attacker can inject script into ENV
 
