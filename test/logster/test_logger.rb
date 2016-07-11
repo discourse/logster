@@ -30,6 +30,17 @@ class TestLogger < Minitest::Test
     assert_match(/W,.*boom/, io.string)
   end
 
+  def test_backtrace_with_chain
+    @other_store = TestStore.new
+    @logger.chain(Logster::Logger.new(@other_store))
+
+    @logger.add(0, "test", "prog", backtrace: "backtrace", env: {a: "x"})
+
+    [@store, @other_store].each do |store|
+      assert_equal "backtrace", store.calls[0][3][:backtrace]
+    end
+  end
+
   class PlayLogger
     attr_accessor :skip_store
     def initialize(tester)
