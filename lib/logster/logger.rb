@@ -5,10 +5,13 @@ module Logster
     LOGSTER_ENV = "logster_env".freeze
 
     attr_accessor :store, :skip_store
+    attr_reader :rails_logger
 
-    def initialize(store)
+    def initialize(store, rails_logger: nil)
       super(nil)
       @store = store
+      @rails_logger = rails_logger
+      chain(@rails_logger)
     end
 
     def chain(logger)
