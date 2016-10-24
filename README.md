@@ -96,6 +96,9 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 5. Create a new Pull Request
 
 # CHANGELOG
+- 2016-10-24: Version 1.2.6
+  - Fix: Check if `Rails.env` is defined when using Logster in a none Rails project.
+
 - 2016-07-11: Version 1.2.5
   - Fix: Chained `Logster::Logger` logger now receives backtrace as well.
 
