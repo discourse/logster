@@ -12,7 +12,8 @@ module Logster
       @subdirectory = nil
 
       @allow_grouping = false
-      if defined?(::Rails) && ::Rails.env.production?
+
+      if defined?(::Rails) && defined?(::Rails.env) && ::Rails.env.production?
         @allow_grouping = true
       end
     end
