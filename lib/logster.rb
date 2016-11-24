@@ -42,7 +42,7 @@ module Logster
   end
 
   def self.set_environments(envs)
-    @config.environments = envs
+    config.environments = envs
   end
 end
 
