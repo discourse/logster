@@ -20,6 +20,10 @@ module Logster
     @logger
   end
 
+  def self.rails_logger
+    @logger.default_logger
+  end
+
   def self.store=(store)
     @store=store
   end
