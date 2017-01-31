@@ -17,6 +17,20 @@ class TestLogger < Minitest::Test
     @logger = Logster::Logger.new(@store)
   end
 
+  def test_per_thread_override
+    @logger.override_level = 2
+
+    @logger.add(0, "test", "prog", backtrace: "backtrace", env: {a: "x"})
+    Thread.new do
+      @logger.add(0, "test", "prog", backtrace: "backtrace", env: {a: "x"})
+    end.join
+
+    @logger.override_level = nil
+    @logger.add(0, "test", "prog", backtrace: "backtrace", env: {a: "x"})
+
+    assert_equal 2, @store.calls.length
+  end
+
   def test_backtrace
     @logger.add(0, "test", "prog", backtrace: "backtrace", env: {a: "x"})
     assert_equal "backtrace", @store.calls[0][3][:backtrace]

@@ -96,6 +96,10 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 5. Create a new Pull Request
 
 # CHANGELOG
+
+- 2017-01-30: Version 1.2.7
+  - Feature: Add override_level to Logster::Logger allowing for threadsafe logger override
+
 - 2016-10-24: Version 1.2.6
   - Fix: Check if `Rails.env` is defined when using Logster in a none Rails project.
 

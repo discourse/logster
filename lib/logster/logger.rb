@@ -9,6 +9,19 @@ module Logster
     def initialize(store)
       super(nil)
       @store = store
+      @override_levels = nil
+    end
+
+    def override_level=(val)
+      tid = Thread.current.object_id
+
+      ol = @override_levels
+      if val.nil? && ol && ol.key?(tid)
+        ol.delete(tid)
+        @override_levels = nil if ol.length == 0
+      elsif val
+        (@override_levels ||= {})[tid] = val
+      end
     end
 
     def chain(logger)
@@ -37,9 +50,13 @@ module Logster
       add_with_opts(*args,&block)
     end
 
+    def level
+      ol = @override_levels
+      (ol && ol[Thread.current.object_id]) || @level
+    end
 
     def add_with_opts(severity, message, progname, opts=nil, &block)
-      if severity < @level
+      if severity < level
         return true
       end
 
