@@ -75,6 +75,12 @@ Out of the box, logster will use the default redis connection, to customise, in 
 Logster.store = Logster::RedisStore.new(redis_connection)
 ```
 
+To configure Redis key namespace
+```
+redis_connection = Redis::Namespace.new(:my_logs_namespace, redis: Redis.new(host: 'localhost', port: 6379, db: 1))
+Logster.store = Logster::RedisStore.new(redis_connection)
+```
+
 ### Heroku Deployment
 In case you may be using the `rails_12factor` gem in a production deployment on Heroku, the standard `Rails.logger` will not cooperate properly with Logster. Extend Rails.logger in your `config/application.rb` or `config/initializers/logster.rb` with:
 ```
