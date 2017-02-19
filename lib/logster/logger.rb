@@ -1,7 +1,9 @@
 require 'logger'
 
 module Logster
-  class Logger < ::Logger
+
+  class Logger < Class.new(const_defined?('ActiveSupport::Logger') ? ActiveSupport::Logger : ::Logger)
+
     LOGSTER_ENV = "logster_env".freeze
 
     attr_accessor :store, :skip_store
