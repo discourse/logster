@@ -1,4 +1,5 @@
 require 'digest/sha1'
+require 'securerandom'
 
 module Logster
 
