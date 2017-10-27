@@ -97,6 +97,9 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 
 # CHANGELOG
 
+- 2017-10-27: Version 1.2.8
+  - Fix: `Logster::Middleware::DebugExceptions` is passed a request in Rails 5 instead of the env.
+
 - 2017-01-30: Version 1.2.7
   - Feature: Add override_level to Logster::Logger allowing for threadsafe logger override
 
