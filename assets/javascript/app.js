@@ -270,6 +270,10 @@ App.MessageCollection = Em.Object.extend({
     App.ajax("/messages.json", {
       data: data
     }).success(function(data) {
+        // guard against race: stale search result
+        if (data.filter != self.get('filter')) { return; }
+        if (data.search != self.get('search')) { return; }
+
         if (data.messages.length > 0) {
           var newRows = self.toMessages(data.messages);
           var messages = self.get("messages");
