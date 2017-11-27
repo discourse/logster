@@ -36,6 +36,24 @@ class TestViewer < Minitest::Test
     assert_equal("/hello/world",viewer.send(:resolve_path, "/logsie/hello/world"))
   end
 
+  def test_search_raceguard_s
+    _,_,result_j = viewer.call(Rack::MockRequest.env_for("/logsie/messages.json?search=searchkey"))
+    result = JSON.parse(result_j.first)
+    assert_equal('searchkey', result['search'])
+  end
+
+  def test_search_raceguard_sr
+    _,_,result_j = viewer.call(Rack::MockRequest.env_for("/logsie/messages.json?search=/regex/&regex_search=true"))
+    result = JSON.parse(result_j.first)
+    assert_equal('/regex/', result['search'])
+  end
+
+  def test_search_raceguard_f
+    _,_,result_j = viewer.call(Rack::MockRequest.env_for("/logsie/messages.json?filter=0_1_2_3_4"))
+    result = JSON.parse(result_j.first)
+    assert_equal([0,1,2,3,4], result['filter'])
+  end
+
   def test_assets
     env = {}
     env["PATH_INFO"] = "/logsie/javascript/external/jquery.min.js"
