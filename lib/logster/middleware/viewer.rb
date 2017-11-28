@@ -141,10 +141,10 @@ module Logster
 
         payload = {
           messages: @store.latest(opts),
-          total: @store.count
+          total: @store.count,
+          search: req['search'] || '',
+          filter: filter || '',
         }
-        payload[:search] = req['search'] if search
-        payload[:filter] = filter if filter
 
         json = JSON.generate(payload)
         [200, {"Content-Type" => "application/json"}, [json]]
