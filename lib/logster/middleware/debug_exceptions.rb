@@ -2,8 +2,13 @@ class Logster::Middleware::DebugExceptions < ActionDispatch::DebugExceptions
   private
 
   def log_error(request_or_env, wrapper)
-    is_request = Rails::VERSION::MAJOR > 4
-    env = is_request ? request_or_env.env : request_or_env
+    env =
+      if Rails::VERSION::MAJOR > 4
+        request_or_env.env
+      else
+        request_or_env
+      end
+
     exception = wrapper.exception
 
     Logster.config.current_context.call(env) do
@@ -17,6 +22,5 @@ class Logster::Middleware::DebugExceptions < ActionDispatch::DebugExceptions
                         env: env)
     end
 
-    super(request_or_env, wrapper) if is_request
   end
 end
