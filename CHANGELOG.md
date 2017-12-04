@@ -1,11 +1,5 @@
 # CHANGELOG
 
-- 2017-12-01: Version 1.2.10
-  - Fix: `Logster::Middleware::DebugExceptions` was not logging exceptions in Rails 5.
-
-- 2017-11-29: Version 1.2.9
-  - Fix: Race condition for search results that get returned out-of-order
-
 - 2017-10-27: Version 1.2.8
   - Fix: `Logster::Middleware::DebugExceptions` is passed a request in Rails 5 instead of the env.
 
