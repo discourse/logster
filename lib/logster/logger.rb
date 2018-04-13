@@ -5,6 +5,7 @@ module Logster
     LOGSTER_ENV = "logster_env".freeze
 
     attr_accessor :store, :skip_store
+    attr_reader :chained
 
     def initialize(store)
       super(nil)
