@@ -32,6 +32,7 @@ module Logster
       @backtrace = nil
       @count = 1
       @protected = false
+      @first_timestamp = nil
     end
 
     def to_h

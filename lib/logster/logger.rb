@@ -11,6 +11,8 @@ module Logster
       super(nil)
       @store = store
       @override_levels = nil
+      @chained = []
+      @skip_store = false
     end
 
     def override_level=(val)
@@ -26,7 +28,6 @@ module Logster
     end
 
     def chain(logger)
-      @chained ||= []
       @chained << logger
     end
 

@@ -35,13 +35,15 @@ module Logster
 
       def report_js_error(env)
         req = Rack::Request.new(env)
-        message = req["message"] || ""
-        message << "\nUrl: " << req["url"] if req["url"]
-        message << "\nLine: " << req["line"] if req["line"]
-        message << "\nColumn: " << req["column"] if req["column"]
-        message << "\nWindow Location: " << req["window_location"] if req["window_location"]
+        params = req.params
 
-        backtrace = req["stacktrace"] || ""
+        message = params["message"] || ""
+        message << "\nUrl: " << params["url"] if params["url"]
+        message << "\nLine: " << params["line"] if params["line"]
+        message << "\nColumn: " << params["column"] if params["column"]
+        message << "\nWindow Location: " << params["window_location"] if params["window_location"]
+
+        backtrace = params["stacktrace"] || ""
         Logster.store.report(::Logger::Severity::WARN,
                             "javascript",
                             message,

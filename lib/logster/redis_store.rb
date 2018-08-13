@@ -118,8 +118,9 @@ module Logster
       super()
       @redis = redis || Redis.new
       @max_backlog = 1000
+      @redis_prefix = nil
+      @redis_raw_connection = nil
     end
-
 
     def save(message)
       if keys=message.solved_keys

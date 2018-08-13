@@ -124,25 +124,27 @@ module Logster
       protected
 
       def serve_messages(req)
+        params = req.params
+
         opts = {
-          before: req["before"],
-          after: req["after"]
+          before: params["before"],
+          after: params["after"]
         }
 
-        if(filter = req["filter"])
+        if(filter = params["filter"])
           filter = filter.split("_").map{|s| s.to_i}
           opts[:severity] = filter
         end
 
-        if search = req["search"]
-          search = (parse_regex(search) || search) if req["regex_search"] == "true"
+        if search = params["search"]
+          search = (parse_regex(search) || search) if params["regex_search"] == "true"
           opts[:search] = search
         end
 
         payload = {
           messages: @store.latest(opts),
           total: @store.count,
-          search: req['search'] || '',
+          search: params['search'] || '',
           filter: filter || '',
         }
 
