@@ -76,7 +76,7 @@ module Logster
     end
 
     def callback_key
-      "#{@key}:callback_triggered"
+      "#{key}:callback_triggered"
     end
 
     private
