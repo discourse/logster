@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- 2018-08-13: Version 1.2.9
+  - Feature: expose chained loggers in Logster::Logger
+
 - 2017-10-27: Version 1.2.8
   - Fix: `Logster::Middleware::DebugExceptions` is passed a request in Rails 5 instead of the env.
 
