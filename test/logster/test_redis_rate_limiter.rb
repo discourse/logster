@@ -102,7 +102,7 @@ class TestRedisRateLimiter < Minitest::Test
     Timecop.freeze(time + 70) do
       @redis.del("#{key}:1")
       assert_equal(7, @rate_limiter.check(Logger::WARN))
-      assert_equal(nil, @redis.get(@rate_limiter.callback_key))
+      assert_nil(@redis.get(@rate_limiter.callback_key))
     end
   end
 
