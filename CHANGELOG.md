@@ -1,6 +1,6 @@
 # CHANGELOG
 
-- 2018-08-13: Version 1.2.9
+- 2018-08-13: Version 1.2.10
   - Feature: expose chained loggers in Logster::Logger
 
 - 2017-10-27: Version 1.2.8
