@@ -1,21 +1,21 @@
 PATH
   remote: ..
   specs:
-    logster (1.2.9)
+    logster (1.2.11)
 
 GEM
   remote: https://rubygems.org/
   specs:
     mustermann (1.0.2)
-    puma (3.11.4)
+    puma (3.12.0)
     rack (2.0.5)
-    rack-protection (2.0.1)
+    rack-protection (2.0.3)
       rack
-    redis (4.0.1)
-    sinatra (2.0.1)
+    redis (4.0.2)
+    sinatra (2.0.3)
       mustermann (~> 1.0)
       rack (~> 2.0)
-      rack-protection (= 2.0.1)
+      rack-protection (= 2.0.3)
       tilt (~> 2.0)
     tilt (2.0.8)
 
@@ -29,4 +29,4 @@ DEPENDENCIES
   sinatra
 
 BUNDLED WITH
-   1.16.1
+   1.16.3
