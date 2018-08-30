@@ -428,6 +428,9 @@ module Logster
 
       if Regexp === search
         row if row.message =~ search
+      elsif search[0] == "-"
+        exclude = search.sub('-', '')
+        row unless row.message.include?(exclude)
       elsif row.message.include?(search)
         row
       end

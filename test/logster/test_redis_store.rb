@@ -209,6 +209,19 @@ class TestRedisStore < Minitest::Test
     assert_equal(1, latest.length)
   end
 
+  def test_search_exclude_results
+    @store.report(Logger::INFO, "test", "A")
+    @store.report(Logger::INFO, "test", "B")
+
+    messages = @store.latest
+    assert_equal(2, messages.length)
+
+    latest = @store.latest(search: "-A")
+
+    assert_equal(1, latest.length)
+    assert_equal("B", latest[0].message)
+  end
+
   def test_regex_search
     @store.report(Logger::INFO, "test", "pattern_1")
     @store.report(Logger::INFO, "test", "pattern_2")
