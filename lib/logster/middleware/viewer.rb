@@ -28,12 +28,19 @@ module Logster
         end
 
         if resource = resolve_path(path)
+          if resource =~ /^\/javascript\/(components|templates)\/([a-z\-]+)\.js$/
+            type, name = $1, $2
+            status, headers, body = serve_file(env, resource.sub('.js', '.hbs'))
 
-          if resource =~ /\.ico$|\.js$|\.png|\.handlebars$|\.css$|\.woff$|\.ttf$|\.woff2$|\.svg$|\.otf$|\.eot$/
-            env[PATH_INFO] = resource
-            # accl redirect is going to be trouble, ensure its bypassed
-            env['sendfile.type'] = ''
-            @fileserver.call(env)
+            if status == 200
+              body = [compile_hbs(body.to_path, type, name)]
+              headers['Content-Type'] = 'application/javascript'
+              headers['Content-Length'] = body.first.bytesize
+            end
+
+            [status, headers, body]
+          elsif resource =~ /\.ico$|\.js$|\.png|\.handlebars$|\.css$|\.woff$|\.ttf$|\.woff2$|\.svg$|\.otf$|\.eot$/
+            serve_file(env, resource)
 
           elsif resource.start_with?("/messages.json")
             serve_messages(Rack::Request.new(env))
@@ -123,6 +130,13 @@ module Logster
 
       protected
 
+      def serve_file(env, path)
+        env[PATH_INFO] = path
+        # accl redirect is going to be trouble, ensure its bypassed
+        env['sendfile.type'] = ''
+        @fileserver.call(env)
+      end
+
       def serve_messages(req)
         params = req.params
 
@@ -185,20 +199,18 @@ module Logster
       end
 
       def component(name)
-        ember_template("components/#{name}", "components/" << name)
+        script("components/#{name}.js")
       end
 
       def template(name)
-        ember_template("templates/#{name}", name)
+        script("templates/#{name}.js")
       end
 
-      def ember_template(location, name)
-        val = File.read("#{@assets_path}/javascript/#{location}.hbs")
-<<JS
-      <script>
-        Ember.TEMPLATES[#{name.inspect}] = Ember.Handlebars.compile(#{val.inspect});
-      </script>
-JS
+      def compile_hbs(path, type, name)
+        name = "#{type}/#{name}" if type == 'components'
+        val = File.read(path)
+
+        "Ember.TEMPLATES[#{name.inspect}] = Ember.Handlebars.compile(#{val.inspect});"
       end
 
       def body(preload)
