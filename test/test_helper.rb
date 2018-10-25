@@ -6,6 +6,7 @@ require 'redis'
 require 'logster'
 require 'logster/base_store'
 require 'timecop'
+require 'byebug'
 
 class Logster::TestStore < Logster::BaseStore
   attr_accessor :reported

@@ -67,4 +67,41 @@ class TestViewer < Minitest::Test
     assert_equal(/hello/i, viewer.send(:parse_regex, '/hello/i'))
   end
 
+  def test_linking_to_a_valid_ember_component
+    status, headers, body = viewer.call(
+      'PATH_INFO' => '/logsie/javascript/components/message-row.js',
+      'REQUEST_METHOD' => 'GET'
+    )
+
+    assert_equal(200, status)
+    assert_equal('application/javascript', headers['Content-Type'])
+    assert_match(/Ember.TEMPLATES\["components\/message-row"\]/, body.first)
+  end
+
+  def test_linking_to_a_valid_ember_template
+    status, headers, body = viewer.call(
+      'PATH_INFO' => '/logsie/javascript/templates/application.js',
+      'REQUEST_METHOD' => 'GET'
+    )
+
+    assert_equal(200, status)
+    assert_equal('application/javascript', headers['Content-Type'])
+    assert_match(/Ember.TEMPLATES\["application"\]/, body.first)
+  end
+
+  def test_linking_to_an_invalid_ember_component_or_template
+    %w(
+      /logsie/javascript/templates/application.hbs
+      /logsie/javascript/templates/does_not_exist.js
+      /logsie/javascript/components/does_not_exist.js
+      /logsie/javascript/templates/../../app.js
+    ).each do |path|
+      status, _ = viewer.call(
+        'PATH_INFO' => path,
+        'REQUEST_METHOD' => 'GET'
+      )
+
+      assert_equal(404, status, "#{path} should have 404'ed")
+    end
+  end
 end
