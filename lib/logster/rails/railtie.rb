@@ -14,9 +14,10 @@ module Logster::Rails
     store.level = Logger::Severity::WARN if Rails.env.production?
 
     logger = Logster::Logger.new(store)
-    logger.chain(::Rails.logger)
+    original_logger = ::Rails.logger
+    logger.chain(original_logger)
     logger.level = ::Rails.logger.level
-
+    logger = ActiveSupport::TaggedLogging.new(logger) if original_logger.respond_to?(:clear_tags!, true)
     Logster.logger = ::Rails.logger = config.logger = logger
   end
 
