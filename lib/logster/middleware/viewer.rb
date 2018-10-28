@@ -213,6 +213,10 @@ module Logster
         "Ember.TEMPLATES[#{name.inspect}] = Ember.Handlebars.compile(#{val.inspect});"
       end
 
+      def to_json_and_escape(payload)
+        Rack::Utils.escape_html(JSON.fast_generate(payload))
+      end
+
       def body(preload)
 <<HTML
 <!doctype html>
@@ -239,21 +243,10 @@ module Logster
   #{component("panel-resizer")}
   #{template("index")}
   #{template("show")}
-  <script>
-    window.Logger = {
-       rootPath: "#{@logs_path}",
-       preload: #{JSON.fast_generate(preload).gsub("</", "<\\/")}
-    };
-  </script>
+  <meta id="preloaded-data" data-root-path="#{@logs_path}" data-preloaded="#{to_json_and_escape(preload)}">
 </head>
 <body>
   #{script("app.js")}
-  <script>
-    App.Router.reopen({
-      rootURL: Logger.rootPath,
-      location: 'history'
-    });
-  </script>
 </body>
 </html>
 HTML

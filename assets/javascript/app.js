@@ -16,6 +16,11 @@ moment.lang('en', {
       }
 });
 
+var preloaded = document.getElementById('preloaded-data').dataset;
+var Logger = {
+   rootPath: preloaded.rootPath,
+   preload: JSON.parse(preloaded.preloaded)
+};
 
 App = Ember.Application.create({
 });
@@ -48,6 +53,11 @@ App.preloadOrAjax = function(url, settings) {
 App.Router.map(function() {
   this.route("index", { path: "/" });
   this.route("show", { path: "/show/:id" });
+});
+
+App.Router.reopen({
+  rootURL: Logger.rootPath,
+  location: 'history'
 });
 
 var entityMap = {
