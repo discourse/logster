@@ -12,6 +12,7 @@ class TestViewer < Minitest::Test
   end
 
   def setup
+    Logster.config.subdirectory = "/logsie"
     Logster.store = Logster::RedisStore.new
   end
 
@@ -21,10 +22,11 @@ class TestViewer < Minitest::Test
   end
 
   def viewer
-    @viewer ||= begin
-                  Logster.config.subdirectory = "/logsie"
-                  Logster::Middleware::Viewer.new(nil)
-                end
+    @viewer ||= Logster::Middleware::Viewer.new(nil)
+  end
+
+  def request
+    @request ||= Rack::MockRequest.new(Rack::Lint.new(viewer))
   end
 
   def test_path_resolution
@@ -37,30 +39,26 @@ class TestViewer < Minitest::Test
   end
 
   def test_search_raceguard_s
-    _,_,result_j = viewer.call(Rack::MockRequest.env_for("/logsie/messages.json?search=searchkey"))
-    result = JSON.parse(result_j.first)
+    response = request.get('/logsie/messages.json?search=searchkey')
+    result = JSON.parse(response.body)
     assert_equal('searchkey', result['search'])
   end
 
   def test_search_raceguard_sr
-    _,_,result_j = viewer.call(Rack::MockRequest.env_for("/logsie/messages.json?search=/regex/&regex_search=true"))
-    result = JSON.parse(result_j.first)
+    response = request.get('/logsie/messages.json?search=/regex/&regex_search=true')
+    result = JSON.parse(response.body)
     assert_equal('/regex/', result['search'])
   end
 
   def test_search_raceguard_f
-    _,_,result_j = viewer.call(Rack::MockRequest.env_for("/logsie/messages.json?filter=0_1_2_3_4"))
-    result = JSON.parse(result_j.first)
+    response = request.get("/logsie/messages.json?filter=0_1_2_3_4")
+    result = JSON.parse(response.body)
     assert_equal([0,1,2,3,4], result['filter'])
   end
 
   def test_assets
-    env = {}
-    env["PATH_INFO"] = "/logsie/javascript/external/jquery.min.js"
-    env["REQUEST_METHOD"] = "GET"
-
-    result,  = viewer.call(env)
-    assert_equal(200, result)
+    response = request.get('/logsie/javascript/external/jquery.min.js')
+    assert_equal(200, response.status)
   end
 
   def test_regex_parse
@@ -68,25 +66,19 @@ class TestViewer < Minitest::Test
   end
 
   def test_linking_to_a_valid_ember_component
-    status, headers, body = viewer.call(
-      'PATH_INFO' => '/logsie/javascript/components/message-row.js',
-      'REQUEST_METHOD' => 'GET'
-    )
+    response = request.get('/logsie/javascript/components/message-row.js')
 
-    assert_equal(200, status)
-    assert_equal('application/javascript', headers['Content-Type'])
-    assert_match(/Ember.TEMPLATES\["components\/message-row"\]/, body.first)
+    assert_equal(200, response.status)
+    assert_equal('application/javascript', response.headers['Content-Type'])
+    assert_match(/Ember.TEMPLATES\["components\/message-row"\]/, response.body)
   end
 
   def test_linking_to_a_valid_ember_template
-    status, headers, body = viewer.call(
-      'PATH_INFO' => '/logsie/javascript/templates/application.js',
-      'REQUEST_METHOD' => 'GET'
-    )
+    response = request.get('/logsie/javascript/templates/application.js')
 
-    assert_equal(200, status)
-    assert_equal('application/javascript', headers['Content-Type'])
-    assert_match(/Ember.TEMPLATES\["application"\]/, body.first)
+    assert_equal(200, response.status)
+    assert_equal('application/javascript', response.headers['Content-Type'])
+    assert_match(/Ember.TEMPLATES\["application"\]/, response.body)
   end
 
   def test_linking_to_an_invalid_ember_component_or_template
@@ -96,12 +88,8 @@ class TestViewer < Minitest::Test
       /logsie/javascript/components/does_not_exist.js
       /logsie/javascript/templates/../../app.js
     ).each do |path|
-      status, _ = viewer.call(
-        'PATH_INFO' => path,
-        'REQUEST_METHOD' => 'GET'
-      )
-
-      assert_equal(404, status, "#{path} should have 404'ed")
+      response = request.get(path)
+      assert_equal(404, response.status, "#{path} should have 404'ed")
     end
   end
 end
