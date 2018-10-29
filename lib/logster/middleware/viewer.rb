@@ -35,7 +35,7 @@ module Logster
             if status == 200
               body = [compile_hbs(body.to_path, type, name)]
               headers['Content-Type'] = 'application/javascript'
-              headers['Content-Length'] = body.first.bytesize
+              headers['Content-Length'] = body.first.bytesize.to_s
             end
 
             [status, headers, body]
