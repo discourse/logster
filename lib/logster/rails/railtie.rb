@@ -17,7 +17,9 @@ module Logster::Rails
     original_logger = ::Rails.logger
     logger.chain(original_logger)
     logger.level = ::Rails.logger.level
-    logger = ActiveSupport::TaggedLogging.new(logger) if original_logger.respond_to?(:clear_tags!, true)
+    if defined?(ActiveSupport::TaggedLogging) && ActiveSupport::TaggedLogging === original_logger
+      logger = ActiveSupport::TaggedLogging.new(original_logger)
+    end
     Logster.logger = ::Rails.logger = config.logger = logger
   end
 
