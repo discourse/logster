@@ -1,0 +1,57 @@
+<div id='top-panel'>
+  <table id='log-table'>
+    <thead>
+      <tr>
+        <th class="count"></th>
+        <th class="severity"></th>
+        <th class="info"></th>
+        <th class="protected"></th>
+        <th class="time"></th>
+      </tr>
+    </thead>
+    <tbody>
+    {{#if model.moreBefore}}
+      <tr {{action "showMoreBefore"}} class="show-more">
+        <td colspan=5>select to see {{model.totalBefore}} more</td>
+      </tr>
+    {{/if}}
+    {{#each model.messages as |message|}}
+      {{message-row model=message selectedMessage=(action "selectMessage")}}
+    {{/each}}
+    </tbody>
+  </table>
+</div>
+{{panel-resizer}}
+<div id="bottom-panel">
+  {{message-info currentMessage=currentMessage removeMessage=(action "removeMessage") solveMessage=(action "solveMessage")}}
+
+  <div class="action-panel">
+    <label class="debug">
+      {{input type="checkbox" checked=showDebug}}
+      Debug
+    </label>
+    <label class="info">
+      {{input type="checkbox" checked=showInfo}}
+      Info
+    </label>
+    <label class="warn">
+      {{input type="checkbox" checked=showWarn}}
+      <i class='fa fa-exclamation-circle warning'></i>
+      Warning
+    </label>
+    <label class="error">
+      {{input type="checkbox" checked=showErr}}
+      <i class='fa fa-times-circle error'></i>
+      Error
+    </label>
+    <label class="fatal">
+      {{input type="checkbox" checked=showFatal}}
+      <i class='fa fa-times-circle fatal'></i>
+      Fatal
+    </label>
+    <label class="search">
+      {{input type="textfield" placeholder="Search" value=search}}
+    </label>
+    <a class="clear btn danger" href {{action "clear"}}><i class='fa fa-times'></i> Clear logs</a>
+  </div>
+</div>

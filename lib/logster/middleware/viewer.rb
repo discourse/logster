@@ -28,18 +28,7 @@ module Logster
         end
 
         if resource = resolve_path(path)
-          if resource =~ /^\/javascript\/(components|templates)\/([a-z\-]+)\.js$/
-            type, name = $1, $2
-            status, headers, body = serve_file(env, resource.sub('.js', '.hbs'))
-
-            if status == 200
-              body = [compile_hbs(body.to_path, type, name)]
-              headers['Content-Type'] = 'application/javascript'
-              headers['Content-Length'] = body.first.bytesize.to_s
-            end
-
-            [status, headers, body]
-          elsif resource =~ /\.ico$|\.js$|\.png|\.handlebars$|\.css$|\.woff$|\.ttf$|\.woff2$|\.svg$|\.otf$|\.eot$/
+          if resource =~ /\.ico$|\.js$|\.png|\.handlebars$|\.css$|\.woff$|\.ttf$|\.woff2$|\.svg$|\.otf$|\.eot$/
             serve_file(env, resource)
 
           elsif resource.start_with?("/messages.json")
@@ -198,61 +187,35 @@ module Logster
         "<script src='#{@logs_path}/javascript/#{name}'></script>"
       end
 
-      def component(name)
-        script("components/#{name}.js")
-      end
-
-      def template(name)
-        script("templates/#{name}.js")
-      end
-
-      def compile_hbs(path, type, name)
-        name = "#{type}/#{name}" if type == 'components'
-        val = File.read(path)
-
-        "Ember.TEMPLATES[#{name.inspect}] = Ember.Handlebars.compile(#{val.inspect});"
-      end
-
       def to_json_and_escape(payload)
         Rack::Utils.escape_html(JSON.fast_generate(payload))
       end
 
       def body(preload)
-<<HTML
-<!doctype html>
-<html>
-<head>
-  <link rel="shortcut icon" href="#{@logs_path}/images/icon_64x64.png">
-  <link rel="apple-touch-icon" href="#{@logs_path}/images/icon_144x144.png" />
-  <title>#{Logster.config.web_title || "Logs"}</title>
-  <link href='//fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
-  <link href='//fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
-  #{css("app.css")}
-  #{css("font-awesome.min.css")}
-  #{script("external/moment.min.js")}
-  #{script("external/jquery.min.js")}
-  #{script("external/lodash.min.js")}
-  #{script("external/ember-template-compiler.js")}
-  #{script("external/ember.min.js", "external/ember.js")}
-  #{template("application")}
-  #{component("message-row")}
-  #{component("message-info")}
-  #{component("tabbed-section")}
-  #{component("tab-contents")}
-  #{component("tab-link")}
-  #{component("panel-resizer")}
-  #{template("index")}
-  #{template("show")}
-  <meta id="preloaded-data" data-root-path="#{@logs_path}" data-preloaded="#{to_json_and_escape(preload)}">
-</head>
-<body>
-  #{script("app.js")}
-</body>
-</html>
-HTML
+        root_url = @logs_path
+        root_url += "/" if root_url[-1] != "/"
+        <<~HTML
+          <!doctype html>
+          <html>
+            <head>
+              <link rel="shortcut icon" href="#{@logs_path}/images/icon_64x64.png">
+              <link rel="apple-touch-icon" href="#{@logs_path}/images/icon_144x144.png" />
+              <title>#{Logster.config.web_title || "Logs"}</title>
+              <link href='//fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+              <link href='//fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+              #{css("vendor.css")}
+              #{css("font-awesome.min.css")}
+              #{css("client-app.css")}
+              #{script("vendor.js")}
+              <meta id="preloaded-data" data-root-path="#{@logs_path}" data-preloaded="#{to_json_and_escape(preload)}">
+              <meta name="client-app/config/environment" content="%7B%22modulePrefix%22%3A%22client-app%22%2C%22environment%22%3A%22production%22%2C%22rootURL%22%3A%22#{root_url}%22%2C%22locationType%22%3A%22history%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%2C%22EXTEND_PROTOTYPES%22%3A%7B%22Date%22%3Afalse%7D%7D%2C%22APP%22%3A%7B%22name%22%3A%22client-app%22%2C%22version%22%3A%220.0.0+8c60a18b%22%7D%2C%22exportApplicationGlobal%22%3Afalse%7D" />
+            </head>
+            <body>
+              #{script("client-app.js")}
+            </body>
+          </html>
+        HTML
       end
-
     end
   end
-
 end
