@@ -4,12 +4,11 @@ import { preloadOrAjax } from "client-app/lib/utilities";
 
 export default Route.extend({
   model(params) {
-    return new Promise((resolve, reject) => {
-      preloadOrAjax("/show/" + params.id + ".json")
-        .then(json => {
-          resolve(Message.create(json));
-        })
-        .catch(reject);
-    });
+    return preloadOrAjax("/show/" + params.id + ".json");
+  },
+
+  setupController(controller, model) {
+    this._super(...arguments);
+    controller.set("model", Message.create(model));
   }
 });

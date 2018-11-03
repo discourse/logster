@@ -102,7 +102,7 @@ module Logster
             if json
               [200, {"Content-Type" => "application/json; charset=utf-8"}, [message.to_json]]
             else
-              preload = preload_json({"/show/#{key}.json" => message})
+              preload = preload_json({"/show/#{key}" => message})
               [200, {"Content-Type" => "text/html; charset=utf-8"}, [body(preload)]]
             end
 

@@ -9,6 +9,6 @@ export function init(dataset) {
 
 export default {
   get(key) {
-    return CONTAINER[key];
+    return Em.get(CONTAINER, key);
   }
 };

@@ -21,7 +21,7 @@ export function ajax(url, settings) {
 }
 
 export function preloadOrAjax(url, settings) {
-  const preloaded = Preload.get(`preload.${url}`);
+  const preloaded = Preload.get(`preload.${url.replace(".json", "")}`);
   if (preloaded) {
     return Em.RSVP.resolve(preloaded);
   } else {
