@@ -56,29 +56,30 @@ class TestViewer < Minitest::Test
     assert_equal([0,1,2,3,4], result['filter'])
   end
 
-  def test_assets
-    response = request.get('/logsie/javascript/external/jquery.min.js')
-    assert_equal(200, response.status)
-  end
-
   def test_regex_parse
     assert_equal(/hello/i, viewer.send(:parse_regex, '/hello/i'))
   end
 
-  def test_linking_to_a_valid_ember_component
-    response = request.get('/logsie/javascript/components/message-row.js')
-
-    assert_equal(200, response.status)
-    assert_equal('application/javascript', response.headers['Content-Type'])
-    assert_match(/Ember.TEMPLATES\["components\/message-row"\]/, response.body)
+  def test_linking_to_a_valid_js_files
+    %w(
+      /logsie/javascript/client-app.js
+      /logsie/javascript/vendor.js
+    ).each do |path|
+      response = request.get(path)
+      assert_equal(200, response.status)
+      assert_equal('application/javascript', response.headers['Content-Type'])
+    end
   end
 
-  def test_linking_to_a_valid_ember_template
-    response = request.get('/logsie/javascript/templates/application.js')
-
-    assert_equal(200, response.status)
-    assert_equal('application/javascript', response.headers['Content-Type'])
-    assert_match(/Ember.TEMPLATES\["application"\]/, response.body)
+  def test_linking_to_a_valid_css_files
+    %w(
+      /logsie/stylesheets/client-app.css
+      /logsie/stylesheets/vendor.css
+    ).each do |path|
+      response = request.get(path)
+      assert_equal(200, response.status)
+      assert_equal('text/css', response.headers['Content-Type'])
+    end
   end
 
   def test_linking_to_an_invalid_ember_component_or_template
