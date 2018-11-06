@@ -47,22 +47,29 @@ export default Controller.extend({
     }
   },
 
-  filterChanged: observer("showDebug", "showInfo", "showWarn", "showErr", "showFatal", function() {
-    const filter = [];
-    ["Debug", "Info", "Warn", "Err", "Fatal"].forEach((severity, index) => {
-      if (this.get(`show${severity}`)) {
-        filter.push(index);
-      }
-    });
+  filterChanged: observer(
+    "showDebug",
+    "showInfo",
+    "showWarn",
+    "showErr",
+    "showFatal",
+    function() {
+      const filter = [];
+      ["Debug", "Info", "Warn", "Err", "Fatal"].forEach((severity, index) => {
+        if (this.get(`show${severity}`)) {
+          filter.push(index);
+        }
+      });
 
-    // always show unknown, rare
-    filter.push(5);
-    const model = this.get("model");
-    model.set("filter", filter);
-    if (this.get("initialized")) {
-      model.reload();
+      // always show unknown, rare
+      filter.push(5);
+      const model = this.get("model");
+      model.set("filter", filter);
+      if (this.get("initialized")) {
+        model.reload();
+      }
     }
-  }),
+  ),
 
   searchChanged: observer("search", function() {
     const search = this.get("search");
