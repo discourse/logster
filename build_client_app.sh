@@ -1,7 +1,5 @@
 #!/bin/bash
 
-rm -rf client-app/dist
-
 (cd client-app && ember build --environment=${1:-production})
 
 rm assets/javascript/*

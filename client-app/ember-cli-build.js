@@ -23,7 +23,7 @@ module.exports = function(defaults) {
   // please specify an object with the list of modules as keys
   // along with the exports of each module as its value.
 
-  app.import("bower_components/lodash/dist/lodash.min.js");
-  app.import("bower_components/moment/min/moment.min.js");
+  app.import("node_modules/lodash/lodash.min.js");
+  app.import("node_modules/moment/min/moment.min.js");
   return app.toTree();
 };

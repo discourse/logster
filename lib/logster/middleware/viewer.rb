@@ -204,7 +204,6 @@ module Logster
               <link href='//fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
               <link href='//fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
               #{css("vendor.css")}
-              #{css("font-awesome.min.css")}
               #{css("client-app.css")}
               #{script("vendor.js")}
               <meta id="preloaded-data" data-root-path="#{@logs_path}" data-preloaded="#{to_json_and_escape(preload)}">
