@@ -1,6 +1,7 @@
 import { ajax, increaseTitleCount } from "client-app/lib/utilities";
 import Message from "client-app/models/message";
 import { compare } from "@ember/utils";
+import { computed } from "@ember/object";
 
 export default Em.Object.extend({
   messages: Em.A(),
@@ -120,13 +121,13 @@ export default Em.Object.extend({
     });
   },
 
-  moreBefore: function() {
+  moreBefore: computed("totalBefore", function() {
     return this.get("totalBefore") > 0;
-  }.property("totalBefore"),
+  }),
 
-  totalBefore: function() {
+  totalBefore: computed("total", "messages.length", function() {
     return this.get("total") - this.get("messages").length;
-  }.property("total", "messages.[]"),
+  }),
 
   showMoreBefore: function() {
     const messages = this.get("messages");
@@ -137,7 +138,7 @@ export default Em.Object.extend({
     });
   },
 
-  regexSearch: function() {
+  regexSearch: computed("search", function() {
     const search = this.get("search");
     if (search && search.length > 2 && search[0] === "/") {
       const match = search.match(/\/(.*)\/(.*)/);
@@ -149,7 +150,7 @@ export default Em.Object.extend({
         }
       }
     }
-  }.property("search"),
+  }),
 
   toMessages(messages) {
     return messages.map(m => Message.create(m));

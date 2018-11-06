@@ -1,5 +1,6 @@
 import Controller from "@ember/controller";
 import { ajax } from "client-app/lib/utilities";
+import { observer } from "@ember/object";
 
 export default Controller.extend({
   currentMessage: Em.computed.alias("model.currentMessage"),
@@ -46,7 +47,7 @@ export default Controller.extend({
     }
   },
 
-  filterChanged: function() {
+  filterChanged: observer("showDebug", "showInfo", "showWarn", "showErr", "showFatal", function() {
     const filter = [];
     ["Debug", "Info", "Warn", "Err", "Fatal"].forEach((severity, index) => {
       if (this.get(`show${severity}`)) {
@@ -61,9 +62,9 @@ export default Controller.extend({
     if (this.get("initialized")) {
       model.reload();
     }
-  }.observes("showDebug", "showInfo", "showWarn", "showErr", "showFatal"),
+  }),
 
-  searchChanged: function() {
+  searchChanged: observer("search", function() {
     const search = this.get("search");
     const model = this.get("model");
     model.set("search", search);
@@ -71,5 +72,5 @@ export default Controller.extend({
     if (this.get("initialized")) {
       model.reload();
     }
-  }.observes("search")
+  })
 });

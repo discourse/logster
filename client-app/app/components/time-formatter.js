@@ -1,24 +1,25 @@
 import Component from "@ember/component";
 import { formatTime } from "client-app/lib/utilities";
+import { computed } from "@ember/object";
 
 export default Component.extend({
   tagName: "span",
   classNames: "auto-update-time",
   attributeBindings: ["dataTimestamp:data-timestamp", "title"],
 
-  title: function() {
+  title: computed(function() {
     return this.get("moment").format();
-  }.property(),
+  }),
 
-  dataTimestamp: function() {
+  dataTimestamp: computed(function() {
     return this.get("timestamp");
-  }.property(),
+  }),
 
-  moment: function() {
+  moment: computed(function() {
     return moment(this.get("timestamp"));
-  }.property(),
+  }),
 
-  time: function() {
+  time: computed("timestamp", function() {
     return formatTime(this.get("timestamp"));
-  }.property("timestamp")
+  })
 });

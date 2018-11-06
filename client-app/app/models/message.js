@@ -1,5 +1,6 @@
 import { ajax, buildHashString } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
+import { computed } from "@ember/object";
 
 export default Em.Object.extend({
   MAX_LEN: 200,
@@ -25,22 +26,22 @@ export default Em.Object.extend({
     return ajax("/unprotect/" + this.get("key"), { type: "DELETE" });
   },
 
-  showCount: function() {
+  showCount: computed("count", function() {
     return this.get("count") > 1;
-  }.property("count"),
+  }),
 
-  hasMore: function() {
+  hasMore: computed("message", "expanded", function() {
     const message = this.get("message");
     const expanded = this.get("expanded");
 
     return !expanded && message.length > this.MAX_LEN;
-  }.property("message", "expanded"),
+  }),
 
-  shareUrl: function() {
+  shareUrl: computed("key", function() {
     return Preload.get("rootPath") + "/show/" + this.get("key");
-  }.property("key"),
+  }),
 
-  displayMessage: function() {
+  displayMessage: computed("message", "expanded", function() {
     let message = this.get("message");
     const expanded = this.get("expanded");
 
@@ -48,25 +49,25 @@ export default Em.Object.extend({
       message = message.substr(0, this.MAX_LEN);
     }
     return message;
-  }.property("message", "expanded"),
+  }),
 
   updateFromObject(other) {
     // XXX Only updatable property is count right now
     this.set("count", other.get("count"));
   },
 
-  canSolve: function() {
+  canSolve: computed(function() {
     const backtrace = this.get("backtrace");
     return (
       this.get("env.application_version") && backtrace && backtrace.length > 0
     );
-  }.property(),
+  }),
 
-  envTable: function() {
+  envTable: computed("env", function() {
     return buildHashString(this.get("env"));
-  }.property("env"),
+  }),
 
-  rowClass: function() {
+  rowClass: computed("severity", function() {
     switch (this.get("severity")) {
       case 0:
         return "debug";
@@ -79,9 +80,9 @@ export default Em.Object.extend({
       case 4:
         return "fatal";
     }
-  }.property("severity"),
+  }),
 
-  glyph: function() {
+  glyph: computed("severity", function() {
     switch (this.get("severity")) {
       case 0:
         return "";
@@ -94,5 +95,5 @@ export default Em.Object.extend({
       case 4:
         return "<i class='fa fa-times-circle fatal'></i>";
     }
-  }.property("severity")
+  })
 });
