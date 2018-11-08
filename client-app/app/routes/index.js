@@ -1,0 +1,53 @@
+import Route from "@ember/routing/route";
+import MessageCollection from "client-app/models/message-collection";
+import { isHidden } from "client-app/lib/utilities";
+
+export default Route.extend({
+  model() {
+    // TODO from preload json?
+    return MessageCollection.create();
+  },
+
+  setupController(controller, model) {
+    this._super(controller, model);
+    controller.setProperties({
+      showDebug: true,
+      showInfo: true,
+      showWarn: true,
+      showErr: true,
+      showFatal: true,
+      search: "",
+      initialized: true
+    });
+    model.reload();
+
+    let times = 0;
+    let backoff = 1;
+
+    this.refreshInterval = setInterval(() => {
+      times += 1;
+      const hidden = isHidden();
+      let load = !hidden;
+
+      if (hidden) {
+        if (times % backoff === 0) {
+          load = true;
+          if (backoff < 20) {
+            backoff++;
+          }
+        }
+      }
+      // refresh a lot less aggressively in background
+      if (load) {
+        model.loadMore();
+        if (!hidden) {
+          backoff = 1;
+        }
+      }
+    }, 3000);
+  },
+
+  deactivate() {
+    clearInterval(this.refreshInterval);
+  }
+});

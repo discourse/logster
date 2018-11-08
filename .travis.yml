@@ -4,7 +4,6 @@ matrix:
   fast_finish: true
 
 rvm:
-  - 2.2.8
   - 2.3.4
 
 services:
