@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2018-11-09: Version 1.3.0
+  - Feature: upgrade Ember to 3.5.1
+  - Feature: remove inline JS for CSP compliance
+
 - 2018-08-13: Version 1.2.10
   - Feature: expose chained loggers in Logster::Logger
 
