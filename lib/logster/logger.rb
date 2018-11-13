@@ -62,6 +62,12 @@ module Logster
         return true
       end
 
+      # it is not fun losing messages cause encoding is bad
+      # protect all messages by scrubbing if needed
+      if message && !message.valid_encoding?
+        message = message.scrub
+      end
+
       if @chained
         i = 0
         # micro optimise for logging

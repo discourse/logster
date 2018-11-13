@@ -17,6 +17,12 @@ class TestLogger < Minitest::Test
     @logger = Logster::Logger.new(@store)
   end
 
+  def test_only_logs_valid_encoding
+    @logger.add(4, "a \xE4 test", "prog")
+    _, _, message = @store.calls[0]
+    assert_equal true, message.valid_encoding?
+  end
+
   def test_per_thread_override
     @logger.override_level = 2
 

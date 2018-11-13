@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- 2018-11-09: Version 1.3.1
+  - Feature: auto scrub invalid messages reported to logger
+
 - 2018-11-09: Version 1.3.0
   - Feature: upgrade Ember to 3.5.1
   - Feature: remove inline JS for CSP compliance
