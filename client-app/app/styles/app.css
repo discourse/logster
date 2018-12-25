@@ -3,6 +3,11 @@ body {
   font-size: 12px;
 }
 
+body.mobile,
+body.mobile .message {
+  font-size: 14px;
+}
+
 pre {
   font-family: "Roboto Mono", Consolas, Monaco, Ubuntu Mono, monospace;
 }
@@ -44,22 +49,26 @@ tbody tr td {
 th {
   text-align: left;
   padding-right: 10px;
-  font-size: 12px;
   color: #222;
   padding-bottom: 8px;
 }
 
 td.time {
-  font-size: 12px;
   color: #999;
   vertical-align: top;
+  font-size: 12px;
 }
+
+td.severity {
+  text-align: center;
+}
+
 .message {
-  font-size: 13px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   padding-right: 10px;
+  font-size: 13px;
 }
 
 th.count {
@@ -71,7 +80,7 @@ th.severity {
 }
 
 th.time {
-  width: 90px;
+  width: 40px;
   text-align: right;
   padding-right: 20px;
 }
@@ -111,14 +120,11 @@ td.count {
   font-weight: bold;
 }
 
-.action-panel .search input {
+.action-panel .search {
   border: 1px solid #ddd;
   padding: 3px;
   vertical-align: middle;
-}
-
-.regex input {
-  margin-left: 2px !important;
+  box-sizing: border-box;
 }
 
 tr.show-more {
@@ -127,19 +133,16 @@ tr.show-more {
   text-decoration: none;
   background-color: #ddd;
   cursor: pointer;
-  font-size: 12px;
 }
 
 #bottom-panel {
   position: fixed;
   bottom: 0;
   left: 0;
-  right: 100%;
+  right: 0;
   height: 300px;
-  width: 100%;
   background-color: #f1f1f1;
   padding: 8px;
-  font-size: 12px;
 }
 
 #bottom-panel.full {
@@ -173,6 +176,10 @@ tr.show-more {
   display: none;
 }
 
+#bottom-panel.full .message-actions button {
+  margin-top: 8px;
+}
+
 #bottom-panel.full .message-actions {
   position: fixed;
   height: 40px;
@@ -184,23 +191,15 @@ tr.show-more {
   padding-left: 10px;
 }
 
-#bottom-panel.full .message-actions button {
-  margin-top: 10px;
-}
-
 .message-actions {
   position: absolute;
-  bottom: 3px;
-  right: 30px;
+  bottom: 5px;
+  right: 0;
+  margin-right: 10px;
 }
 
 .message-actions button {
-  margin-right: 7px;
-}
-
-.message-actions .share {
-  text-decoration: none;
-  color: #333;
+  margin-left: 5px;
 }
 
 .divider {
@@ -208,7 +207,7 @@ tr.show-more {
   bottom: 310px;
   left: 0;
   right: 0;
-  height: 10px;
+  height: 15px;
   border-top: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
   background-color: #fafafa;
@@ -225,15 +224,15 @@ tr.show-more {
 }
 
 .divider .line-1 {
-  top: 3px;
+  top: 5px;
 }
 
 .divider .line-2 {
-  top: 4px;
+  top: 6px;
 }
 
 .divider .line-3 {
-  top: 5px;
+  top: 7px;
 }
 
 #top-panel {
@@ -248,11 +247,9 @@ tr.show-more {
 .message-info {
   position: absolute;
   border-bottom: 1px solid #ddd;
-  bottom: 35px;
   top: 0;
   left: 0;
   right: 0;
-  overflow: auto;
 }
 
 .action-panel {
@@ -260,19 +257,25 @@ tr.show-more {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 30px;
   font-weight: bold;
 }
+
 .action-panel input {
-  position: relative;
-  top: -1px;
-  margin-left: 20px;
-  vertical-align: sub;
+  margin: 0;
+}
+
+.action-panel i.fa,
+input,
+label span {
+  vertical-align: middle;
+}
+
+.severity-filters label {
+  margin-right: 18px;
 }
 
 .action-panel .clear {
-  position: absolute;
-  right: 30px;
+  float: right;
   vertical-align: middle;
 }
 
@@ -283,11 +286,17 @@ tr.show-more {
   table-layout: fixed;
 }
 
+.btn .fa,
+.btn span {
+  vertical-align: middle;
+}
+
 .hidden {
   display: none;
 }
 
-.message-info pre {
+.message-info pre,
+.message-info .env-table {
   position: relative;
   margin: 10px;
 }
@@ -308,7 +317,7 @@ tr.show-more {
   top: 5px;
   bottom: 35px;
   left: 5px;
-  right: 5px;
+  right: 0;
   overflow: auto;
   display: none;
 }
@@ -319,13 +328,13 @@ tr.show-more {
 
 .tabs {
   position: absolute;
-  bottom: 10px;
+  bottom: 13px;
   left: 0;
   right: 0;
   list-style-type: none;
   border-top: 1px solid #ddd;
   margin: 0 0 5px;
-  padding: 0 0 0 14px;
+  padding: 0 0 0 10px;
 }
 .tabs li {
   float: left;
@@ -335,14 +344,14 @@ tr.show-more {
 }
 .tabs a {
   position: relative;
-  top: 4px;
+  top: 6px;
   text-decoration: none;
   color: #333;
   border: 1px solid #ddd;
   border-top: none;
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
-  padding: 4px;
+  padding: 6px;
   background-color: #e1e1e1;
 }
 
@@ -354,10 +363,10 @@ tr.show-more {
 .btn {
   display: inline-block;
   margin: 0;
-  padding: 2px 12px;
+  padding: 5px 12px;
   font-weight: 500;
   font-size: 1em;
-  line-height: 18px;
+  line-height: 0;
   text-align: center;
   cursor: pointer;
   transition: all 0.25s;
@@ -384,4 +393,105 @@ tr.show-more {
 .btn.danger:hover {
   background-color: #c63c1b;
   color: #eee;
+}
+
+.search-clear-all .search,
+.search-clear-all .clear {
+  height: 24px;
+}
+
+.severity-filters label,
+.search-clear-all .search,
+.search-clear-all .clear {
+  align-self: center;
+}
+
+.search-clear-all .clear {
+  margin-left: auto;
+}
+
+@media (min-width: 661px) {
+  .severity-filters,
+  .search-clear-all {
+    height: 100%;
+  }
+  .severity-filters,
+  .search-clear-all,
+  .more-wrapping {
+    display: flex;
+  }
+  .severity-filters {
+    float: left;
+  }
+  .action-panel {
+    padding: 10px;
+    box-sizing: border-box;
+    height: 42px;
+  }
+  .message-info {
+    bottom: 42px;
+  }
+}
+
+@media (max-width: 660px) {
+  .severity-filters {
+    padding: 10px;
+  }
+  .search-clear-all {
+    padding: 10px;
+    padding-top: 0;
+  }
+  .action-panel {
+    height: 69px;
+  }
+  .message-info {
+    bottom: 69px;
+  }
+}
+
+@media (max-width: 415px) {
+  .severity-filters {
+    overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: nowrap;
+  }
+  .more-wrapping:before,
+  .more-wrapping:after {
+    content: "";
+    position: absolute;
+    height: 15px;
+  }
+  .more-wrapping:before {
+    width: 15px;
+    margin-left: -10px;
+    background: linear-gradient(to right, #f1f1f1 0%, rgba(61, 65, 71, 0) 100%);
+  }
+  .more-wrapping:after {
+    right: 0;
+    width: 23px;
+    background: linear-gradient(to right, rgba(61, 65, 71, 0) 0%, #f1f1f1 100%);
+  }
+}
+
+.btn.no-text .fa {
+  margin: 0;
+}
+
+.actions-menu {
+  position: absolute;
+  background: #fafafa;
+  display: inline-flex;
+  flex-direction: column;
+  bottom: 27px;
+  right: 45px;
+  width: 115px;
+  padding: 5px;
+  padding-bottom: 0px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+}
+
+.actions-menu button {
+  margin: 0 0 5px 0;
+  height: 27px;
 }

@@ -28,17 +28,14 @@
 
   {{#if currentMessage}}
     <div class='message-actions'>
-      {{#unless currentMessage.protected}}
-        {{#if currentMessage.canSolve}}
-          <button {{action 'solve'}} class="solve btn danger"><i class='fa fa-check-square-o'></i>Solve</button>
-        {{/if}}
-
-        <button {{action 'remove'}} class="delete btn danger"><i class='fa fa-trash-o'></i>Delete</button>
-        <button {{action 'protect'}} class="protect btn"><i class='fa fa-lock'></i>Protect</button>
-      {{else}}
-        <button {{action 'unprotect'}} class="unprotect btn"><i class='fa fa-unlock'></i>Unprotect</button>
-      {{/unless}}
-      <a href="{{currentMessage.shareUrl}}" class="share btn"><i class='fa fa-share'></i>Share</a>
+      {{#actions-menu actionsInMenu=actionsInMenu share=(action "share")}}
+        {{#each buttons as |btn|}}
+          <button {{action btn.action}} class="{{btn.klass}} btn {{if btn.danger 'danger' ''}}">
+            <i class="fa fa-{{btn.icon}}"></i>
+            <span>{{btn.label}}</span>
+          </button>
+        {{/each}}
+      {{/actions-menu}}
     </div>
   {{/if}}
 </div>

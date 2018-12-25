@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- 2018-12-25: Version 1.3.2
+  - UX: improve usability on mobile
+
 - 2018-11-09: Version 1.3.1
   - Feature: auto scrub invalid messages reported to logger
 

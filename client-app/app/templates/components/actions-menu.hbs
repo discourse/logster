@@ -1,0 +1,12 @@
+{{#if actionsInMenu}}
+  {{#if showMenu}}
+    <div class="actions-menu">
+      {{yield}}
+    </div>
+  {{/if}}
+  <button {{action 'expandMenu'}} class="expand btn no-text"><i class='fa fa-ellipsis-h'></i></button>
+  <button {{action "share"}} class="share btn"><i class='fa fa-share'></i><span>Share</span></button>
+{{else}}
+  {{yield}}
+  <button {{action "share"}} class="share btn"><i class='fa fa-share'></i><span>Share</span></button>
+{{/if}}

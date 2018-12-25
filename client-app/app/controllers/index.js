@@ -1,9 +1,18 @@
 import Controller from "@ember/controller";
 import { ajax } from "client-app/lib/utilities";
-import { observer } from "@ember/object";
+import { observer, computed } from "@ember/object";
 
 export default Controller.extend({
   currentMessage: Em.computed.alias("model.currentMessage"),
+
+  resizePanels(amount) {
+    Em.$("#bottom-panel").css("height", amount - 10);
+    Em.$("#top-panel").css("bottom", amount + 12);
+  },
+
+  actionsInMenu: computed(function() {
+    return this.site.isMobile;
+  }),
 
   actions: {
     expandMessage(message) {

@@ -203,6 +203,7 @@ module Logster
               <title>#{Logster.config.web_title || "Logs"}</title>
               <link href='//fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
               <link href='//fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+              <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=yes">
               #{css("vendor.css")}
               #{css("client-app.css")}
               #{script("vendor.js")}
