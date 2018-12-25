@@ -410,7 +410,7 @@ label span {
   margin-left: auto;
 }
 
-@media (min-width: 661px) {
+@media (min-width: 701px) {
   .severity-filters,
   .search-clear-all {
     height: 100%;
@@ -433,7 +433,7 @@ label span {
   }
 }
 
-@media (max-width: 660px) {
+@media (max-width: 700px) {
   .severity-filters {
     padding: 10px;
   }
