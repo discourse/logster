@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- 2018-12-26: Version 1.3.3
+  - Fix: fix double lines logs when date is too long
+
 - 2018-12-25: Version 1.3.2
   - UX: improve usability on mobile
 
