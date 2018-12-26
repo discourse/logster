@@ -45,6 +45,10 @@ export default Route.extend({
         }
       }
     }, 3000);
+
+    this.events.on("panelResized", amount => {
+      controller.resizePanels(amount);
+    });
   },
 
   deactivate() {

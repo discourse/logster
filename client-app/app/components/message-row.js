@@ -31,7 +31,7 @@ export default Component.extend({
     CHECKED_BOTTOM = true;
   },
 
-  didInsertElement: function() {
+  didInsertElement() {
     const $topPanel = Em.$("#top-panel");
     Em.run.next(() => {
       CHECKED_BOTTOM = false;

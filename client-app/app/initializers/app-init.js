@@ -3,8 +3,12 @@ import {
   resetTitleCount
 } from "client-app/lib/utilities";
 import { init } from "client-app/lib/preload";
+import Evented from "@ember/object/evented";
+import EmberObject from "@ember/object";
 
-export function initialize() {
+const TARGETS = ["component", "route"];
+
+export function initialize(app) {
   // config for moment.js
   moment.updateLocale("en", {
     relativeTime: {
@@ -48,6 +52,19 @@ export function initialize() {
     },
     false
   );
+
+  app.register("events:main", EmberObject.extend(Evented).create(), {
+    instantiate: false
+  });
+  TARGETS.forEach(t => app.inject(t, "events", "events:main"));
+
+  const isMobile =
+    /mobile/i.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent);
+  if (isMobile) {
+    Em.$("body").addClass("mobile");
+  }
+  app.register("site:main", { isMobile }, { instantiate: false });
+  app.inject("controller", "site", "site:main");
 }
 
 export default {
