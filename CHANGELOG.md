@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2018-12-30: Version 1.3.4
+  - FIX: linear-gradient issue on iOS
+  - FIX: actions menu should have highest z-index
+
 - 2018-12-26: Version 1.3.3
   - Fix: fix double lines logs when date is too long
 

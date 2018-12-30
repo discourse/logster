@@ -143,6 +143,8 @@ tr.show-more {
   height: 300px;
   background-color: #f1f1f1;
   padding: 8px;
+  padding-top: 0;
+  z-index: 2;
 }
 
 #bottom-panel.full {
@@ -212,7 +214,6 @@ tr.show-more {
   border-bottom: 1px solid #ddd;
   background-color: #fafafa;
   cursor: row-resize;
-  z-index: 1;
 }
 
 .divider div {
@@ -314,9 +315,9 @@ label span {
 
 .message-info .content {
   position: absolute;
-  top: 5px;
+  top: 0;
   bottom: 35px;
-  left: 5px;
+  left: 0;
   right: 0;
   overflow: auto;
   display: none;
@@ -459,17 +460,17 @@ label span {
   .more-wrapping:after {
     content: "";
     position: absolute;
-    height: 15px;
+    height: 18px;
   }
   .more-wrapping:before {
     width: 15px;
     margin-left: -10px;
-    background: linear-gradient(to right, #f1f1f1 0%, rgba(61, 65, 71, 0) 100%);
+    background: linear-gradient(to right, #f1f1f1 0%, rgba(241, 241, 241, 0.001) 100%);
   }
   .more-wrapping:after {
     right: 0;
     width: 23px;
-    background: linear-gradient(to right, rgba(61, 65, 71, 0) 0%, #f1f1f1 100%);
+    background: linear-gradient(to left, #f1f1f1 0%, rgba(241, 241, 241, 0.001) 100%);
   }
 }
 
@@ -488,7 +489,6 @@ label span {
   padding: 5px;
   padding-bottom: 0px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-  z-index: 2;
 }
 
 .actions-menu button {
