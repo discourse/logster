@@ -6,7 +6,7 @@ export default Controller.extend({
   currentMessage: Em.computed.alias("model.currentMessage"),
 
   resizePanels(amount) {
-    Em.$("#bottom-panel").css("height", amount - 10);
+    Em.$("#bottom-panel").css("height", amount - 13);
     Em.$("#top-panel").css("bottom", amount + 12);
   },
 
