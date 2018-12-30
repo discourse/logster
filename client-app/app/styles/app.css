@@ -460,17 +460,17 @@ label span {
   .more-wrapping:after {
     content: "";
     position: absolute;
-    height: 15px;
+    height: 18px;
   }
   .more-wrapping:before {
     width: 15px;
     margin-left: -10px;
-    background: linear-gradient(to right, #f1f1f1 0%, rgba(61, 65, 71, 0) 100%);
+    background: linear-gradient(to right, #f1f1f1 0%, rgba(241, 241, 241, 0.001) 100%);
   }
   .more-wrapping:after {
     right: 0;
     width: 23px;
-    background: linear-gradient(to right, rgba(61, 65, 71, 0) 0%, #f1f1f1 100%);
+    background: linear-gradient(to left, #f1f1f1 0%, rgba(241, 241, 241, 0.001) 100%);
   }
 }
 
