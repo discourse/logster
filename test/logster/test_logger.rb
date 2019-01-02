@@ -61,6 +61,12 @@ class TestLogger < Minitest::Test
     end
   end
 
+  def test_progname_parameter
+    @logger.add(0, "test")
+    progname = @store.calls[0][1]
+    assert_nil progname
+  end
+
   class PlayLogger
     attr_accessor :skip_store
     def initialize(tester)
