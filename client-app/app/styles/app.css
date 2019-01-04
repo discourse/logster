@@ -478,6 +478,11 @@ label span {
   margin: 0;
 }
 
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .actions-menu {
   position: absolute;
   background: #fafafa;
@@ -494,4 +499,12 @@ label span {
 .actions-menu button {
   margin: 0 0 5px 0;
   height: 27px;
+}
+
+.nav-controls {
+  margin: 10px 10px;
+}
+
+.env-number {
+  margin: 0 7px;
 }

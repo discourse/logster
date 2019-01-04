@@ -23,14 +23,14 @@ module Logster
 
     attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :count, :env, :protected, :first_timestamp
 
-    def initialize(severity, progname, message, timestamp = nil, key = nil)
+    def initialize(severity, progname, message, timestamp = nil, key = nil, count: 1)
       @timestamp = timestamp || get_timestamp
       @severity = severity
       @progname = progname
       @message = message
       @key = key || SecureRandom.hex
       @backtrace = nil
-      @count = 1
+      @count = count || 1
       @protected = false
       @first_timestamp = nil
     end
@@ -80,7 +80,14 @@ module Logster
 
     def populate_from_env(env)
       env ||= {}
-      @env = Message.populate_from_env(self.class.default_env.merge env)
+      if Array === env
+        env = env.map do |single_env|
+          self.class.default_env.merge(single_env)
+        end
+      else
+        env = self.class.default_env.merge(env)
+      end
+      @env = Message.populate_from_env(env)
     end
 
     def self.default_env
@@ -104,8 +111,13 @@ module Logster
 
     # todo - memoize?
     def solved_keys
-      if (versions=env["application_version"]) &&
-          (backtrace && backtrace.length > 0)
+      if Array === env
+        versions = env.map { |single_env| single_env["application_version"] }
+      else
+        versions = env["application_version"]
+      end
+
+      if versions && backtrace && backtrace.length > 0
         versions = [versions] if String === versions
 
         versions.map do |version|
@@ -121,35 +133,49 @@ module Logster
     def merge_similar_message(other)
       self.first_timestamp ||= self.timestamp
       self.timestamp = [self.timestamp,other.timestamp].max
+      self.count += other.count || 1
+
       other_env = JSON.load JSON.fast_generate other.env
-      other_env.keys.each do |env_key|
-        self.env[env_key] = Message.env_merge_helper(self.env[env_key], other_env[env_key])
+      if Array === self.env
+        Array === other_env ? self.env.concat(other_env) : self.env << other_env
+      else
+        Array === other_env ? self.env = [self.env, *other_env] : self.env = [self.env, other_env]
       end
     end
 
     def self.populate_from_env(env)
+      if Array === env
+        env.map do |single_env|
+          self.populate_env_helper(single_env)
+        end
+      else
+        self.populate_env_helper(env)
+      end
+    end
+
+    def self.populate_env_helper(env)
       env[LOGSTER_ENV] ||= begin
-          unless env.include? "rack.input"
-            # Not a web request
-            return env
+        unless env.include? "rack.input"
+          # Not a web request
+          return env
+        end
+        scrubbed = default_env
+        request = Rack::Request.new(env)
+        params = {}
+        request.params.each do |k,v|
+          if k.include? "password"
+            params[k] = "[redacted]"
+          elsif Array === v
+            params[k] = v[0..20]
+          else
+            params[k] = v && v[0..100]
           end
-          scrubbed = default_env
-          request = Rack::Request.new(env)
-          params = {}
-          request.params.each do |k,v|
-            if k.include? "password"
-              params[k] = "[redacted]"
-            elsif Array === v
-              params[k] = v[0..20]
-            else
-              params[k] = v && v[0..100]
-            end
-          end
-          scrubbed["params"] = params if params.length > 0
-          ALLOWED_ENV.map{ |k|
-           scrubbed[k] = env[k] if env[k]
-          }
-          scrubbed
+        end
+        scrubbed["params"] = params if params.length > 0
+        ALLOWED_ENV.map{ |k|
+         scrubbed[k] = env[k] if env[k]
+        }
+        scrubbed
       end
     end
 

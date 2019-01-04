@@ -1,4 +1,4 @@
-import { ajax, buildHashString } from "client-app/lib/utilities";
+import { ajax } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
 import { computed } from "@ember/object";
 
@@ -58,13 +58,11 @@ export default Em.Object.extend({
 
   canSolve: computed(function() {
     const backtrace = this.get("backtrace");
+    const env = this.get("env")
+    const appVersion = Array.isArray(env) ? env.map(e => e.application_version).compact().join("") : env.application_version;
     return (
-      this.get("env.application_version") && backtrace && backtrace.length > 0
+      appVersion && backtrace && backtrace.length > 0
     );
-  }),
-
-  envTable: computed("env", function() {
-    return buildHashString(this.get("env"));
   }),
 
   rowClass: computed("severity", function() {

@@ -51,7 +51,8 @@ class SampleLoader
 
     $store.report(message["severity"], message["progname"], message["message"], {
       backtrace: message["backtrace"],
-      env: message["env"]
+      env: message["env"],
+      count: message["count"]
     })
   end
 

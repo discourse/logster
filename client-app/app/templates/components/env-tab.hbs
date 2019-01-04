@@ -1,0 +1,10 @@
+{{#if isEnvArray}}
+  <div class="nav-controls">
+    <button disabled={{disableBackButtons}} {{action "bigJump" "back"}} class="btn nav-btn no-text"><i class="fa fa-fast-backward"></i></button>
+    <button disabled={{disableBackButtons}} {{action "takeStep" "back"}} class="btn nav-btn no-text"><i class="fa fa-backward"></i></button>
+    <span class="env-number">{{current}}/{{message.env.length}}</span>
+    <button disabled={{disableForwardButtons}} {{action "takeStep" "front"}} class="btn nav-btn no-text"><i class="fa fa-forward"></i></button>
+    <button disabled={{disableForwardButtons}} {{action "bigJump" "front"}} class="btn nav-btn no-text"><i class="fa fa-fast-forward"></i></button>
+  </div>
+{{/if}}
+{{{html}}}
