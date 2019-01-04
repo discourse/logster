@@ -1,4 +1,3 @@
-
 module Logster
   class BaseStore
 
@@ -79,12 +78,11 @@ module Logster
       return if (!msg || (String === msg && msg.empty?)) && skip_empty
       return if level && severity < level
 
-      message = Logster::Message.new(severity, progname, msg, opts[:timestamp])
+      message = Logster::Message.new(severity, progname, msg, opts[:timestamp], count: opts[:count])
 
       env = opts[:env] || {}
       backtrace = opts[:backtrace]
-
-      if env[:backtrace]
+      if Hash === env && env[:backtrace]
         # Special - passing backtrace through env
         backtrace = env.delete(:backtrace)
       end
@@ -110,7 +108,6 @@ module Logster
       end
 
       if similar
-        similar.count += 1
         similar.merge_similar_message(message)
 
         replace_and_bump similar
