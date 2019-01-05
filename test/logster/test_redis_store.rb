@@ -234,6 +234,128 @@ class TestRedisStore < Minitest::Test
     assert_equal(1, latest.length)
   end
 
+  def test_env_search
+    @store.report(Logger::INFO, "test", "message ABCD", env: { cluster: "business5" })
+    @store.report(Logger::INFO, "test", "message WXYZ", env: { cluster: "business7" })
+
+    messages = @store.latest
+    assert_equal(2, messages.length)
+
+    latest = @store.latest(search: "business5")
+
+    assert_equal(1, latest.length)
+    assert_equal("message ABCD", latest[0].message)
+
+    latest = @store.latest(search: "-business5")
+
+    assert_equal(1, latest.length)
+    assert_equal("message WXYZ", latest[0].message)
+
+    latest = @store.latest(search: /business/)
+
+    assert_equal(2, latest.length)
+    assert_equal(["message ABCD", "message WXYZ"], latest.map(&:message).sort)
+  end
+
+  def test_array_env_search_preserve_env
+    m1_original_env = [{ cluster: "business5" }, { cluster: "standard3" }]
+    m2_original_env = [{ cluster: "business2" }, { cluster: "standard7" }]
+
+    @store.report(Logger::INFO, "test", "message ABCD", env: m1_original_env, count: 2)
+    @store.report(Logger::INFO, "test", "message WXYZ", env: m2_original_env, count: 2)
+
+    messages = @store.latest
+    assert_equal(2, messages.length)
+
+    m1_key = messages[0].key
+    m2_key = messages[1].key
+
+    messages = @store.latest(search: "business")
+    assert_equal(2, messages.size)
+
+    # any hashes that don't match should be stripped from the env
+    # array but only temporarily until it's sent to the client
+    # env array should remain untouched in redis memory
+    assert_equal(["business5"], messages[0].env.map { |env| env["cluster"]})
+    assert_equal(1, messages[0].count)
+    assert_equal(["business2"], messages[1].env.map { |env| env["cluster"]})
+    assert_equal(1, messages[1].count)
+
+    m1 = @store.get(m1_key)
+    m2 = @store.get(m2_key)
+    # original env should preserved in redis memory
+    assert_equal(["business5", "standard3"], m1.env.map { |env| env["cluster"] })
+    assert_equal(["business2", "standard7"], m2.env.map { |env| env["cluster"] })
+  end
+
+  def test_both_env_and_title_match_search
+    @store.report(Logger::INFO, "test", "message", env: [{ cluster: "business15" }])
+    @store.report(Logger::INFO, "test", "message2", env: { cluster: "business15" })
+
+    messages = @store.latest
+    assert_equal(2, messages.size)
+
+    messages = @store.latest(search: "-business15")
+    assert_equal(0, messages.size)
+  end
+
+  def test_data_kept_intact_on_report_when_env_matches_an_ignore_pattern
+    begin
+      Logster.config.allow_grouping = true
+      backtrace = caller
+      message = @store.report(Logger::WARN, "", "my error", env: { whatever: "something", backtrace: backtrace })
+
+      @store.ignore = [
+          Logster::IgnorePattern.new("business")
+      ]
+      message2 = @store.report(Logger::WARN, "", "my error", env: { cluster: "business17", backtrace: backtrace })
+
+      message = @store.get(message.key)
+      assert(Array === message.env)
+      assert_equal(2, message.env.size)
+      # message2 shouldn't vanish even if
+      # its env matches an ignore pattern
+      # however it should be merged with message1
+      assert_equal("business17", message.env[1]["cluster"])
+    ensure
+      # reset so it doesn't affect other tests
+      @store.ignore = nil
+      Logster.config.allow_grouping = false
+    end
+  end
+
+  def test_array_env_negative_search
+    @store.report(Logger::INFO, "test", "message ABCD", env: [{ cluster: "business5" }, { cluster: "standard3" }], count: 2)
+    @store.report(Logger::INFO, "test", "message WXYZ", env: [{ cluster: "business2" }, { cluster: "standard7" }], count: 2)
+
+    messages = @store.latest
+    assert_equal(2, messages.length)
+
+    messages = @store.latest(search: "-business")
+    assert_equal(2, messages.size)
+
+    assert_equal(["standard3"], messages[0].env.map { |env| env["cluster"]})
+    assert_equal(1, messages[0].count)
+    assert_equal(["standard7"], messages[1].env.map { |env| env["cluster"]})
+    assert_equal(1, messages[1].count)
+  end
+
+  def test_negative_search_MUST_not_match_title_in_order_to_include_message
+    @store.report(Logger::INFO, "test", "message ABCD", env: [{ cluster: "business5" }, { cluster: "standard3" }], count: 2)
+
+    messages = @store.latest(search: "-ABCD")
+    assert_equal(0, messages.size) # cause title has ABCD
+  end
+
+  def test_positive_search_looks_at_title_OR_env
+    @store.report(Logger::INFO, "test", "message", env: [{ cluster: "business5 ABCDEFG" }, { cluster: "standard3" }], count: 2)
+
+    messages = @store.latest(search: "ABCDEFG")
+    assert_equal(1, messages.size)
+    assert_equal(1, messages[0].env.size)
+    assert_equal("business5 ABCDEFG", messages[0].env[0]["cluster"])
+  end
+
   def test_backtrace
     @store.report(Logger::INFO, "test", "pattern_1")
     message = @store.latest(limit: 1).first

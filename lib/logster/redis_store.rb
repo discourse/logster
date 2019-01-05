@@ -423,18 +423,69 @@ module Logster
       [start, finish]
     end
 
+    def get_search(search)
+      exclude = false
+      if String === search && search[0] == "-"
+        exclude = true
+        search = search.sub("-", "")
+      end
+      [search, exclude]
+    end
+
     def filter_search(row, search)
+      search, exclude = get_search(search)
       return row unless row && search
 
-      if Regexp === search
-        row if row.message =~ search
-      elsif search[0] == "-"
-        exclude = search.sub('-', '')
-        row unless row.message.include?(exclude)
-      elsif row.message.include?(search)
-        row
+      if exclude
+        row if !(row =~ search) && filter_env!(row, search, exclude)
+      else
+        row if row =~ search || filter_env!(row, search)
       end
+    end
 
+    def filter_env!(message, search, exclude = false)
+      if Array === message.env
+        array_env_matches?(message, search, exclude)
+      else
+        if exclude
+          !env_matches?(message.env, search)
+        else
+          env_matches?(message.env, search)
+        end
+      end
+    end
+
+    def env_matches?(env, search)
+      return false unless env && search
+
+      env.values.any? do |value|
+        if Hash === value
+          env_matches?(value, search)
+        else
+          case search
+            when Regexp
+              value.to_s =~ search
+            when String
+              value.to_s =~ Regexp.new(search, Regexp::IGNORECASE)
+            else
+              false
+          end
+        end
+      end
+    end
+
+    def array_env_matches?(message, search, exclude)
+      matches = message.env.select do |env|
+        if exclude
+          !env_matches?(env, search)
+        else
+          env_matches?(env, search)
+        end
+      end
+      return false if matches.empty?
+      message.env = matches
+      message.count = matches.size
+      true
     end
 
     def check_rate_limits(severity)
