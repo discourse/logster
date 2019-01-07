@@ -5,11 +5,12 @@ matrix:
 
 rvm:
   - 2.3.4
+  - 2.5.3
 
 services:
   - redis-server
 
 before_install:
-  - gem install bundler
+  - gem install bundler -v 1.17.2
 
 sudo: false

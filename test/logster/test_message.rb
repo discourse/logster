@@ -71,6 +71,7 @@ class TestMessage < MiniTest::Test
   def test_merging_sums_count_for_both_messages
     msg1 = Logster::Message.new(0, '', 'test', 10, count: 15)
     msg2 = Logster::Message.new(0, '', 'test', 20, count: 13)
+    msg2.env = {}
 
     assert_equal(msg1.grouping_key, msg2.grouping_key)
 
