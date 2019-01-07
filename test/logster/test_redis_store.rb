@@ -198,15 +198,16 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_search
-    @store.report(Logger::INFO, "test", "A")
-    @store.report(Logger::INFO, "test", "B")
+    @store.report(Logger::INFO, "test", "ABCDEFG")
+    @store.report(Logger::INFO, "test", "TUVWXYZ")
 
     messages = @store.latest
     assert_equal(2, messages.length)
 
-    latest = @store.latest(search: "B")
+    latest = @store.latest(search: "TUVWXYZ")
 
     assert_equal(1, latest.length)
+    assert_equal("TUVWXYZ", latest[0].message)
   end
 
   def test_search_exclude_results
