@@ -3,6 +3,8 @@ import Message from "client-app/models/message";
 import { compare } from "@ember/utils";
 import { computed } from "@ember/object";
 
+const BATCH_SIZE = 50;
+
 export default Em.Object.extend({
   messages: Em.A(),
   currentMessage: null,
@@ -106,7 +108,13 @@ export default Em.Object.extend({
     this.set("total", 0);
     this.get("messages").clear();
 
-    return this.load();
+    return this.load().then(data => {
+      if (data.messages.length < BATCH_SIZE) {
+        this.set("noMoreBefore", true);
+      } else {
+        this.set("noMoreBefore", false);
+      }
+    });
   },
 
   loadMore() {
@@ -136,6 +144,12 @@ export default Em.Object.extend({
 
     this.load({
       before: firstKey
+    }).then(data => {
+      if (data.messages.length < BATCH_SIZE) {
+        this.set("noMoreBefore", true);
+      } else {
+        this.set("noMoreBefore", false);
+      }
     });
   },
 

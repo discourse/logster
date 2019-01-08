@@ -12,7 +12,13 @@
     <tbody>
     {{#if model.moreBefore}}
       <tr {{action "showMoreBefore"}} class="show-more">
-        <td colspan=5>select to see {{model.totalBefore}} more</td>
+        <td colspan=5>
+          {{#if model.noMoreBefore}}
+            No more logs
+          {{else}}
+            select to see {{model.totalBefore}} more
+          {{/if}}
+        </td>
       </tr>
     {{/if}}
     {{#each model.messages as |message|}}
