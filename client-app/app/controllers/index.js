@@ -56,6 +56,19 @@ export default Controller.extend({
     }
   },
 
+  updateSelectedMessage() {
+    const currentKey = this.get("currentMessage.key");
+    const messages = this.get("model.messages");
+    if (currentKey && messages) {
+      const match = messages.find(m => m.key === currentKey);
+      if (match) {
+        match.set("selected", true);
+      } else {
+        this.set("currentMessage", null);
+      }
+    }
+  },
+
   filterChanged: observer(
     "showDebug",
     "showInfo",
@@ -75,7 +88,7 @@ export default Controller.extend({
       const model = this.get("model");
       model.set("filter", filter);
       if (this.get("initialized")) {
-        model.reload();
+        model.reload().then(() => this.updateSelectedMessage());
       }
     }
   ),
@@ -86,7 +99,7 @@ export default Controller.extend({
     model.set("search", search);
 
     if (this.get("initialized")) {
-      model.reload();
+      model.reload().then(() => this.updateSelectedMessage());
     }
   })
 });
