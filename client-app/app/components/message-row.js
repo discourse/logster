@@ -4,7 +4,7 @@ let CHECKED_BOTTOM;
 let STICK_TO_BOTTOM;
 
 export default Component.extend({
-  tagName: "tr",
+  tagName: "div",
 
   classNameBindings: [
     "model.rowClass",
