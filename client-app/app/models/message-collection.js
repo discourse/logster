@@ -61,7 +61,7 @@ export default Em.Object.extend({
       data.after = opts.after;
     }
 
-    ajax("/messages.json", {
+    return ajax("/messages.json", {
       data: data
     }).then(data => {
       // guard against race: ensure the results we're trying to apply
@@ -98,6 +98,7 @@ export default Em.Object.extend({
         }
       }
       this.set("total", data.total);
+      return data;
     });
   },
 
@@ -105,7 +106,7 @@ export default Em.Object.extend({
     this.set("total", 0);
     this.get("messages").clear();
 
-    this.load();
+    return this.load();
   },
 
   loadMore() {
