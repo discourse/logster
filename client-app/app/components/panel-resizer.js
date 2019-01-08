@@ -61,9 +61,9 @@ export default Component.extend({
     });
 
     Em.run.next(() => {
-      const amount = (localStorage && localStorage.logster_divider_bottom) || 300;
-      const fromTop =
-        $win.height() - parseInt(amount, 10);
+      const amount =
+        (localStorage && localStorage.logster_divider_bottom) || 300;
+      const fromTop = $win.height() - parseInt(amount, 10);
       this.divideView(fromTop, $win);
     });
   },

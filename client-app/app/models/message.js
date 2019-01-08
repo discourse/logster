@@ -58,11 +58,14 @@ export default Em.Object.extend({
 
   canSolve: computed(function() {
     const backtrace = this.get("backtrace");
-    const env = this.get("env")
-    const appVersion = Array.isArray(env) ? env.map(e => e.application_version).compact().join("") : env.application_version;
-    return (
-      appVersion && backtrace && backtrace.length > 0
-    );
+    const env = this.get("env");
+    const appVersion = Array.isArray(env)
+      ? env
+          .map(e => e.application_version)
+          .compact()
+          .join("")
+      : env.application_version;
+    return appVersion && backtrace && backtrace.length > 0;
   }),
 
   rowClass: computed("severity", function() {
