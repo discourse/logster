@@ -1,17 +1,15 @@
-<td class="count">
+<div class="count">
   {{#if model.showCount}}
-    <span>{{model.count}}</span>
+    {{model.count}}
   {{/if}}
-</td>
-<td class="severity">{{{model.glyph}}}</td>
-<td class="message-body">
-  <div class="message">
-    {{model.displayMessage}}
-  </div>
-</td>
-<td class='protected'>
+</div>
+<div class="severity">{{{model.glyph}}}</div>
+<div class="message-body">
+  {{model.displayMessage}}
+</div>
+<div class='protected'>
   {{#if model.protected}}
     <i title="message is protected, clearing will not remove it" class='fa fa-lock'></i>
   {{/if}}
-</td>
-<td class="time">{{time-formatter timestamp=model.timestamp}}</td>
+</div>
+<div class="time">{{time-formatter timestamp=model.timestamp}}</div>

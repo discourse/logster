@@ -1,31 +1,18 @@
 <div id='top-panel'>
-  <table id='log-table'>
-    <thead>
-      <tr>
-        <th class="count"></th>
-        <th class="severity"></th>
-        <th class="info"></th>
-        <th class="protected"></th>
-        <th class="time"></th>
-      </tr>
-    </thead>
-    <tbody>
+  <div id="log-table">
     {{#if model.moreBefore}}
-      <tr {{action "showMoreBefore"}} class="show-more">
-        <td colspan=5>
-          {{#if model.noMoreBefore}}
-            No more logs
-          {{else}}
-            select to see {{model.totalBefore}} more
-          {{/if}}
-        </td>
-      </tr>
+      <div {{action "showMoreBefore"}} class="show-more">
+        {{#if model.noMoreBefore}}
+          No more logs
+        {{else}}
+          select to see {{model.totalBefore}} more
+        {{/if}}
+      </div>
     {{/if}}
     {{#each model.messages as |message|}}
       {{message-row model=message selectedMessage=(action "selectMessage")}}
     {{/each}}
-    </tbody>
-  </table>
+  </div>
 </div>
 <div id="bottom-panel">
   {{message-info
