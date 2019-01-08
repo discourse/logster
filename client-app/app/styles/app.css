@@ -46,7 +46,7 @@ tbody tr {
 }
 
 .message-row div {
-  border-top: .5px #e9e9e9 solid;
+  border-top: 0.5px #e9e9e9 solid;
   padding-top: 1px;
   padding-bottom: 1px;
   line-height: 25px;
@@ -79,7 +79,6 @@ tbody tr {
   font-size: 12px;
   padding-right: 8px;
 }
-
 
 .message-row .count {
   text-align: right;
@@ -455,12 +454,20 @@ label span {
   .more-wrapping:before {
     width: 15px;
     margin-left: -10px;
-    background: linear-gradient(to right, #f1f1f1 0%, rgba(241, 241, 241, 0.001) 100%);
+    background: linear-gradient(
+      to right,
+      #f1f1f1 0%,
+      rgba(241, 241, 241, 0.001) 100%
+    );
   }
   .more-wrapping:after {
     right: 0;
     width: 23px;
-    background: linear-gradient(to left, #f1f1f1 0%, rgba(241, 241, 241, 0.001) 100%);
+    background: linear-gradient(
+      to left,
+      #f1f1f1 0%,
+      rgba(241, 241, 241, 0.001) 100%
+    );
   }
 }
 
