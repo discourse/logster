@@ -1,5 +1,12 @@
 # CHANGELOG
 
+- 2019-01-09: Version 1.4.0
+  - FEATURE: allow navigation through merged errors
+  - FEATURE: search should look at env
+  - FIX: deselect message if new filtering doesn't include selected message
+  - UX: don't give timestamps more space than they need; use `div`s with flexbox instead of `table`
+  - FIX: hide "load more" when there are no more messages and filters/search applied
+
 - 2018-12-30: Version 1.3.4
   - FIX: linear-gradient issue on iOS
   - FIX: actions menu should have highest z-index
