@@ -2,10 +2,10 @@
   <div id="log-table">
     {{#if model.moreBefore}}
       <div {{action "showMoreBefore"}} class="show-more">
-        {{#if model.noMoreBefore}}
-          No more logs
+        {{#if model.hideCountInLoadMore}}
+          Load more
         {{else}}
-          select to see {{model.totalBefore}} more
+          Select to see {{model.totalBefore}} more
         {{/if}}
       </div>
     {{/if}}

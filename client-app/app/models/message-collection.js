@@ -108,13 +108,18 @@ export default Em.Object.extend({
     this.set("total", 0);
     this.get("messages").clear();
 
-    return this.load().then(data => {
-      if (data.messages.length < BATCH_SIZE) {
-        this.set("noMoreBefore", true);
-      } else {
-        this.set("noMoreBefore", false);
-      }
-    });
+    return this.load().then(data => this.updateCanLoadMore(data));
+  },
+
+  updateCanLoadMore(data) {
+    if (!data) {
+      return;
+    }
+    if (data.messages.length < BATCH_SIZE) {
+      this.set("canLoadMore", false);
+    } else {
+      this.set("canLoadMore", true);
+    }
   },
 
   loadMore() {
@@ -130,8 +135,14 @@ export default Em.Object.extend({
     });
   },
 
-  moreBefore: computed("totalBefore", function() {
-    return this.get("totalBefore") > 0;
+  hideCountInLoadMore: computed("search", "filter", function() {
+    const search = this.get("search");
+    const filter = this.get("filter");
+    return (search && search.length > 0) || (filter && filter.length < 6);
+  }),
+
+  moreBefore: computed("messages.length", "canLoadMore", function() {
+    return this.get("messages.length") >= BATCH_SIZE && this.get("canLoadMore");
   }),
 
   totalBefore: computed("total", "messages.length", function() {
@@ -144,13 +155,7 @@ export default Em.Object.extend({
 
     this.load({
       before: firstKey
-    }).then(data => {
-      if (data.messages.length < BATCH_SIZE) {
-        this.set("noMoreBefore", true);
-      } else {
-        this.set("noMoreBefore", false);
-      }
-    });
+    }).then(data => this.updateCanLoadMore(data));
   },
 
   regexSearch: computed("search", function() {
