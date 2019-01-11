@@ -90,4 +90,19 @@ class TestMessage < MiniTest::Test
     assert_equal(msg.env.size, 1)
     assert hash <= msg.env[0]
   end
+
+  def test_ensure_env_samples_dont_exceed_50
+    msg1 = Logster::Message.new(0, '', 'test', 10, count: 50)
+    msg1.env = [{a: 1}]
+    msg2 = Logster::Message.new(0, '', 'test', 20, count: 13)
+    msg2.env = {b: 2}
+
+    assert_equal(msg1.grouping_key, msg2.grouping_key)
+
+    msg1.merge_similar_message(msg2)
+    msg1 = Logster::Message.from_json(msg1.to_json)
+
+    assert_equal(63, msg1.count) # update count
+    assert_equal([{ "a" => 1 }], msg1.env) # but don't merge msg2's env into msg1's
+  end
 end
