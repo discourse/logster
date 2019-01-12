@@ -289,6 +289,7 @@ label span {
 .message-info .env-table {
   position: relative;
   margin: 10px;
+  margin-top: 5px;
 }
 
 #overlay {
@@ -490,6 +491,7 @@ label span {
   padding: 5px;
   padding-bottom: 0px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  z-index: 3;
 }
 
 .actions-menu button {
@@ -498,7 +500,15 @@ label span {
 }
 
 .nav-controls {
-  margin: 10px 10px;
+  padding: 10px;
+}
+
+#bottom-panel:not(.full) .nav-controls {
+  position: sticky;
+  top: 0;
+  background: #f1f1f1;
+  z-index: 1;
+  border-bottom: 1px solid #ddd;
 }
 
 .env-number {
