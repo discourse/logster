@@ -14,7 +14,7 @@ module Logster
     end
 
     # Modify the saved message to the given one (identified by message.key) and bump it to the top of the latest list
-    def replace_and_bump(message)
+    def replace_and_bump(message, save_env: true)
       not_implemented
     end
 
@@ -40,7 +40,17 @@ module Logster
     end
 
     # Get a message by its message_key
-    def get(message_key)
+    def get(message_key, load_env: true)
+      not_implemented
+    end
+
+    # Get a group of messages by their message_keys
+    def bulk_get(message_keys)
+      not_implemented
+    end
+
+    # Get a message's env by its message_key
+    def get_env(message_key)
       not_implemented
     end
 
@@ -104,13 +114,14 @@ module Logster
 
       if Logster.config.allow_grouping
         key = self.similar_key(message)
-        similar = get key if key
+        similar = get(key, load_env: false) if key
       end
 
       if similar
-        similar.merge_similar_message(message)
+        similar.env = get_env(similar.key) if similar.count < Logster::MAX_GROUPING_LENGTH
+        save_env = similar.merge_similar_message(message)
 
-        replace_and_bump similar
+        replace_and_bump(similar, save_env: save_env)
         similar
       else
         save message
