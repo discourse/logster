@@ -144,18 +144,20 @@ module Logster
     def delete(msg)
       @redis.multi do
         @redis.hdel(hash_key, msg.key)
+        @redis.hdel(env_key, msg.key)
         @redis.hdel(grouping_key, msg.grouping_key)
         @redis.lrem(list_key, -1, msg.key)
       end
     end
 
-    def replace_and_bump(message)
+    def replace_and_bump(message, save_env: true)
       # TODO make it atomic
       exists = @redis.hexists(hash_key, message.key)
       return false unless exists
 
       @redis.multi do
-        @redis.hset(hash_key, message.key, message.to_json)
+        @redis.hset(hash_key, message.key, message.to_json(exclude_env: true))
+        @redis.hset(env_key, message.key, (message.env || {}).to_json) if save_env
         @redis.lrem(list_key, -1, message.key)
         @redis.rpush(list_key, message.key)
       end
@@ -201,12 +203,11 @@ module Logster
       begin
         keys = @redis.lrange(list_key, start, finish) || []
         break unless keys and keys.count > 0
-        rows = @redis.hmget(hash_key, keys)
+        rows = bulk_get(keys)
 
         temp = []
 
-        rows.each do |s|
-          row = Message.from_json(s)
+        rows.each do |row|
           break if before && before == row.key
           row = nil if severity && !severity.include?(row.severity)
 
@@ -236,10 +237,14 @@ module Logster
       keys = @redis.smembers(protected_key) || []
       if keys.empty?
         @redis.del(hash_key)
+        @redis.del(env_key)
       else
         protected = @redis.mapped_hmget(hash_key, *keys)
+        protected_env = @redis.mapped_hmget(env_key, *keys)
         @redis.del(hash_key)
+        @redis.del(env_key)
         @redis.mapped_hmset(hash_key, protected)
+        @redis.mapped_hmset(env_key, protected_env)
 
         sorted = protected
           .values
@@ -264,15 +269,39 @@ module Logster
       @redis.del(list_key)
       @redis.del(protected_key)
       @redis.del(hash_key)
+      @redis.del(env_key)
       @redis.del(grouping_key)
       @redis.del(solved_key)
     end
 
-    def get(message_key)
+    def get(message_key, load_env: true)
       json = @redis.hget(hash_key, message_key)
       return nil unless json
 
-      Message.from_json(json)
+      message = Message.from_json(json)
+      if load_env
+        message.env = get_env(message_key)
+      end
+      message
+    end
+
+    def bulk_get(message_keys)
+      envs = @redis.hmget(env_key, message_keys)
+      @redis.hmget(hash_key, message_keys).map!.with_index do |json, ind|
+        message =  Message.from_json(json)
+        env = envs[ind]
+        if !message.env || message.env.size == 0
+          env = env && env.size > 0 ? ::JSON.parse(env) : {}
+          message.env = env
+        end
+        message
+      end
+    end
+
+    def get_env(message_key)
+      json = @redis.hget(env_key, message_key)
+      return {} if !json || json.size == 0
+      JSON.parse(json)
     end
 
     def protect(message_key)
@@ -323,8 +352,7 @@ module Logster
         start = count ? 0 - count : 0
         message_keys = @redis.lrange(list_key, start, -1 ) || []
 
-        @redis.hmget(hash_key, message_keys).each do |json|
-          message =  Message.from_json(json)
+        bulk_get(message_keys).each do |message|
           unless (ignores & (message.solved_keys || [])).empty?
             delete message
           end
@@ -339,6 +367,7 @@ module Logster
           unless @redis.sismember(protected_key, removed_key)
             rmsg = get removed_key
             @redis.hdel(hash_key, rmsg.key)
+            @redis.hdel(env_key, rmsg.key)
             @redis.hdel(grouping_key, rmsg.grouping_key)
             break
           else
@@ -352,7 +381,8 @@ module Logster
     end
 
     def update_message(message)
-      @redis.hset(hash_key, message.key, message.to_json)
+      @redis.hset(hash_key, message.key, message.to_json(exclude_env: true))
+      @redis.hset(env_key, message.key, (message.env || {}).to_json)
       if message.protected
         @redis.sadd(protected_key, message.key)
       else
@@ -504,6 +534,10 @@ module Logster
 
     def hash_key
       @hash_key ||= "__LOGSTER__MAP"
+    end
+
+    def env_key
+      @env_key ||= "__LOGSTER__ENV_MAP"
     end
 
     def protected_key

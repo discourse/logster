@@ -35,7 +35,7 @@ module Logster
       @first_timestamp = nil
     end
 
-    def to_h
+    def to_h(exclude_env: false)
       h = {
         message: @message,
         progname: @progname,
@@ -44,19 +44,18 @@ module Logster
         key: @key,
         backtrace: @backtrace,
         count: @count,
-        env: @env,
         protected: @protected
       }
 
-      if @first_timestamp
-        h[:first_timestamp] = @first_timestamp
-      end
+      h[:first_timestamp] = @first_timestamp if @first_timestamp
+      h[:env] = @env unless exclude_env
 
       h
     end
 
     def to_json(opts = nil)
-      JSON.fast_generate(to_h, opts)
+      exclude_env = Hash === opts && opts.delete(:exclude_env)
+      JSON.fast_generate(to_h(exclude_env: exclude_env), opts)
     end
 
     def self.from_json(json)
@@ -135,7 +134,7 @@ module Logster
       self.timestamp = [self.timestamp, other.timestamp].max
 
       self.count += other.count || 1
-      return if self.count >= Logster::MAX_GROUPING_LENGTH
+      return false if self.count > Logster::MAX_GROUPING_LENGTH
 
       other_env = JSON.load JSON.fast_generate other.env
       if Array === self.env
@@ -143,6 +142,7 @@ module Logster
       else
         Array === other_env ? self.env = [self.env, *other_env] : self.env = [self.env, other_env]
       end
+      true
     end
 
     def self.populate_from_env(env)
