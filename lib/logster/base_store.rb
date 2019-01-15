@@ -118,10 +118,13 @@ module Logster
       end
 
       if similar
-        similar.env = get_env(similar.key) if similar.count < Logster::MAX_GROUPING_LENGTH
+        has_env = !similar.env.nil? && !similar.env.empty?
+        if similar.count < Logster::MAX_GROUPING_LENGTH && !has_env
+          similar.env = get_env(similar.key) || {}
+        end
         save_env = similar.merge_similar_message(message)
 
-        replace_and_bump(similar, save_env: save_env)
+        replace_and_bump(similar, save_env: save_env || has_env)
         similar
       else
         save message

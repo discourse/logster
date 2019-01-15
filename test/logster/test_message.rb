@@ -71,7 +71,8 @@ class TestMessage < MiniTest::Test
 
     assert_equal(msg1.grouping_key, msg2.grouping_key)
 
-    msg1.merge_similar_message(msg2)
+    save_env = msg1.merge_similar_message(msg2)
+    assert(save_env)
     assert_equal(msg1.count, 15 + 13)
   end
 
@@ -93,9 +94,26 @@ class TestMessage < MiniTest::Test
 
     assert_equal(msg1.grouping_key, msg2.grouping_key)
 
-    msg1.merge_similar_message(msg2)
+    save_env = msg1.merge_similar_message(msg2)
 
+    refute(save_env)
     assert_equal(63, msg1.count) # update count
     assert_equal([{ a: 1 }], msg1.env) # but don't merge msg2's env into msg1's
+  end
+
+  def test_message_to_h_respects_params
+    msg = Logster::Message.new(0, "", "test")
+    test_hash = { test_key: "this is a test" }
+    msg.env = test_hash
+    assert_equal(test_hash, msg.to_h[:env])
+    assert_nil(msg.to_h(exclude_env: true)[:env])
+  end
+
+  def test_message_to_json_respects_params
+    msg = Logster::Message.new(0, "", "test")
+    test_hash = { test_key: "this is a test" }
+    msg.env = test_hash
+    assert_includes(msg.to_json, test_hash.to_json)
+    refute_includes(msg.to_json(exclude_env: true), test_hash.to_json)
   end
 end
