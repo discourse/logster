@@ -53,14 +53,14 @@ class TestBaseStore < Minitest::Test
 
   def test_ignore_pattern_basic
     @store.ignore = [
-        Logster::IgnorePattern.new(nil, {username: 'CausingErrors'})
+        Logster::IgnorePattern.new(nil, username: 'CausingErrors')
     ]
     @store.report(Logger::WARN, "test", "Foobar") #
-    @store.report(Logger::WARN, "test", "Foobar", { env: { username: 'CausingErrors' }})
+    @store.report(Logger::WARN, "test", "Foobar", env: { username: 'CausingErrors' })
     @store.report(Logger::WARN, "test", "Foobar", env: nil)
-    @store.report(Logger::WARN, "test", "Something Else", { env: { username: 'CausingErrors' }})
-    @store.report(Logger::WARN, "test", "Something Else", { env: { 'username' => 'CausingErrors' }})
-    @store.report(Logger::WARN, "test", "Something Else", { env: { username: 'GoodPerson' }}) #
+    @store.report(Logger::WARN, "test", "Something Else", env: { username: 'CausingErrors' })
+    @store.report(Logger::WARN, "test", "Something Else", env: { 'username' => 'CausingErrors' })
+    @store.report(Logger::WARN, "test", "Something Else", env: { username: 'GoodPerson' }) #
     @store.report(Logger::WARN, "test", "Can't verify CSRF token authenticity") #
 
     assert_equal(4, @store.count)
@@ -69,10 +69,10 @@ class TestBaseStore < Minitest::Test
   def test_ignore_pattern_real
     @store.ignore = [
         /^ActionController::RoutingError \(No route matches/,
-        Logster::IgnorePattern.new("Can't verify CSRF token authenticity", { REQUEST_URI: /\/trackback\/$/ })
+        Logster::IgnorePattern.new("Can't verify CSRF token authenticity", REQUEST_URI: /\/trackback\/$/)
     ]
     # blocked
-    @store.report(Logger::WARN, "whatever", "Can't verify CSRF token authenticity", {
+    @store.report(Logger::WARN, "whatever", "Can't verify CSRF token authenticity",
         env: {
             HTTP_HOST: 'meta.discourse.org',
             REQUEST_URI: '/t/use-more-standard-smiley-codes-instead-of-smile/1822/trackback/',
@@ -85,9 +85,9 @@ class TestBaseStore < Minitest::Test
                 blog_name: 'get free spam for cheap'
             }
         }
-    })
+    )
     # logged
-    @store.report(Logger::WARN, "whatever", "Can't verify CSRF token authenticity", {
+    @store.report(Logger::WARN, "whatever", "Can't verify CSRF token authenticity",
         env: {
             HTTP_HOST: 'meta.discourse.org',
             REQUEST_URI: '/session',
@@ -99,12 +99,12 @@ class TestBaseStore < Minitest::Test
                 form_authenticity_token: 'incorrect'
             }
         }
-    })
+    )
     assert_equal(1, @store.count)
   end
 
   def test_timestamp
-    time = Time.now - 24*60*60
+    time = Time.now - 24 * 60 * 60
     message = @store.report(Logger::WARN, "test", "B", timestamp: time)
 
     assert_equal(time, message.timestamp)
@@ -122,20 +122,20 @@ class TestBaseStore < Minitest::Test
     # Backtrace can be passed via backtrace param or env
     message = @store.report(Logger::WARN, "test", "A", backtrace: error.backtrace)
     assert_equal(error.backtrace.join("\n"), message.backtrace)
-    message = @store.report(Logger::WARN, "test", "B", env: {backtrace: error.backtrace})
+    message = @store.report(Logger::WARN, "test", "B", env: { backtrace: error.backtrace })
     assert_equal(error.backtrace.join("\n"), message.backtrace)
 
     # Via env takes priority
-    message = @store.report(Logger::WARN, "test", "C", backtrace: "Garbage", env: {backtrace: error.backtrace})
+    message = @store.report(Logger::WARN, "test", "C", backtrace: "Garbage", env: { backtrace: error.backtrace })
     assert_equal(error.backtrace.join("\n"), message.backtrace)
 
     # Backtrace is always a string
     # Cannot do an equal assert here, because it uses `caller` when not provided
     message = @store.report(Logger::WARN, "test", "D", backtrace: nil)
     assert_kind_of(String, message.backtrace)
-    message = @store.report(Logger::WARN, "test", "E", env: {backtrace: nil})
+    message = @store.report(Logger::WARN, "test", "E", env: { backtrace: nil })
     assert_kind_of(String, message.backtrace)
-    message = @store.report(Logger::WARN, "test", "F", backtrace: nil, env: {backtrace: nil})
+    message = @store.report(Logger::WARN, "test", "F", backtrace: nil, env: { backtrace: nil })
     assert_kind_of(String, message.backtrace)
     message = @store.report(Logger::WARN, "test", "G")
     assert_kind_of(String, message.backtrace)

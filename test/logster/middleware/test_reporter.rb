@@ -3,7 +3,6 @@ require 'rack'
 require 'logster/redis_store'
 require 'logster/middleware/reporter'
 
-
 class TestReporter < Minitest::Test
 
   def test_logs_errors
@@ -18,4 +17,3 @@ class TestReporter < Minitest::Test
   end
 
 end
-

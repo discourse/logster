@@ -20,7 +20,6 @@ class SampleLoader
     @sample_data_key = 'sample_data'
   end
 
-
   def ensure_samples_loaded
     $redis.del @sample_data_key
     data = File.read('data/data.json')
@@ -45,15 +44,15 @@ class SampleLoader
   end
 
   def load_next_sample
-    message =  JSON.parse($redis.lindex(@sample_data_key, @index))
+    message = JSON.parse($redis.lindex(@sample_data_key, @index))
     @index += 1
     @index %= @length
 
-    $store.report(message["severity"], message["progname"], message["message"], {
+    $store.report(message["severity"], message["progname"], message["message"],
       backtrace: message["backtrace"],
       env: message["env"],
       count: message["count"]
-    })
+    )
   end
 
   def load_error
@@ -61,10 +60,10 @@ class SampleLoader
     params = {}
     params["always_present"] = "some_value_#{rand(3)}"
     params["key_#{rand(3)}"] = "some_value_#{rand(3)}"
-    $store.report(2, '', "Message message message", {
+    $store.report(2, '', "Message message message",
       backtrace: 'Backtrace backtrace backtrace',
-      env: {something: :foo, random: rand(3), array: [1,2,3], rand_array: [10, 11, rand(300)], params: params}
-    })
+      env: { something: :foo, random: rand(3), array: [1, 2, 3], rand_array: [10, 11, rand(300)], params: params }
+    )
   end
 end
 
@@ -79,7 +78,7 @@ class Sample < Sinatra::Base
 
   get '/' do
 
-<<HTML
+    <<HTML
 <html>
 <head>
 </head>

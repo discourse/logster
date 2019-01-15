@@ -19,7 +19,7 @@ class TestRedisStore < Minitest::Test
     @store.delete(msg)
     latest = @store.latest
 
-    assert_equal(0,latest.length)
+    assert_equal(0, latest.length)
     assert_nil(@store.get_env(msg.key))
   end
 
@@ -271,12 +271,12 @@ class TestRedisStore < Minitest::Test
   def test_clear
     env = { "clear_env" => "cllleear" }
     @store.max_backlog = 25
-    a_message = @store.report(Logger::WARN, "test", "A", timestamp: Time.now - (24*60*60), env: env)
+    a_message = @store.report(Logger::WARN, "test", "A", timestamp: Time.now - (24 * 60 * 60), env: env)
     @store.protect a_message.key
     20.times do
       @store.report(Logger::WARN, "test", "B", env: env)
     end
-    c_message = @store.report(Logger::WARN, "test", "C", timestamp: Time.now + (24*60*60), env: env)
+    c_message = @store.report(Logger::WARN, "test", "C", timestamp: Time.now + (24 * 60 * 60), env: env)
     @store.protect c_message.key
     d_message = @store.report(Logger::WARN, "test", "D", env: env)
     10.times do
@@ -341,7 +341,7 @@ class TestRedisStore < Minitest::Test
     @store.report(Logger::ERROR, "test", "E")
     # respects after
     latest = @store.latest(severity: [Logger::ERROR, Logger::WARN], limit: 2, after: latest[1].key)
-    assert_equal(1, latest.length);
+    assert_equal(1, latest.length)
   end
 
   def test_search
@@ -424,9 +424,9 @@ class TestRedisStore < Minitest::Test
     # any hashes that don't match should be stripped from the env
     # array but only temporarily until it's sent to the client
     # env array should remain untouched in redis memory
-    assert_equal(["business5"], messages[0].env.map { |env| env["cluster"]})
+    assert_equal(["business5"], messages[0].env.map { |env| env["cluster"] })
     assert_equal(1, messages[0].count)
-    assert_equal(["business2"], messages[1].env.map { |env| env["cluster"]})
+    assert_equal(["business2"], messages[1].env.map { |env| env["cluster"] })
     assert_equal(1, messages[1].count)
 
     m1 = @store.get(m1_key)
@@ -482,9 +482,9 @@ class TestRedisStore < Minitest::Test
     messages = @store.latest(search: "-business")
     assert_equal(2, messages.size)
 
-    assert_equal(["standard3"], messages[0].env.map { |env| env["cluster"]})
+    assert_equal(["standard3"], messages[0].env.map { |env| env["cluster"] })
     assert_equal(1, messages[0].count)
-    assert_equal(["standard7"], messages[1].env.map { |env| env["cluster"]})
+    assert_equal(["standard7"], messages[1].env.map { |env| env["cluster"] })
     assert_equal(1, messages[1].count)
   end
 
@@ -532,7 +532,7 @@ class TestRedisStore < Minitest::Test
     assert_equal(1, @store.latest.count)
 
     @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1")
-    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz"})
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz" })
 
     assert_equal(2, @store.latest.count)
 
@@ -542,15 +542,15 @@ class TestRedisStore < Minitest::Test
 
   def test_solve_grouped
     Logster.config.allow_grouping = true
-    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz"})
-    m = @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "efg"})
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz" })
+    m = @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "efg" })
 
     assert_equal(1, @store.latest.count)
 
     @store.solve(m.key)
 
-    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz"})
-    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "efg"})
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz" })
+    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "efg" })
 
     assert_equal(0, @store.latest.count)
 
@@ -559,7 +559,7 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_clears_solved
-    m = @store.report(Logger::WARN, "application", "test error2", backtrace: "backtrace1", env: {"application_version" => "abc"})
+    m = @store.report(Logger::WARN, "application", "test error2", backtrace: "backtrace1", env: { "application_version" => "abc" })
     @store.solve(m.key)
 
     assert_equal(1, @store.solved.length)
@@ -570,7 +570,7 @@ class TestRedisStore < Minitest::Test
 
   def test_solving_with_some_missing_version
 
-    m=@store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz"})
+    m = @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz" })
     @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1")
 
     @store.solve(m.key)
@@ -579,17 +579,17 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_env
-    env = Rack::MockRequest.env_for("/test").merge({
+    env = Rack::MockRequest.env_for("/test").merge(
       "HTTP_HOST" => "www.site.com",
       "HTTP_USER_AGENT" => "SOME WHERE"
-    })
+    )
     orig = env.dup
     orig["test"] = "tests"
     orig["test1"] = "tests1"
-    Logster.add_to_env(env,"test","tests")
-    Logster.add_to_env(env,"test1","tests1")
+    Logster.add_to_env(env, "test", "tests")
+    Logster.add_to_env(env, "test1", "tests1")
 
-    orig.delete_if do |k,v|
+    orig.delete_if do |k, v|
       !%w{
         HTTP_HOST
         REQUEST_METHOD

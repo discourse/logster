@@ -20,7 +20,6 @@ module Logster::Rails
     Logster.logger = ::Rails.logger = config.logger = logger
   end
 
-
   def self.initialize!(app)
     return unless Logster.config.environments.include?(Rails.env.to_sym)
 

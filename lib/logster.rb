@@ -21,7 +21,7 @@ module Logster
   end
 
   def self.store=(store)
-    @store=store
+    @store = store
   end
 
   def self.store

@@ -1,5 +1,5 @@
 class SidekiqLogsterReporter
-  def call(ex, context={})
+  def call(ex, context = {})
     # Pass context to Logster
     fake_env = {}
     context.each do |key, value|

@@ -31,7 +31,7 @@ module Logster
       @chained << logger
     end
 
-    def add_to_chained(logger, severity, message, progname, opts=nil, &block)
+    def add_to_chained(logger, severity, message, progname, opts = nil, &block)
       if logger.respond_to? :skip_store
         old = logger.skip_store
         logger.skip_store = @skip_store
@@ -57,7 +57,7 @@ module Logster
       (ol && ol[Thread.current.object_id]) || @level
     end
 
-    def add_with_opts(severity, message, progname=progname(), opts=nil, &block)
+    def add_with_opts(severity, message, progname = progname(), opts = nil, &block)
       if severity < level
         return true
       end

@@ -33,9 +33,9 @@ class TestViewer < Minitest::Test
     assert_nil(viewer.send(:resolve_path, "/logs"))
     assert_nil(viewer.send(:resolve_path, "/admin/logsie"))
     assert_nil(viewer.send(:resolve_path, "/admin/logsie/bla"))
-    assert_equal("/",viewer.send(:resolve_path, "/logsie"))
-    assert_equal("/",viewer.send(:resolve_path, "/logsie/"))
-    assert_equal("/hello/world",viewer.send(:resolve_path, "/logsie/hello/world"))
+    assert_equal("/", viewer.send(:resolve_path, "/logsie"))
+    assert_equal("/", viewer.send(:resolve_path, "/logsie/"))
+    assert_equal("/hello/world", viewer.send(:resolve_path, "/logsie/hello/world"))
   end
 
   def test_search_raceguard_s
@@ -53,7 +53,7 @@ class TestViewer < Minitest::Test
   def test_search_raceguard_f
     response = request.get("/logsie/messages.json?filter=0_1_2_3_4")
     result = JSON.parse(response.body)
-    assert_equal([0,1,2,3,4], result['filter'])
+    assert_equal([0, 1, 2, 3, 4], result['filter'])
   end
 
   def test_regex_parse

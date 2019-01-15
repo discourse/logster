@@ -30,7 +30,7 @@ class TestMessage < MiniTest::Test
     msg2 = Logster::Message.new(0, '', 'test', 20)
     msg2.env = [{ e: "ee", f: "ff" }, { g: "gg", h: "hh" }]
 
-    msg1.merge_similar_message(msg2) 
+    msg1.merge_similar_message(msg2)
 
     # new env should be an array, but it should never have
     # another array of envs within itself (hence flatten(1))
@@ -46,7 +46,7 @@ class TestMessage < MiniTest::Test
     msg2 = Logster::Message.new(0, '', 'test', 20)
     msg2.env = { e: "ee", f: "ff" }
 
-    msg1.merge_similar_message(msg2) 
+    msg1.merge_similar_message(msg2)
 
     assert_equal(msg1.env.size, 3)
     assert_equal(msg1.env.map(&:keys).flatten(1).map(&:to_s), %w{a b c d e f})
@@ -88,9 +88,9 @@ class TestMessage < MiniTest::Test
 
   def test_ensure_env_samples_dont_exceed_50
     msg1 = Logster::Message.new(0, '', 'test', 10, count: 50)
-    msg1.env = [{a: 1}]
+    msg1.env = [{ a: 1 }]
     msg2 = Logster::Message.new(0, '', 'test', 20, count: 13)
-    msg2.env = {b: 2}
+    msg2.env = { b: 2 }
 
     assert_equal(msg1.grouping_key, msg2.grouping_key)
 

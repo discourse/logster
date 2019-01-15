@@ -13,7 +13,7 @@ module Logster
 
         @logs_path = Logster.config.subdirectory
         @path_regex = Regexp.new("^(#{@logs_path}$)|^(#{@logs_path}(/.*))$")
-        @store = Logster.store or raise ArgumentError.new("store")
+        (@store = Logster.store) || raise(ArgumentError.new("store"))
 
         @assets_path = File.expand_path("../../../../assets", __FILE__)
         @fileserver = Rack::File.new(@assets_path)
@@ -46,7 +46,7 @@ module Logster
             end
 
             Logster.store.delete(message)
-            return [301, {"Location" => "#{@logs_path}/"}, []]
+            return [301, { "Location" => "#{@logs_path}/" }, []]
 
           elsif resource =~ /\/(un)?protect\/([0-9a-f]+)$/
             off = $1 == "un"
@@ -59,13 +59,13 @@ module Logster
 
             if off
               if Logster.store.unprotect(key)
-                return [301, {"Location" => "#{@logs_path}/show/#{key}?protected=false"}, []]
+                return [301, { "Location" => "#{@logs_path}/show/#{key}?protected=false" }, []]
               else
                 return [500, {}, ["Failed"]]
               end
             else
               if Logster.store.protect(key)
-                return [301, {"Location" => "#{@logs_path}/show/#{key}?protected=true"}, []]
+                return [301, { "Location" => "#{@logs_path}/show/#{key}?protected=true" }, []]
               else
                 return [500, {}, ["Failed"]]
               end
@@ -81,7 +81,7 @@ module Logster
 
             Logster.store.solve(key)
 
-            return [301, {"Location" => "#{@logs_path}"}, []]
+            return [301, { "Location" => "#{@logs_path}" }, []]
 
           elsif resource =~ /\/clear$/
             if env[REQUEST_METHOD] != "POST"
@@ -100,14 +100,14 @@ module Logster
             end
 
             if json
-              [200, {"Content-Type" => "application/json; charset=utf-8"}, [message.to_json]]
+              [200, { "Content-Type" => "application/json; charset=utf-8" }, [message.to_json]]
             else
-              preload = preload_json({"/show/#{key}" => message})
-              [200, {"Content-Type" => "text/html; charset=utf-8"}, [body(preload)]]
+              preload = preload_json("/show/#{key}" => message)
+              [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload)]]
             end
 
           elsif resource == "/"
-            [200, {"Content-Type" => "text/html; charset=utf-8"}, [body(preload_json)]]
+            [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload_json)]]
 
           else
             [404, {}, ["Not found"]]
@@ -134,8 +134,8 @@ module Logster
           after: params["after"]
         }
 
-        if(filter = params["filter"])
-          filter = filter.split("_").map{|s| s.to_i}
+        if (filter = params["filter"])
+          filter = filter.split("_").map { |s| s.to_i }
           opts[:severity] = filter
         end
 
@@ -152,7 +152,7 @@ module Logster
         }
 
         json = JSON.generate(payload)
-        [200, {"Content-Type" => "application/json"}, [json]]
+        [200, { "Content-Type" => "application/json" }, [json]]
       end
 
       def parse_regex(string)
@@ -169,20 +169,20 @@ module Logster
         end
       end
 
-      def preload_json(extra={})
+      def preload_json(extra = {})
         values = {}
         values.merge!(extra)
       end
 
-      def css(name, attrs={})
-        attrs = attrs.map do |k,v|
+      def css(name, attrs = {})
+        attrs = attrs.map do |k, v|
           "#{k}='#{v}'"
         end.join(" ")
 
         "<link rel='stylesheet' type='text/css' href='#{@logs_path}/stylesheets/#{name}' #{attrs}>"
       end
 
-      def script(prod, dev=nil)
+      def script(prod, dev = nil)
         name = ENV['DEBUG_JS'] == "1" && dev ? dev : prod
         "<script src='#{@logs_path}/javascript/#{name}'></script>"
       end
