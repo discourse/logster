@@ -14,11 +14,13 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_delete
-    msg = @store.report(Logger::WARN, "test", "testing")
+    env = { test_env: "this is env" }
+    msg = @store.report(Logger::WARN, "test", "testing", env: env)
     @store.delete(msg)
     latest = @store.latest
 
     assert_equal(0,latest.length)
+    assert_nil(@store.get_env(msg.key))
   end
 
   def test_latest
@@ -78,25 +80,165 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_get
-    a_message = @store.report(Logger::WARN, "test", "A")
+    a_env = { "a_message" => "A MESSAGE" }
+    a_message = @store.report(Logger::WARN, "test", "A", env: a_env)
     b_message = @store.report(Logger::WARN, "test", "B")
     @store.report(Logger::WARN, "test", "C")
 
-    assert_equal("A", @store.get(a_message.key).message)
-    assert_equal("B", @store.get(b_message.key).message)
+    a_message = @store.get(a_message.key)
+    assert_equal("A", a_message.message)
+    assert_equal("B", b_message.message)
+    assert(a_env <= a_message.env)
+
+    a_message = @store.get(a_message.key, load_env: false)
+    assert_equal("A", a_message.message)
+    assert_nil(a_message.env)
+  end
+
+  def test_save_saves_env_separately
+    env = { "myenv" => "thisisenv" }
+    message = @store.report(Logger::WARN, "test", "title", env: env)
+    message = @store.get(message.key, load_env: false)
+    assert_nil(message.env)
+
+    message = @store.get(message.key)
+    assert(env <= message.env)
+
+    assert(env <= @store.get_env(message.key))
+  end
+
+  def test_bulk_get
+    keys = []
+
+    5.times do |n|
+      env = n == 0 ? nil : { "test_#{n}" => "envsss" }
+      keys << @store.report(Logger::WARN, "progname", "test_#{n}", env: env).key
+    end
+
+    messages = @store.bulk_get(keys)
+
+    5.times do |n|
+      msg = messages[n]
+      assert_equal("test_#{n}", msg.message)
+      if n == 0
+        assert_equal(Logster::Message.default_env, msg.env)
+      else
+        assert({ "test_#{n}" => "envsss" } <= msg.env)
+      end
+    end
+  end
+
+  def test_get_env
+    env = { "my_little_env" => "some value" }
+    message = @store.report(Logger::WARN, "test", "A", env: env)
+    assert(env <= @store.get_env(message.key))
+    assert_nil(@store.get_env("nonexistentkey"))
+  end
+
+  def test_replace_and_bump
+    old_env = { "old_env" => "old value" }
+    message = @store.report(Logger::WARN, "test", "A", env: old_env)
+
+    unsaved_env = { "unsaved_env" => "lost value" }
+    message.env = unsaved_env
+
+    @store.replace_and_bump(message, save_env: false)
+
+    message = @store.get(message.key)
+    assert(old_env <= message.env)
+    refute(unsaved_env <= message.env)
+
+    saved_env = { "saved_env" => "saved value!" }
+    message.env = saved_env
+
+    @store.replace_and_bump(message)
+
+    message = @store.get(message.key)
+    assert(saved_env == message.env)
+  end
+
+  def test_backward_compatibility_no_loss_of_data
+    # previously we were storing env samples as a part of the main message json
+    # now we've switched to storing samples separately from the main message
+    # we need to make we don't lose env data of messages stored the old way
+    # when we migrate to the new system
+
+    # it probably makes sense to remove this test after a while (say 6-12 months)
+
+    Logster.config.allow_grouping = true
+    backtrace = "fake backtrace"
+    env = { "some_env" => "some env" }
+    message = Logster::Message.new(Logger::WARN, "", "title", count: 60)
+    message.env = env
+    message.backtrace = backtrace
+
+    @store.save(message)
+
+    # hack to force env to be stored with the main message json
+    @store.redis.hset(@store.send("hash_key"), message.key, message.to_json(exclude_env: false))
+
+    another_env = { "another_env" => "more env" }
+    message = @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: another_env)
+    message = @store.get(message.key)
+
+    assert(env <= message.env)
+    assert_equal(61, message.count)
+    # another_env is not merged cause count is 60, only the count is updated
+
+    # make sure we are now storing env samples separately
+    message = @store.get(message.key, load_env: false)
+    assert_nil(message.env)
+  ensure
+    Logster.config.allow_grouping = false
+  end
+
+  def test_backward_compatibility_no_loss_of_data_2
+    # same story as the test above, just a bit different
+
+    Logster.config.allow_grouping = true
+    backtrace = "fake backtrace"
+    env = { "some_env" => "some env" }
+    message = Logster::Message.new(Logger::WARN, "", "title")
+    message.env = env
+    message.backtrace = backtrace
+
+    @store.save(message)
+
+    # hack to force env to be stored with the main message json
+    @store.redis.hset(@store.send("hash_key"), message.key, message.to_json(exclude_env: false))
+
+    another_env = { "another_env" => "more env" }
+    message = @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: another_env)
+    message = @store.get(message.key)
+
+    assert_instance_of(Array, message.env)
+    assert(env <= message.env[0])
+    assert(another_env <= message.env[1])
+    assert_equal(2, message.env.size)
+    assert_equal(2, message.count)
+
+    # make sure we are now storing env samples separately
+    message = @store.get(message.key, load_env: false)
+    assert_nil(message.env)
+  ensure
+    Logster.config.allow_grouping = false
   end
 
   def test_backlog
+    env = { "backlog_test" => "BACKLOG" }
     @store.max_backlog = 1
+    deleted_msg = @store.report(Logger::WARN, "test", "A")
     @store.report(Logger::WARN, "test", "A")
     @store.report(Logger::WARN, "test", "A")
-    @store.report(Logger::WARN, "test", "A")
-    @store.report(Logger::WARN, "test", "B")
+    @store.report(Logger::WARN, "test", "B", env: env)
 
     latest = @store.latest
 
     assert_equal(1, latest.length)
     assert_equal("B", latest[0].message)
+    assert(env <= latest[0].env)
+    assert_nil(@store.get(deleted_msg.key))
+    assert_nil(@store.get_env(deleted_msg.key))
   end
 
   def test_save_unsave
@@ -127,17 +269,18 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_clear
+    env = { "clear_env" => "cllleear" }
     @store.max_backlog = 25
-    a_message = @store.report(Logger::WARN, "test", "A", timestamp: Time.now - (24*60*60))
+    a_message = @store.report(Logger::WARN, "test", "A", timestamp: Time.now - (24*60*60), env: env)
     @store.protect a_message.key
     20.times do
-      @store.report(Logger::WARN, "test", "B")
+      @store.report(Logger::WARN, "test", "B", env: env)
     end
-    c_message = @store.report(Logger::WARN, "test", "C", timestamp: Time.now + (24*60*60))
+    c_message = @store.report(Logger::WARN, "test", "C", timestamp: Time.now + (24*60*60), env: env)
     @store.protect c_message.key
-    d_message = @store.report(Logger::WARN, "test", "D")
+    d_message = @store.report(Logger::WARN, "test", "D", env: env)
     10.times do
-      @store.report(Logger::WARN, "test", "E")
+      @store.report(Logger::WARN, "test", "E", env: env)
     end
 
     latest = @store.latest
@@ -147,8 +290,10 @@ class TestRedisStore < Minitest::Test
 
     # Protected messages are still accessible by their key
     assert_equal("C", @store.get(c_message.key).message)
+    assert(env <= @store.get_env(c_message.key))
     # Unprotected messages are gone
     assert_nil(@store.get(d_message.key))
+    assert_nil(@store.get_env(d_message.key))
 
     # The latest list is rebuilt with protected messages, earliest first
     # Including messages that previously fell off (A)
@@ -156,6 +301,8 @@ class TestRedisStore < Minitest::Test
     assert_equal(2, latest.length)
     assert_equal("A", latest[0].message)
     assert_equal("C", latest[1].message)
+    assert(env <= latest[0].env)
+    assert(env <= latest[1].env)
   end
 
   def test_hash_cleanup
@@ -309,7 +456,7 @@ class TestRedisStore < Minitest::Test
       @store.ignore = [
           Logster::IgnorePattern.new("business")
       ]
-      message2 = @store.report(Logger::WARN, "", "my error", env: { cluster: "business17", backtrace: backtrace })
+      @store.report(Logger::WARN, "", "my error", env: { cluster: "business17", backtrace: backtrace })
 
       message = @store.get(message.key)
       assert(Array === message.env)

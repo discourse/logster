@@ -280,7 +280,7 @@ module Logster
 
       message = Message.from_json(json)
       if load_env
-        message.env = get_env(message_key)
+        message.env = get_env(message_key) || {}
       end
       message
     end
@@ -300,7 +300,7 @@ module Logster
 
     def get_env(message_key)
       json = @redis.hget(env_key, message_key)
-      return {} if !json || json.size == 0
+      return if !json || json.size == 0
       JSON.parse(json)
     end
 
