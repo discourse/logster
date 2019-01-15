@@ -60,11 +60,11 @@ module Logster
 
     def self.from_json(json)
       parsed = ::JSON.parse(json)
-      msg = new( parsed["severity"],
+      msg = new(parsed["severity"],
             parsed["progname"],
             parsed["message"],
             parsed["timestamp"],
-            parsed["key"] )
+            parsed["key"])
       msg.backtrace = parsed["backtrace"]
       msg.env = parsed["env"]
       msg.count = parsed["count"]
@@ -164,7 +164,7 @@ module Logster
         scrubbed = default_env
         request = Rack::Request.new(env)
         params = {}
-        request.params.each do |k,v|
+        request.params.each do |k, v|
           if k.include? "password"
             params[k] = "[redacted]"
           elsif Array === v
@@ -174,8 +174,8 @@ module Logster
           end
         end
         scrubbed["params"] = params if params.length > 0
-        ALLOWED_ENV.map{ |k|
-         scrubbed[k] = env[k] if env[k]
+        ALLOWED_ENV.map { |k|
+          scrubbed[k] = env[k] if env[k]
         }
         scrubbed
       end
@@ -190,16 +190,16 @@ module Logster
 
     def =~(pattern)
       case pattern
-        when Hash
-          IgnorePattern.new(nil, pattern).matches? self
-        when String
-          IgnorePattern.new(pattern, nil).matches? self
-        when Regexp
-          IgnorePattern.new(pattern, nil).matches? self
-        when IgnorePattern
-          pattern.matches? self
+      when Hash
+        IgnorePattern.new(nil, pattern).matches? self
+      when String
+        IgnorePattern.new(pattern, nil).matches? self
+      when Regexp
+        IgnorePattern.new(pattern, nil).matches? self
+      when IgnorePattern
+        pattern.matches? self
         else
-          nil
+        nil
       end
     end
 

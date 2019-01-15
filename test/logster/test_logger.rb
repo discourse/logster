@@ -26,19 +26,19 @@ class TestLogger < Minitest::Test
   def test_per_thread_override
     @logger.override_level = 2
 
-    @logger.add(0, "test", "prog", backtrace: "backtrace", env: {a: "x"})
+    @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
     Thread.new do
-      @logger.add(0, "test", "prog", backtrace: "backtrace", env: {a: "x"})
+      @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
     end.join
 
     @logger.override_level = nil
-    @logger.add(0, "test", "prog", backtrace: "backtrace", env: {a: "x"})
+    @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
 
     assert_equal 2, @store.calls.length
   end
 
   def test_backtrace
-    @logger.add(0, "test", "prog", backtrace: "backtrace", env: {a: "x"})
+    @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
     assert_equal "backtrace", @store.calls[0][3][:backtrace]
   end
 
@@ -54,7 +54,7 @@ class TestLogger < Minitest::Test
     @other_store = TestStore.new
     @logger.chain(Logster::Logger.new(@other_store))
 
-    @logger.add(0, "test", "prog", backtrace: "backtrace", env: {a: "x"})
+    @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
 
     [@store, @other_store].each do |store|
       assert_equal "backtrace", store.calls[0][3][:backtrace]
@@ -73,7 +73,7 @@ class TestLogger < Minitest::Test
       @tester = tester
     end
 
-    def add(s,m,p,&block)
+    def add(s, m, p, &block)
       @tester.assert(skip_store)
     end
   end

@@ -17,25 +17,25 @@ class TestIgnorePattern < Minitest::Test
 
   def test_env_pattern
     msg = Logster::Message.new(Logger::WARN, "test", "my error")
-    msg.env = {"frogs" => "are big"}
+    msg.env = { "frogs" => "are big" }
 
-    pattern = Logster::IgnorePattern.new(nil, {frogs: "big"})
+    pattern = Logster::IgnorePattern.new(nil, frogs: "big")
 
     assert pattern.matches? msg
 
-    msg.env = {legs: nil}
+    msg.env = { legs: nil }
     assert !(pattern.matches? msg)
 
-    msg.env = {legs: 3}
+    msg.env = { legs: 3 }
     assert !(pattern.matches? msg)
 
-    msg.env = {frogs: "small"}
+    msg.env = { frogs: "small" }
     assert !pattern.matches?(msg)
 
     pattern = Logster::IgnorePattern.new(nil, "small")
     assert pattern.matches? msg
 
-    msg.env = {frogs: "big"}
+    msg.env = { frogs: "big" }
     assert !(pattern.matches? msg)
   end
 end

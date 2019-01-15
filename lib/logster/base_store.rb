@@ -108,7 +108,7 @@ module Logster
         message.backtrace = caller.join("\n")
       end
 
-      return if ignore && ignore.any? { |pattern| message =~ pattern}
+      return if ignore && ignore.any? { |pattern| message =~ pattern }
 
       similar = nil
 

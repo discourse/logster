@@ -1,13 +1,13 @@
 module Logster
   class IgnorePattern
 
-    def initialize(message_pattern=nil, env_patterns=nil)
+    def initialize(message_pattern = nil, env_patterns = nil)
       @msg_match = message_pattern
       @env_match = env_patterns
     end
 
     def self.from_message_and_request_uri(msg, request)
-      IgnorePattern.new(msg, {REQUEST_URI: request})
+      IgnorePattern.new(msg, REQUEST_URI: request)
     end
 
     def matches?(message)
@@ -32,18 +32,18 @@ module Logster
       return false unless message && pattern
 
       case pattern
-        when Regexp
-          message.to_s =~ pattern
-        when String
-          message.to_s =~ Regexp.new(pattern, Regexp::IGNORECASE)
-        when Hash
-          if Hash === message
-            compare_hash(message, pattern)
-          else
-            false
-          end
+      when Regexp
+        message.to_s =~ pattern
+      when String
+        message.to_s =~ Regexp.new(pattern, Regexp::IGNORECASE)
+      when Hash
+        if Hash === message
+          compare_hash(message, pattern)
         else
           false
+        end
+        else
+        false
       end
     end
 

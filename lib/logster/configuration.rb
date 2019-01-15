@@ -7,7 +7,7 @@ module Logster
 
     def initialize
       # lambda |env,block|
-      @current_context = lambda{ |_, &block| block.call }
+      @current_context = lambda { |_, &block| block.call }
       @environments = [:development, :production]
       @subdirectory = nil
 

@@ -8,7 +8,7 @@ module Logster
 
     attr_reader :duration, :callback
 
-    def self.clear_all(redis, redis_prefix=nil)
+    def self.clear_all(redis, redis_prefix = nil)
       prefix = key_prefix(redis_prefix)
 
       redis.eval "
@@ -123,7 +123,7 @@ module Logster
     end
 
     def save(message)
-      if keys=message.solved_keys
+      if keys = message.solved_keys
         keys.each do |solved|
           return true if @redis.hget(solved_key, solved)
         end
@@ -185,7 +185,7 @@ module Logster
       clear_solved
     end
 
-    def latest(opts={})
+    def latest(opts = {})
       limit = opts[:limit] || 50
       severity = opts[:severity]
       before = opts[:before]
@@ -202,7 +202,7 @@ module Logster
 
       begin
         keys = @redis.lrange(list_key, start, finish) || []
-        break unless keys and keys.count > 0
+        break unless keys && (keys.count > 0)
         rows = bulk_get(keys)
 
         temp = []
@@ -288,7 +288,7 @@ module Logster
     def bulk_get(message_keys)
       envs = @redis.hmget(env_key, message_keys)
       @redis.hmget(hash_key, message_keys).map!.with_index do |json, ind|
-        message =  Message.from_json(json)
+        message = Message.from_json(json)
         env = envs[ind]
         if !message.env || message.env.size == 0
           env = env && env.size > 0 ? ::JSON.parse(env) : {}
@@ -350,7 +350,7 @@ module Logster
 
       if ignores.length > 0
         start = count ? 0 - count : 0
-        message_keys = @redis.lrange(list_key, start, -1 ) || []
+        message_keys = @redis.lrange(list_key, start, -1) || []
 
         bulk_get(message_keys).each do |message|
           unless (ignores & (message.solved_keys || [])).empty?
@@ -415,7 +415,7 @@ module Logster
       start = -limit
       finish = -1
 
-      return [start,finish] unless before || after
+      return [start, finish] unless before || after
 
       found = nil
       find = before || after
@@ -493,12 +493,12 @@ module Logster
           env_matches?(value, search)
         else
           case search
-            when Regexp
-              value.to_s =~ search
-            when String
-              value.to_s =~ Regexp.new(search, Regexp::IGNORECASE)
+          when Regexp
+            value.to_s =~ search
+          when String
+            value.to_s =~ Regexp.new(search, Regexp::IGNORECASE)
             else
-              false
+            false
           end
         end
       end
