@@ -224,6 +224,29 @@ class TestRedisStore < Minitest::Test
     Logster.config.allow_grouping = false
   end
 
+  def test_merging_performance
+    Logster.config.allow_grouping = true
+    backtrace = "fake backtrace"
+    env = { "some_env" => "some env" }
+    another_env = { "another_env" => "more env" }
+    yet_another_env = { "moaar_env" => "more env" }
+
+    @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: env, count: 49)
+
+    message = @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: another_env)
+    assert_instance_of(Array, message.env)
+    assert_equal(2, message.env.size)
+    assert(env <= message.env[0])
+    assert(another_env <= message.env[1])
+
+    message = @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: yet_another_env)
+    # we don't need to load env from redis cause we don't
+    # need to merge new env samples if count is 50 or more
+    assert_nil(message.env)
+  ensure
+    Logster.config.allow_grouping = false
+  end
+
   def test_backlog
     env = { "backlog_test" => "BACKLOG" }
     @store.max_backlog = 1
