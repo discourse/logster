@@ -1,6 +1,12 @@
 # CHANGELOG
 
-- 2019-01-09: Version 1.4.0
+- 2019-01-17: Version 2.0.0.pre
+  - FIX: don't merge any new env samples if there are 50 samples (1.4.0.pre regression)
+  - UX: make env navigation controls stick to the top when scrolled
+  - PERF: store env samples separately from the rest of message data
+  - DEV: Rubocop
+
+- 2019-01-09: Version 1.4.0.pre
   - FEATURE: allow navigation through merged errors
   - FEATURE: search should look at env
   - FIX: deselect message if new filtering doesn't include selected message
