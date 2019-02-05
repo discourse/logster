@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- 2019-02-05: Version 2.0.1
+  - FIX: env line height issue on iOS
+
 - 2019-01-17: Version 2.0.0.pre
   - FIX: don't merge any new env samples if there are 50 samples (1.4.0.pre regression)
   - UX: make env navigation controls stick to the top when scrolled
