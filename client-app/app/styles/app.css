@@ -15,6 +15,7 @@ pre {
 table.env-table tbody tr td {
   border-top: none;
   line-height: 18px;
+  height: 18px;
   vertical-align: top;
 }
 
@@ -505,6 +506,10 @@ label span {
 
 #bottom-panel:not(.full) .nav-controls {
   position: sticky;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -ms-sticky;
+  position: -o-sticky;
   top: 0;
   background: #f1f1f1;
   z-index: 1;
