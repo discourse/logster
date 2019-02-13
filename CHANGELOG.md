@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- 2019-02-13: Version 2.1.0
+  - FEATURE/DEV: adds a defer logger that will do logging asynchronously only in dev environments. It should speed things up a little in dev.
+
 - 2019-02-05: Version 2.0.1
   - FIX: env line height issue on iOS
 
