@@ -27,7 +27,7 @@ module Logster
         blk = @queue.pop
         # we need to be able to break the loop so that the new
         # thread "finishes" and let us test this code.
-        break unless blk
+        break if blk == :terminate
         blk.call
       end
     end

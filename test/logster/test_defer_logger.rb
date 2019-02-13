@@ -19,7 +19,7 @@ class TestDeferLogger < Minitest::Test
     @defer_logger.add(4, "hi this a test", "prog")
 
     assert_equal(1, queue.size)
-    queue << nil
+    queue << :terminate
     Logster::Scheduler.thread.join
     assert_equal(1, @store.calls.size)
 
