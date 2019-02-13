@@ -13,7 +13,13 @@ module Logster::Rails
     store = Logster.store ||= Logster::RedisStore.new
     store.level = Logger::Severity::WARN if Rails.env.production?
 
-    logger = Logster::Logger.new(store)
+    if Rails.env.development?
+      require 'logster/defer_logger'
+      logger = Logster::DeferLogger.new(store)
+    else
+      logger = Logster::Logger.new(store)
+    end
+
     logger.chain(::Rails.logger)
     logger.level = ::Rails.logger.level
 

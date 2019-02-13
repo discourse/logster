@@ -98,11 +98,16 @@ module Logster
       opts ||= {}
       opts[:env] ||= Thread.current[LOGSTER_ENV]
 
-      @store.report(severity, progname, message, opts)
-
+      report_to_store(severity, progname, message, opts)
     rescue => e
       # don't blow up if STDERR is somehow closed
       STDERR.puts "Failed to report error: #{e} #{severity} #{message} #{progname}" rescue nil
+    end
+
+    private
+
+    def report_to_store(severity, progname, message, opts = {})
+      @store.report(severity, progname, message, opts)
     end
   end
 end
