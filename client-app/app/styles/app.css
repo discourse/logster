@@ -519,3 +519,9 @@ label span {
 .env-number {
   margin: 0 7px;
 }
+
+.expand-list {
+  text-decoration: underline;
+  color: blue;
+  cursor: pointer;
+}

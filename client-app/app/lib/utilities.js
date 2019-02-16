@@ -1,4 +1,5 @@
 import Preload from "client-app/lib/preload";
+const expandableKeys = Preload.get("env_expandable_keys");
 
 const entityMap = {
   "&": "&amp;",
@@ -21,7 +22,7 @@ export function ajax(url, settings) {
 }
 
 export function preloadOrAjax(url, settings) {
-  const preloaded = Preload.get(`preload.${url.replace(".json", "")}`);
+  const preloaded = Preload.get(url.replace(".json", ""));
   if (preloaded) {
     return Em.RSVP.resolve(preloaded);
   } else {
@@ -96,7 +97,7 @@ export function buildArrayString(array) {
   return "[" + buffer.join(", ") + "]";
 }
 
-export function buildHashString(hash, recurse) {
+export function buildHashString(hash, recurse, expanded = []) {
   if (!hash) return "";
 
   const buffer = [];
@@ -105,11 +106,17 @@ export function buildHashString(hash, recurse) {
     if (v === null) {
       buffer.push("null");
     } else if (Object.prototype.toString.call(v) === "[object Array]") {
+      let valueHtml = "";
+      if (expandableKeys.indexOf(k) !== -1 && !recurse && expanded.indexOf(k) === -1) {
+        valueHtml = `${escapeHtml(v[0])}, <a class="expand-list" data-key=${k}>${v.length - 1} more</a>`
+      } else {
+        valueHtml = buildArrayString(v);
+      }
       buffer.push(
         "<tr><td>" +
           escapeHtml(k) +
           "</td><td>" +
-          buildArrayString(v) +
+          valueHtml +
           "</td></tr>"
       );
     } else if (typeof v === "object") {

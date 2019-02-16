@@ -1,7 +1,7 @@
 module Logster
   class Configuration
     attr_accessor :current_context, :allow_grouping, :environments,
-      :application_version, :web_title
+      :application_version, :web_title, :env_expandable_keys
 
     attr_writer :subdirectory
 
@@ -10,6 +10,7 @@ module Logster
       @current_context = lambda { |_, &block| block.call }
       @environments = [:development, :production]
       @subdirectory = nil
+      @env_expandable_keys = []
 
       @allow_grouping = false
 

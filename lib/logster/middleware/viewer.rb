@@ -194,6 +194,7 @@ module Logster
       def body(preload)
         root_url = @logs_path
         root_url += "/" if root_url[-1] != "/"
+        preload.merge!(env_expandable_keys: Logster.config.env_expandable_keys)
         <<~HTML
           <!doctype html>
           <html>
