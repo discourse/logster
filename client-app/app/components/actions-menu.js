@@ -26,6 +26,12 @@ export default Component.extend({
     }
   }),
 
+  willDestroyElement() {
+    this._super(...arguments);
+    const $document = Em.$(document);
+    $document.unbind("click", this.get("bindingFunction"));
+  },
+
   actions: {
     expandMenu() {
       this.toggleProperty("showMenu");

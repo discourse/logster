@@ -56,7 +56,7 @@ export default Em.Object.extend({
     this.set("count", other.get("count"));
   },
 
-  canSolve: computed(function() {
+  canSolve: computed("env.application_version", "env.[]", function() {
     const backtrace = this.get("backtrace");
     const env = this.get("env");
     const appVersion = Array.isArray(env)
@@ -64,7 +64,7 @@ export default Em.Object.extend({
           .map(e => e.application_version)
           .compact()
           .join("")
-      : env.application_version;
+      : env && env.application_version;
     return appVersion && backtrace && backtrace.length > 0;
   }),
 

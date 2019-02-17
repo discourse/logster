@@ -1,6 +1,7 @@
 let CONTAINER;
 let isInitialized = false;
 
+// exported so that it can be used in tests
 export function init() {
   const dataset = document.getElementById("preloaded-data").dataset;
   CONTAINER = Em.$.extend(JSON.parse(dataset.preloaded), {

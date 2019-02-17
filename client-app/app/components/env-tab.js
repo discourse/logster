@@ -3,8 +3,6 @@ import { computed } from "@ember/object";
 import { buildHashString } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
 
-const expandableKeys = Preload.get("env_expandable_keys");
-
 export default Component.extend({
   current: 1,
 
@@ -21,7 +19,11 @@ export default Component.extend({
     if (!this.get("isEnvArray")) {
       return buildHashString(this.get("message.env"));
     } else {
-      const currentEnv = Em.$.extend({}, this.get("message.env")[this.get("current") - 1]);
+      const currentEnv = Em.$.extend(
+        {},
+        this.get("message.env")[this.get("current") - 1]
+      );
+      const expandableKeys = Preload.get("env_expandable_keys");
       expandableKeys.forEach(key => {
         if (currentEnv.hasOwnProperty(key) && !Array.isArray(currentEnv[key])) {
           const list = [currentEnv[key]];
@@ -32,7 +34,7 @@ export default Component.extend({
           });
           currentEnv[key] = list.length > 1 ? list : list[0];
         }
-      })
+      });
       return buildHashString(currentEnv, false, this.get("expanded") || []);
     }
   }),
@@ -40,7 +42,11 @@ export default Component.extend({
   click(e) {
     const $elem = Em.$(e.target);
     const dataKey = $elem.data("key");
-    if (expandableKeys.indexOf(dataKey) !== -1 && $elem.hasClass("expand-list")) {
+    const expandableKeys = Preload.get("env_expandable_keys");
+    if (
+      expandableKeys.indexOf(dataKey) !== -1 &&
+      $elem.hasClass("expand-list")
+    ) {
       e.preventDefault();
       if (!this.get("expanded")) {
         this.set("expanded", [dataKey]);

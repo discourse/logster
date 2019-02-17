@@ -1,5 +1,4 @@
 import Preload from "client-app/lib/preload";
-const expandableKeys = Preload.get("env_expandable_keys");
 
 const entityMap = {
   "&": "&amp;",
@@ -102,22 +101,25 @@ export function buildHashString(hash, recurse, expanded = []) {
 
   const buffer = [];
   const hashes = [];
+  const expandableKeys = Preload.get("env_expandable_keys");
   _.each(hash, (v, k) => {
     if (v === null) {
       buffer.push("null");
     } else if (Object.prototype.toString.call(v) === "[object Array]") {
       let valueHtml = "";
-      if (expandableKeys.indexOf(k) !== -1 && !recurse && expanded.indexOf(k) === -1) {
-        valueHtml = `${escapeHtml(v[0])}, <a class="expand-list" data-key=${k}>${v.length - 1} more</a>`
+      if (
+        expandableKeys.indexOf(k) !== -1 &&
+        !recurse &&
+        expanded.indexOf(k) === -1
+      ) {
+        valueHtml = `${escapeHtml(
+          v[0]
+        )}, <a class="expand-list" data-key=${k}>${v.length - 1} more</a>`;
       } else {
         valueHtml = buildArrayString(v);
       }
       buffer.push(
-        "<tr><td>" +
-          escapeHtml(k) +
-          "</td><td>" +
-          valueHtml +
-          "</td></tr>"
+        "<tr><td>" + escapeHtml(k) + "</td><td>" + valueHtml + "</td></tr>"
       );
     } else if (typeof v === "object") {
       hashes.push(k);
