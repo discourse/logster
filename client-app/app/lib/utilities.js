@@ -101,7 +101,7 @@ export function buildHashString(hash, recurse, expanded = []) {
 
   const buffer = [];
   const hashes = [];
-  const expandableKeys = Preload.get("env_expandable_keys");
+  const expandableKeys = Preload.get("env_expandable_keys") || [];
   _.each(hash, (v, k) => {
     if (v === null) {
       buffer.push("null");

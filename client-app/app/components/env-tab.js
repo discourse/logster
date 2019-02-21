@@ -7,8 +7,10 @@ export default Component.extend({
   current: 1,
 
   didUpdateAttrs() {
-    this.set("current", 1);
-    this.set("expanded", null);
+    this.setProperties({
+      current: 1,
+      expanded: null
+    });
   },
 
   isEnvArray: computed("message.env", function() {
@@ -23,7 +25,7 @@ export default Component.extend({
         {},
         this.get("message.env")[this.get("current") - 1]
       );
-      const expandableKeys = Preload.get("env_expandable_keys");
+      const expandableKeys = Preload.get("env_expandable_keys") || [];
       expandableKeys.forEach(key => {
         if (currentEnv.hasOwnProperty(key) && !Array.isArray(currentEnv[key])) {
           const list = [currentEnv[key]];
@@ -41,8 +43,8 @@ export default Component.extend({
 
   click(e) {
     const $elem = Em.$(e.target);
-    const dataKey = $elem.data("key");
-    const expandableKeys = Preload.get("env_expandable_keys");
+    const dataKey = $elem.attr("data-key");
+    const expandableKeys = Preload.get("env_expandable_keys") || [];
     if (
       expandableKeys.indexOf(dataKey) !== -1 &&
       $elem.hasClass("expand-list")

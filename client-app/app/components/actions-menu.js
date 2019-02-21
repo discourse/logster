@@ -22,14 +22,14 @@ export default Component.extend({
     if (this.get("showMenu")) {
       $document.on("click", this.get("bindingFunction"));
     } else {
-      $document.unbind("click", this.get("bindingFunction"));
+      $document.off("click", this.get("bindingFunction"));
     }
   }),
 
   willDestroyElement() {
     this._super(...arguments);
     const $document = Em.$(document);
-    $document.unbind("click", this.get("bindingFunction"));
+    $document.off("click", this.get("bindingFunction"));
   },
 
   actions: {

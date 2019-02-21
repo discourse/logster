@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- 2019-02-21: Version 2.1.2
+  - FEATURE: allow certain env keys to be expandable via `Logster.config.env_expandable_keys.push(:key, :another_key)`. See https://github.com/discourse/logster/pull/81 for more info
+
 - 2019-02-21: Version 2.1.1
   - FEATURE: allow defer logger to be disabled as Ruby 2.5.3 can segfault with defer logger due to a bug in Ruby. To disable run `Logster::Scheduler.disable`
 
