@@ -5,11 +5,25 @@ module Logster
       @queue = Queue.new
       @mutex = Mutex.new
       @thread = nil
+      @enabled = true
+    end
+
+    def disable
+      @enabled = false
+    end
+
+    def enable
+      @enabled = true
     end
 
     def schedule(&blk)
-      start_thread if !@thread&.alive?
-      @queue << blk
+      if @enabled
+        start_thread if !@thread&.alive?
+        @queue << blk
+      else
+        return if blk == :terminate
+        blk.call
+      end
     end
 
     private

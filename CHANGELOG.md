@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- 2019-02-21: Version 2.1.1
+  - FEATURE: allow defer logger to be disabled as Ruby 2.5.3 can segfault with defer logger due to a bug in Ruby. To disable run `Logster::Scheduler.disable`
+
 - 2019-02-13: Version 2.1.0
   - FEATURE/DEV: adds a defer logger that will do logging asynchronously only in dev environments. It should speed things up a little in dev.
 
