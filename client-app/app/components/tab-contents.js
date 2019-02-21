@@ -1,7 +1,7 @@
 import Component from "@ember/component";
 
 export default Component.extend({
-  classNameBindings: ["active", ":content"],
+  classNameBindings: ["active", ":content", "name"],
   isLink: false,
 
   invokeParent(name) {

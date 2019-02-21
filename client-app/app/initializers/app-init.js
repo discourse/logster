@@ -2,7 +2,6 @@ import {
   updateHiddenProperty,
   resetTitleCount
 } from "client-app/lib/utilities";
-import { init } from "client-app/lib/preload";
 import Evented from "@ember/object/evented";
 import EmberObject from "@ember/object";
 
@@ -27,10 +26,6 @@ export function initialize(app) {
       yy: "%d yrs"
     }
   });
-
-  // parse preloaded json
-  const dataset = document.getElementById("preloaded-data").dataset;
-  init(dataset);
 
   // setup event for updating document title and title count
   let hiddenProperty;
