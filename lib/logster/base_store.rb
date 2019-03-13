@@ -84,6 +84,21 @@ module Logster
       not_implemented
     end
 
+    # takes a string as `pattern` and places it under the set `set_name`
+    def insert_pattern(set_name, pattern)
+      not_implemented
+    end
+
+    # takes a string as `pattern` and removes it from the set `set_name`
+    def remove_pattern(set_name, pattern)
+      not_implemented
+    end
+
+    # returns an array of strings each of which must be convertible to regexp
+    def get_patterns(set_name)
+      not_implemented
+    end
+
     def report(severity, progname, msg, opts = {})
       return if (!msg || (String === msg && msg.empty?)) && skip_empty
       return if level && severity < level
@@ -109,6 +124,11 @@ module Logster
       end
 
       return if ignore && ignore.any? { |pattern| message =~ pattern }
+
+      if Logster.config.enable_custom_patterns_via_ui
+        custom_ignore = Logster::SuppressionPattern.find_all
+        return if custom_ignore.any? { |pattern| message =~ pattern }
+      end
 
       similar = nil
 

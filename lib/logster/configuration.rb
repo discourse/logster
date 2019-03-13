@@ -1,7 +1,7 @@
 module Logster
   class Configuration
     attr_accessor :current_context, :allow_grouping, :environments,
-      :application_version, :web_title, :env_expandable_keys
+      :application_version, :web_title, :env_expandable_keys, :enable_custom_patterns_via_ui
 
     attr_writer :subdirectory
 
@@ -11,6 +11,7 @@ module Logster
       @environments = [:development, :production]
       @subdirectory = nil
       @env_expandable_keys = []
+      @enable_custom_patterns_via_ui = false
 
       @allow_grouping = false
 

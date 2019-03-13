@@ -3,6 +3,12 @@ import { ajax } from "client-app/lib/utilities";
 import { observer, computed } from "@ember/object";
 
 export default Controller.extend({
+  showDebug: true,
+  showInfo: true,
+  showWarn: true,
+  showErr: true,
+  showFatal: true,
+  search: "",
   currentMessage: Em.computed.alias("model.currentMessage"),
 
   resizePanels(amount) {
@@ -69,7 +75,7 @@ export default Controller.extend({
     }
   },
 
-  filterChanged: observer(
+  filter: computed(
     "showDebug",
     "showInfo",
     "showWarn",
@@ -85,13 +91,18 @@ export default Controller.extend({
 
       // always show unknown, rare
       filter.push(5);
-      const model = this.get("model");
-      model.set("filter", filter);
-      if (this.get("initialized")) {
-        model.reload().then(() => this.updateSelectedMessage());
-      }
+      return filter;
     }
   ),
+
+  filterChanged: observer("filter.length", function() {
+    const filter = this.get("filter");
+    const model = this.get("model");
+    model.set("filter", filter);
+    if (filter && this.get("initialized")) {
+      model.reload().then(() => this.updateSelectedMessage());
+    }
+  }),
 
   searchChanged: observer("search", function() {
     const search = this.get("search");

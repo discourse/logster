@@ -342,6 +342,18 @@ module Logster
       @rate_limits ||= {}
     end
 
+    def insert_pattern(set_name, pattern)
+      @redis.sadd(set_name, pattern)
+    end
+
+    def remove_pattern(set_name, pattern)
+      @redis.srem(set_name, pattern)
+    end
+
+    def get_patterns(set_name)
+      @redis.smembers(set_name)
+    end
+
     protected
 
     def clear_solved(count = nil)

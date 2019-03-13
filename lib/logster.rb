@@ -3,6 +3,8 @@ require 'logster/message'
 require 'logster/configuration'
 require 'logster/web'
 require 'logster/ignore_pattern'
+require 'logster/pattern'
+require 'logster/suppression_pattern'
 
 if defined? Redis
   require 'logster/redis_store'

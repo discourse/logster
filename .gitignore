@@ -17,3 +17,5 @@ test/version_tmp
 tmp
 .byebug_history
 .rubocop-https---raw-githubusercontent-com-discourse-discourse-master--rubocop-yml
+*.swo
+*.swp

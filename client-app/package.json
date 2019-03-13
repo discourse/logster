@@ -44,6 +44,7 @@
     "ember-welcome-page": "^3.2.0",
     "eslint-plugin-ember": "^5.2.0",
     "loader.js": "^4.7.0",
+    "prettier": "^1.16.4",
     "qunit-dom": "^0.8.0"
   },
   "engines": {
