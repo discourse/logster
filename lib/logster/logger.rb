@@ -37,7 +37,7 @@ module Logster
         logger.skip_store = @skip_store
       end
 
-      if logger.is_a?(self.class)
+      if logger.is_a?(Logster::Logger)
         logger.add(severity, message, progname, opts, &block)
       else
         logger.add(severity, message, progname, &block)
