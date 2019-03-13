@@ -1,7 +1,7 @@
 import { module, test } from "qunit";
 import { setupRenderingTest } from "ember-qunit";
 import hbs from "htmlbars-inline-precompile";
-import { fillIn, render, find, findAll, click } from "@ember/test-helpers";
+import { fillIn, render, findAll } from "@ember/test-helpers";
 
 module("Integration | Component | patterns-list", function(hooks) {
   setupRenderingTest(hooks);
