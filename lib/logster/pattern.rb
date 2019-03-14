@@ -19,8 +19,8 @@ module Logster
       nil
     end
 
-    def self.find_all(raw: false)
-      patterns = Logster.store.get_patterns(set_name) || []
+    def self.find_all(raw: false, store: Logster.store)
+      patterns = store.get_patterns(set_name) || []
       unless raw
         patterns.map! do |p|
           parse_pattern(p)
@@ -30,10 +30,10 @@ module Logster
       patterns
     end
 
-    def self.find(pattern)
+    def self.find(pattern, store: Logster.store)
       pattern = parse_pattern(pattern).inspect
       return nil unless pattern
-      pattern = find_all(raw: true).find { |p| p == pattern }
+      pattern = find_all(raw: true, store: store).find { |p| p == pattern }
       return nil unless pattern
       new(pattern)
     end
@@ -44,8 +44,9 @@ module Logster
       pattern_size > 3 && pattern_size < 500
     end
 
-    def initialize(pattern)
+    def initialize(pattern, store: Logster.store)
       self.pattern = pattern
+      @store = store
     end
 
     def valid?
@@ -58,7 +59,7 @@ module Logster
 
     def save
       ensure_valid!
-      Logster.store.insert_pattern(set_name, self.to_s)
+      @store.insert_pattern(set_name, self.to_s)
     end
 
     def modify(new_pattern)
@@ -70,7 +71,7 @@ module Logster
     end
 
     def destroy
-      Logster.store.remove_pattern(set_name, self.to_s)
+      @store.remove_pattern(set_name, self.to_s)
     end
 
     def pattern

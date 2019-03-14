@@ -9,6 +9,12 @@ class TestPattern < Minitest::Test
     end
   end
 
+  class TestRedisStore < Logster::BaseStore
+    def get_patterns(set_name)
+      ["/differentstore/"]
+    end
+  end
+
   def setup
     Logster.store = Logster::RedisStore.new
   end
@@ -53,6 +59,12 @@ class TestPattern < Minitest::Test
     assert_includes(results, "/test/i")
     assert_includes(results, "/tttt/")
     assert_includes(results, "/[d-y].*/")
+  end
+
+  def test_find_all_can_take_an_instance_of_store
+    results = FakePattern.find_all(store: TestRedisStore.new)
+    assert_equal(1, results.size)
+    assert_equal(/differentstore/, results.first)
   end
 
   def test_find_works_correctly

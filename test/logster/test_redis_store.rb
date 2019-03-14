@@ -632,6 +632,21 @@ class TestRedisStore < Minitest::Test
     assert_equal(orig, env)
   end
 
+  def test_custom_ignore_patterns_work_with_per_store_config
+    Logster.config.enable_custom_patterns_via_ui = false
+    @store.allow_custom_ignore = true
+    Logster::SuppressionPattern.new("/testtesttest/", store: @store).save
+    @store.report(Logger::INFO, "test", "testtesttesttest")
+    latest = @store.latest
+    assert_equal(0, latest.size)
+
+    @store.allow_custom_ignore = false
+    @store.report(Logger::INFO, "test", "testtesttesttest")
+    latest = @store.latest
+    assert_equal(1, latest.size)
+    assert_equal("testtesttesttest", latest.first.message)
+  end
+
   def test_rate_limits
     %w{minute hour}.each do |duration|
       begin
