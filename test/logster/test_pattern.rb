@@ -17,10 +17,11 @@ class TestPattern < Minitest::Test
 
   def setup
     Logster.store = Logster::RedisStore.new
+    Logster.store.redis.del(FakePattern.set_name)
   end
 
   def teardown
-    Logster.store.redis.flushall
+    Logster.store.redis.del(FakePattern.set_name)
     Logster.store = nil
   end
 

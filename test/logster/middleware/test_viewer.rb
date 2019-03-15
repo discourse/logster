@@ -14,11 +14,12 @@ class TestViewer < Minitest::Test
   def setup
     Logster.config.subdirectory = "/logsie"
     Logster.store = Logster::RedisStore.new
+    Logster.store.redis.del(Logster::SuppressionPattern.set_name)
   end
 
   def teardown
     Logster.config.subdirectory = nil
-    Logster.store.redis.flushall
+    Logster.store.redis.del(Logster::SuppressionPattern.set_name)
     Logster.store = nil
   end
 
@@ -116,13 +117,14 @@ class TestViewer < Minitest::Test
 
   def test_patterns_endpoint_doesnt_work_with_undefined_set
     Logster.config.enable_custom_patterns_via_ui = true
-    Logster.store.redis.flushall
 
-    response = request.post("/logsie/patterns/weirdpatternset.json",
+    keys = Logster.store.redis.keys.size
+    response = request.post("/logsie/patterns/weirdset.json",
       params: { pattern: "disallowedpattern" }
     )
     assert_equal(404, response.status)
-    assert_equal(0, Logster.store.redis.keys.size) # no keys means no sets were created
+    refute_includes(Logster.store.redis.keys, Logster::SuppressionPattern.set_name)
+    assert_equal(keys, Logster.store.redis.keys.size)
   ensure
     Logster.config.enable_custom_patterns_via_ui = false
   end
