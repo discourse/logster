@@ -727,9 +727,32 @@ class TestRedisStore < Minitest::Test
     end
   end
 
+  def test_suppression_patterns_are_cached
+    @store.allow_custom_ignore = true
+    rec = Logster::SuppressionPattern.new(/forest/, store: @store)
+    rec.save
+
+    @store.report(Logger::INFO, "test", "littleforest")
+    latest = @store.latest
+    assert_equal(0, latest.size)
+
+    rec.destroy
+    @store.report(Logger::INFO, "test", "anotherforest")
+    assert_equal(0, @store.latest.size)
+
+    Time.stub :now, Time.at(Time.now + 3) do
+      @store.report(Logger::INFO, "test", "myforest")
+      latest = @store.latest
+      assert_equal(1, latest.size)
+      assert_equal("myforest", latest.first.message)
+    end
+  end
+
   private
 
   def reset_redis
-    @store.redis.flushall
+    @store.redis.keys.each do |key|
+      @store.redis.del(key) if key =~ /logster/i
+    end
   end
 end

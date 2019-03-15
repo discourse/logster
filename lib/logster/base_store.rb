@@ -7,6 +7,7 @@ module Logster
       @max_retention = 60 * 60 * 24 * 7
       @skip_empty = true
       @allow_custom_ignore = false
+      @patterns_cache = Logster::Cache.new
     end
 
     # Save a new message at the front of the latest list.
@@ -127,7 +128,9 @@ module Logster
       return if ignore && ignore.any? { |pattern| message =~ pattern }
 
       if Logster.config.enable_custom_patterns_via_ui || allow_custom_ignore
-        custom_ignore = Logster::SuppressionPattern.find_all(store: self)
+        custom_ignore = @patterns_cache.get do
+          Logster::SuppressionPattern.find_all(store: self)
+        end
         return if custom_ignore.any? { |pattern| message =~ pattern }
       end
 

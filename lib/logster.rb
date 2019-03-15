@@ -5,6 +5,7 @@ require 'logster/web'
 require 'logster/ignore_pattern'
 require 'logster/pattern'
 require 'logster/suppression_pattern'
+require 'logster/cache'
 
 if defined? Redis
   require 'logster/redis_store'
