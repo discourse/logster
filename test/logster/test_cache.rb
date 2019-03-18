@@ -23,4 +23,16 @@ class TestCache < Minitest::Test
       assert_equal(value, prc.call)
     end
   end
+
+  def test_cache_can_be_cleared
+    value = "cached"
+    prc = Proc.new do
+      @cache.fetch { value }
+    end
+    assert_equal(value, prc.call)
+
+    value = "new value"
+    @cache.clear
+    assert_equal(value, prc.call)
+  end
 end

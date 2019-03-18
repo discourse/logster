@@ -12,5 +12,9 @@ module Logster
       end
       @hash[:data]
     end
+
+    def clear
+      @hash.delete(:data)
+    end
   end
 end

@@ -736,7 +736,7 @@ class TestRedisStore < Minitest::Test
     latest = @store.latest
     assert_equal(0, latest.size)
 
-    rec.destroy
+    rec.destroy(clear_cache: false)
     @store.report(Logger::INFO, "test", "anotherforest")
     assert_equal(0, @store.latest.size)
 

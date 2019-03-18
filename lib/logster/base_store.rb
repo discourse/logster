@@ -156,6 +156,10 @@ module Logster
       end
     end
 
+    def clear_suppression_patterns_cache
+      @patterns_cache.clear
+    end
+
     private
 
     def not_implemented
