@@ -5,7 +5,7 @@ module Logster
       @hash = { created_at: Time.now.to_f }
     end
 
-    def get
+    def fetch
       if !@hash.key?(:data) || @hash[:created_at] + @age < Time.now.to_f
         @hash[:data] = yield
         @hash[:created_at] = Time.now.to_f
