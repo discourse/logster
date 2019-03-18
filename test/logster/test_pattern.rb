@@ -9,6 +9,8 @@ class TestPattern < Minitest::Test
     end
   end
 
+  Logster::PATTERNS << FakePattern
+
   class TestRedisStore < Logster::BaseStore
     def get_patterns(set_name)
       ["/differentstore/"]
@@ -17,11 +19,11 @@ class TestPattern < Minitest::Test
 
   def setup
     Logster.store = Logster::RedisStore.new
-    Logster.store.redis.del(FakePattern.set_name)
+    Logster.store.clear_all
   end
 
   def teardown
-    Logster.store.redis.del(FakePattern.set_name)
+    Logster.store.clear_all
     Logster.store = nil
   end
 

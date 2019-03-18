@@ -15,6 +15,8 @@ else
 end
 
 module Logster
+  PATTERNS = [SuppressionPattern]
+
   def self.logger=(logger)
     @logger = logger
   end

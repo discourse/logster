@@ -751,8 +751,6 @@ class TestRedisStore < Minitest::Test
   private
 
   def reset_redis
-    @store.redis.keys.each do |key|
-      @store.redis.del(key) if key =~ /logster/i
-    end
+    @store.clear_all
   end
 end

@@ -272,6 +272,12 @@ module Logster
       @redis.del(env_key)
       @redis.del(grouping_key)
       @redis.del(solved_key)
+      Logster::PATTERNS.each do |klass|
+        @redis.del(klass.set_name)
+      end
+      @redis.keys.each do |key|
+        @redis.del(key) if key.include?(Logster::RedisRateLimiter::PREFIX)
+      end
     end
 
     def get(message_key, load_env: true)
