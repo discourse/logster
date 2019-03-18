@@ -740,7 +740,7 @@ class TestRedisStore < Minitest::Test
     @store.report(Logger::INFO, "test", "anotherforest")
     assert_equal(0, @store.latest.size)
 
-    Time.stub :now, Time.at(Time.now + 3) do
+    Process.stub :clock_gettime, Process.clock_gettime(Process::CLOCK_MONOTONIC) + 3 do
       @store.report(Logger::INFO, "test", "myforest")
       latest = @store.latest
       assert_equal(1, latest.size)

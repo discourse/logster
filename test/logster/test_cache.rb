@@ -19,7 +19,7 @@ class TestCache < Minitest::Test
     assert_equal(cached_value, prc.call)
 
     value = "Now I should be returned again"
-    Time.stub :now, Time.at(Time.now + 6) do
+    Process.stub :clock_gettime,  Process.clock_gettime(Process::CLOCK_MONOTONIC) + 6 do
       assert_equal(value, prc.call)
     end
   end
