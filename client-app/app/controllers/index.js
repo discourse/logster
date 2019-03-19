@@ -1,6 +1,7 @@
 import Controller from "@ember/controller";
 import { ajax } from "client-app/lib/utilities";
 import { observer, computed } from "@ember/object";
+import Preload from "client-app/lib/preload";
 
 export default Controller.extend({
   showDebug: true,
@@ -10,6 +11,10 @@ export default Controller.extend({
   showFatal: true,
   search: "",
   currentMessage: Em.computed.alias("model.currentMessage"),
+
+  showSettings: computed(function() {
+    return Preload.get("patterns_enabled");
+  }),
 
   resizePanels(amount) {
     Em.$("#bottom-panel").css("height", amount - 13);

@@ -52,9 +52,11 @@
     <div class="search-clear-all">
       {{input type="textfield" class="search" placeholder="Search" value=search}}
       <div class="footer-btns">
-        {{#link-to "settings" class="settings btn no-text"}}
-          <i class='fa fa-cog'></i>
-        {{/link-to}}
+        {{#if showSettings}}
+          {{#link-to "settings" class="settings btn no-text"}}
+            <i class='fa fa-cog'></i>
+          {{/link-to}}
+        {{/if}}
         <button class="clear btn danger" {{action "clear"}}><i class='fa fa-trash-o'></i><span>Clear logs</span></button>
       </div>
     </div>

@@ -1,12 +1,12 @@
 module Logster
   class BaseStore
 
-    attr_accessor :level, :max_retention, :skip_empty, :ignore, :allow_custom_ignore
+    attr_accessor :level, :max_retention, :skip_empty, :ignore, :allow_custom_patterns
 
     def initialize
       @max_retention = 60 * 60 * 24 * 7
       @skip_empty = true
-      @allow_custom_ignore = false
+      @allow_custom_patterns = false
       @patterns_cache = Logster::Cache.new
     end
 
@@ -127,7 +127,7 @@ module Logster
 
       return if ignore && ignore.any? { |pattern| message =~ pattern }
 
-      if Logster.config.enable_custom_patterns_via_ui || allow_custom_ignore
+      if Logster.config.enable_custom_patterns_via_ui || allow_custom_patterns
         custom_ignore = @patterns_cache.fetch do
           Logster::SuppressionPattern.find_all(store: self)
         end
