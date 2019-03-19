@@ -8,7 +8,7 @@ class TestCache < Minitest::Test
 
   def test_cache_works
     value = "I should be retured"
-    prc = Proc.new do 
+    prc = Proc.new do
       @cache.fetch do
         value
       end
