@@ -216,6 +216,21 @@ class TestViewer < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = false
   end
 
+  def test_clear_all_button_shouldnt_clear_custom_patterns
+    Logster::SuppressionPattern.new("testpattern").save
+
+    Logster.store.report(Logger::INFO, "test", "mysmalltest")
+    Logster.store.report(Logger::INFO, "test", "another test")
+
+    response = request.post("/logsie/clear")
+
+    assert_equal(200, response.status)
+    assert_equal(0, Logster.store.latest.size)
+    records = Logster::SuppressionPattern.find_all
+    assert_equal(1, records.size)
+    assert_equal(/testpattern/, records.first)
+  end
+
   def test_linking_to_a_valid_js_files
     %w(
       /logsie/javascript/client-app.js
