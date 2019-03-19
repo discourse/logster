@@ -1,5 +1,10 @@
 # CHANGELOG
 
+- 2019-03-19: 2.2.0
+
+  - FEATURE: custom suppression patterns via UI
+  - UX: auto expand env keys when list length is <= 3
+
 - 2019-03-14: Unreleased
 
   - FIX: Logster message options missing when base logger is a sub-class of

@@ -1,5 +1,5 @@
 body {
-  font-family: "Roboto", Arial, "Liberation Sans", "DejaVu Sans", sans-serif;
+  font-family: Arial, "Liberation Sans", "DejaVu Sans", sans-serif;
   font-size: 12px;
 }
 
@@ -34,6 +34,7 @@ tbody tr {
 }
 
 .message-row {
+  font-family: "Roboto";
   display: flex;
 }
 
@@ -267,7 +268,7 @@ label span {
   margin-right: 18px;
 }
 
-.action-panel .clear {
+.search-clear-all .clear {
   float: right;
   vertical-align: middle;
 }
@@ -387,9 +388,19 @@ label span {
   color: #eee;
 }
 
+.btn.ok {
+  background-color: #3781dc;
+  color: white;
+}
+
+.btn.ok:hover {
+  background-color: #286dc2;
+  color: white;
+}
+
 .search-clear-all .search,
 .search-clear-all .clear {
-  height: 24px;
+  height: 100%;
 }
 
 .severity-filters label,
@@ -398,17 +409,31 @@ label span {
   align-self: center;
 }
 
-.search-clear-all .clear {
-  margin-left: auto;
+.search-clear-all .footer-btns .settings {
+  margin: 0 7px 0 7px;
 }
 
-@media (min-width: 701px) {
+.search-clear-all {
+  display: flex;
+  justify-content: space-between;
+}
+
+.search-clear-all .search {
+  min-width: 0;
+  flex-shrink: 2;
+}
+
+.footer-btns {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+@media (min-width: 770px) {
   .severity-filters,
   .search-clear-all {
     height: 100%;
   }
   .severity-filters,
-  .search-clear-all,
   .more-wrapping {
     display: flex;
   }
@@ -425,7 +450,7 @@ label span {
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 770px) {
   .severity-filters {
     padding: 10px;
   }
@@ -441,7 +466,7 @@ label span {
   }
 }
 
-@media (max-width: 415px) {
+@media (max-width: 430px) {
   .severity-filters {
     overflow-x: scroll;
     overflow-y: hidden;
@@ -524,4 +549,85 @@ label span {
   text-decoration: underline;
   color: blue;
   cursor: pointer;
+}
+
+.settings-page {
+  max-width: 1110px;
+  margin-right: auto;
+  margin-left: auto;
+  font-size: 15px;
+  padding: 0 10px;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.settings-header .header-title {
+  flex-grow: 1;
+}
+
+.settings-header .header-logo {
+  width: 50px;
+  height: 50px;
+}
+
+.settings-section {
+  border-top: 1px solid #ddd;
+  padding-top: 15px;
+}
+
+.settings-section .section-title {
+  margin-top: 0;
+}
+
+.settings-section .subsection-title {
+  margin-bottom: 10px;
+}
+
+.settings-section .tip {
+  font-style: italic;
+  font-size: 13px;
+  color: grey;
+}
+
+.settings-section .pattern-wrapper {
+  margin-top: 10px;
+  font-size: 16px;
+  display: flex;
+  height: 33px;
+}
+
+.settings-section .api-error {
+  font-family: Consolas, "Roboto Mono", Monaco, Ubuntu Mono, monospace;
+  margin-top: 5px;
+  color: red;
+}
+
+.pattern-wrapper .pattern-input {
+  font-family: Consolas, "Roboto Mono", Monaco, Ubuntu Mono, monospace;
+  width: 600px;
+  font-size: inherit;
+  padding: 5px 0 5px 0;
+  height: 100%;
+  box-sizing: border-box;
+  vertical-align: middle;
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.btn.new-pattern {
+  height: 100%;
+  line-height: 18px;
+}
+
+.pattern-wrapper .btn {
+  height: 100%;
+  box-sizing: border-box;
+  vertical-align: middle;
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin-left: 10px;
 }

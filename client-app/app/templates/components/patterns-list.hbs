@@ -1,0 +1,25 @@
+{{#if mutable}}
+  <button {{action "create"}} class="btn new-pattern"><i class="fa fa-plus"></i> New</button>
+{{/if}}
+{{#each allPatterns as |pattern|}}
+  <div class="pattern-wrapper">
+    {{input
+      type="textfield"
+      class="pattern-input"
+      placeholder="Enter regular expression…"
+      value=pattern.valueBuffer
+      disabled=(or immutable pattern.saving)
+    }}
+    {{#if mutable}}
+      {{#if pattern.hasBuffer}}
+        <button {{action "save" pattern}} disabled={{pattern.saving}} class="btn ok no-text save"><i class="fa fa-check"></i></button>
+      {{/if}}
+      <button {{action "trash" pattern}} disabled={{pattern.saving}} class="btn no-text trash"><i class="fa fa-trash"></i></button>
+    {{/if}}
+  </div>
+  {{~#if pattern.error~}}
+    <pre class="api-error">
+      {{~pattern.error~}}
+    </pre>
+  {{~/if~}}
+{{/each}}

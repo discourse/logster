@@ -9,6 +9,7 @@ const Router = EmberRouter.extend({
 Router.map(function() {
   this.route("index", { path: "/" });
   this.route("show", { path: "/show/:id" });
+  this.route("settings");
 });
 
 export default Router;

@@ -1,11 +1,13 @@
 module Logster
   class BaseStore
 
-    attr_accessor :level, :max_retention, :skip_empty, :ignore
+    attr_accessor :level, :max_retention, :skip_empty, :ignore, :allow_custom_patterns
 
     def initialize
       @max_retention = 60 * 60 * 24 * 7
       @skip_empty = true
+      @allow_custom_patterns = false
+      @patterns_cache = Logster::Cache.new
     end
 
     # Save a new message at the front of the latest list.
@@ -84,6 +86,21 @@ module Logster
       not_implemented
     end
 
+    # takes a string as `pattern` and places it under the set `set_name`
+    def insert_pattern(set_name, pattern)
+      not_implemented
+    end
+
+    # takes a string as `pattern` and removes it from the set `set_name`
+    def remove_pattern(set_name, pattern)
+      not_implemented
+    end
+
+    # returns an array of strings each of which must be convertible to regexp
+    def get_patterns(set_name)
+      not_implemented
+    end
+
     def report(severity, progname, msg, opts = {})
       return if (!msg || (String === msg && msg.empty?)) && skip_empty
       return if level && severity < level
@@ -110,6 +127,13 @@ module Logster
 
       return if ignore && ignore.any? { |pattern| message =~ pattern }
 
+      if Logster.config.enable_custom_patterns_via_ui || allow_custom_patterns
+        custom_ignore = @patterns_cache.fetch do
+          Logster::SuppressionPattern.find_all(store: self)
+        end
+        return if custom_ignore.any? { |pattern| message =~ pattern }
+      end
+
       similar = nil
 
       if Logster.config.allow_grouping
@@ -130,6 +154,10 @@ module Logster
         save message
         message
       end
+    end
+
+    def clear_suppression_patterns_cache
+      @patterns_cache.clear
     end
 
     private

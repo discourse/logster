@@ -3,6 +3,9 @@ require 'logster/message'
 require 'logster/configuration'
 require 'logster/web'
 require 'logster/ignore_pattern'
+require 'logster/pattern'
+require 'logster/suppression_pattern'
+require 'logster/cache'
 
 if defined? Redis
   require 'logster/redis_store'
@@ -12,6 +15,8 @@ else
 end
 
 module Logster
+  PATTERNS = [SuppressionPattern]
+
   def self.logger=(logger)
     @logger = logger
   end

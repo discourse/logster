@@ -36,7 +36,7 @@ module Logster
 
           elsif resource =~ /\/message\/([0-9a-f]+)$/
             if env[REQUEST_METHOD] != "DELETE"
-              return [405, {}, ["GET not allowed for /clear"]]
+              return method_not_allowed("DELETE is needed for /clear")
             end
 
             key = $1
@@ -85,7 +85,7 @@ module Logster
 
           elsif resource =~ /\/clear$/
             if env[REQUEST_METHOD] != "POST"
-              return [405, {}, ["GET not allowed for /clear"]]
+              return method_not_allowed("POST is needed for /clear")
             end
             Logster.store.clear
             return [200, {}, ["Messages cleared"]]
@@ -106,11 +106,29 @@ module Logster
               [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload)]]
             end
 
+          elsif resource =~ /\/settings(\.json)?$/
+            json = $1 == ".json"
+            if json
+              coded_patterns = Logster.store.ignore&.map(&:inspect) || []
+              custom_patterns = Logster::SuppressionPattern.find_all(raw: true)
+              [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(coded_patterns: coded_patterns, custom_patterns: custom_patterns)]]
+            else
+              [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload_json)]]
+            end
+          elsif resource =~ /\/patterns\/([a-zA-Z0-9_]+)\.json$/
+            unless Logster.config.enable_custom_patterns_via_ui
+              return not_allowed("Custom patterns via the UI is disabled. You can enable it by committing this line to your app source code:\nLogster.config.enable_custom_patterns_via_ui = true")
+            end
+
+            set_name = $1
+            req = Rack::Request.new(env)
+            return method_not_allowed if req.request_method == "GET"
+
+            update_patterns(set_name, req)
           elsif resource == "/"
             [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload_json)]]
-
           else
-            [404, {}, ["Not found"]]
+            not_found
           end
         else
           @app.call(env)
@@ -155,6 +173,60 @@ module Logster
         [200, { "Content-Type" => "application/json" }, [json]]
       end
 
+      def update_patterns(set_name, req)
+        klass = get_class(set_name)
+        return not_found("Unknown set name") unless klass
+
+        request_method = req.request_method
+        pattern = req.params["pattern"]
+
+        record = request_method == "POST" ? klass.new(pattern) : klass.find(pattern)
+        return not_found unless record
+
+        case request_method
+        when "POST"
+          record.save
+        when "PUT"
+          record.modify(req.params["new_pattern"])
+        when "DELETE"
+          record.destroy
+        else
+          return method_not_allowed("Allowed methods: POST, PUT or DELETE")
+        end
+
+        [200, { "Content-Type" => "application/json" }, [JSON.generate(pattern: record.to_s)]]
+      rescue => err
+        error_message = err.message
+
+        unless Logster::Pattern::PatternError === err # likely a bug, give us the backtrace
+          error_message += "\n\n#{err.backtrace.join("\n")}"
+          return [500, {}, [error_message]]
+        end
+
+        [400, {}, [error_message]]
+      end
+
+      def get_class(set_name)
+        case set_name
+        when "suppression"
+          Logster::SuppressionPattern
+        else
+          nil
+        end
+      end
+
+      def not_found(message = "Not found")
+        [404, {}, [message]]
+      end
+
+      def not_allowed(message = "Not allowed")
+        [403, {}, [message]]
+      end
+
+      def method_not_allowed(message = "Method not allowed")
+        [405, {}, [message]]
+      end
+
       def parse_regex(string)
         if string =~ /\/(.+)\/(.*)/
           s = $1
@@ -194,7 +266,10 @@ module Logster
       def body(preload)
         root_url = @logs_path
         root_url += "/" if root_url[-1] != "/"
-        preload.merge!(env_expandable_keys: Logster.config.env_expandable_keys)
+        preload.merge!(
+          env_expandable_keys: Logster.config.env_expandable_keys,
+          patterns_enabled: Logster.config.enable_custom_patterns_via_ui
+        )
         <<~HTML
           <!doctype html>
           <html>

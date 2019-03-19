@@ -157,73 +157,6 @@ class TestRedisStore < Minitest::Test
     assert(saved_env == message.env)
   end
 
-  def test_backward_compatibility_no_loss_of_data
-    # previously we were storing env samples as a part of the main message json
-    # now we've switched to storing samples separately from the main message
-    # we need to make we don't lose env data of messages stored the old way
-    # when we migrate to the new system
-
-    # it probably makes sense to remove this test after a while (say 6-12 months)
-
-    Logster.config.allow_grouping = true
-    backtrace = "fake backtrace"
-    env = { "some_env" => "some env" }
-    message = Logster::Message.new(Logger::WARN, "", "title", count: 60)
-    message.env = env
-    message.backtrace = backtrace
-
-    @store.save(message)
-
-    # hack to force env to be stored with the main message json
-    @store.redis.hset(@store.send("hash_key"), message.key, message.to_json(exclude_env: false))
-
-    another_env = { "another_env" => "more env" }
-    message = @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: another_env)
-    message = @store.get(message.key)
-
-    assert(env <= message.env)
-    assert_equal(61, message.count)
-    # another_env is not merged cause count is 60, only the count is updated
-
-    # make sure we are now storing env samples separately
-    message = @store.get(message.key, load_env: false)
-    assert_nil(message.env)
-  ensure
-    Logster.config.allow_grouping = false
-  end
-
-  def test_backward_compatibility_no_loss_of_data_2
-    # same story as the test above, just a bit different
-
-    Logster.config.allow_grouping = true
-    backtrace = "fake backtrace"
-    env = { "some_env" => "some env" }
-    message = Logster::Message.new(Logger::WARN, "", "title")
-    message.env = env
-    message.backtrace = backtrace
-
-    @store.save(message)
-
-    # hack to force env to be stored with the main message json
-    @store.redis.hset(@store.send("hash_key"), message.key, message.to_json(exclude_env: false))
-
-    another_env = { "another_env" => "more env" }
-    message = @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: another_env)
-    message = @store.get(message.key)
-
-    assert_instance_of(Array, message.env)
-    assert(env <= message.env[0])
-    assert(another_env <= message.env[1])
-    assert_equal(2, message.env.size)
-    assert_equal(2, message.count)
-
-    # make sure we are now storing env samples separately
-    message = @store.get(message.key, load_env: false)
-    assert_nil(message.env)
-  ensure
-    Logster.config.allow_grouping = false
-  end
-
   def test_merging_performance
     Logster.config.allow_grouping = true
     backtrace = "fake backtrace"
@@ -632,6 +565,21 @@ class TestRedisStore < Minitest::Test
     assert_equal(orig, env)
   end
 
+  def test_custom_ignore_patterns_work_with_per_store_config
+    Logster.config.enable_custom_patterns_via_ui = false
+    @store.allow_custom_patterns = true
+    Logster::SuppressionPattern.new("/testtesttest/", store: @store).save
+    @store.report(Logger::INFO, "test", "testtesttesttest")
+    latest = @store.latest
+    assert_equal(0, latest.size)
+
+    @store.allow_custom_patterns = false
+    @store.report(Logger::INFO, "test", "testtesttesttest")
+    latest = @store.latest
+    assert_equal(1, latest.size)
+    assert_equal("testtesttesttest", latest.first.message)
+  end
+
   def test_rate_limits
     %w{minute hour}.each do |duration|
       begin
@@ -712,9 +660,30 @@ class TestRedisStore < Minitest::Test
     end
   end
 
+  def test_suppression_patterns_are_cached
+    @store.allow_custom_patterns = true
+    rec = Logster::SuppressionPattern.new(/forest/, store: @store)
+    rec.save
+
+    @store.report(Logger::INFO, "test", "littleforest")
+    latest = @store.latest
+    assert_equal(0, latest.size)
+
+    rec.destroy(clear_cache: false)
+    @store.report(Logger::INFO, "test", "anotherforest")
+    assert_equal(0, @store.latest.size)
+
+    Process.stub :clock_gettime, Process.clock_gettime(Process::CLOCK_MONOTONIC) + 3 do
+      @store.report(Logger::INFO, "test", "myforest")
+      latest = @store.latest
+      assert_equal(1, latest.size)
+      assert_equal("myforest", latest.first.message)
+    end
+  end
+
   private
 
   def reset_redis
-    @store.redis.flushall
+    @store.clear_all
   end
 end

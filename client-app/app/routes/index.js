@@ -10,16 +10,9 @@ export default Route.extend({
 
   setupController(controller, model) {
     this._super(controller, model);
-    controller.setProperties({
-      showDebug: true,
-      showInfo: true,
-      showWarn: true,
-      showErr: true,
-      showFatal: true,
-      search: "",
-      initialized: true
-    });
+    model.setProperties(controller.getProperties("filter", "search"));
     model.reload();
+    controller.set("initialized", true);
 
     let times = 0;
     let backoff = 1;

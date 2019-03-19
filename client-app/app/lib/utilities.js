@@ -110,7 +110,8 @@ export function buildHashString(hash, recurse, expanded = []) {
       if (
         expandableKeys.indexOf(k) !== -1 &&
         !recurse &&
-        expanded.indexOf(k) === -1
+        expanded.indexOf(k) === -1 &&
+        v.length > 3
       ) {
         valueHtml = `${escapeHtml(
           v[0]

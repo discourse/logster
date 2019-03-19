@@ -14,10 +14,12 @@ class TestViewer < Minitest::Test
   def setup
     Logster.config.subdirectory = "/logsie"
     Logster.store = Logster::RedisStore.new
+    Logster.store.clear_all
   end
 
   def teardown
     Logster.config.subdirectory = nil
+    Logster.store.clear_all
     Logster.store = nil
   end
 
@@ -58,6 +60,175 @@ class TestViewer < Minitest::Test
 
   def test_regex_parse
     assert_equal(/hello/i, viewer.send(:parse_regex, '/hello/i'))
+  end
+
+  def test_settings_page_responds_with_json
+    Logster.store.ignore = [/somepattern/, /anotherpattern/]
+    record = Logster::SuppressionPattern.new("custompattern")
+    record.save
+
+    response = request.get("/logsie/settings.json")
+    assert_equal(200, response.status)
+    assert_includes(response.content_type, "application/json")
+    json = JSON.parse(response.body)
+    custom_patterns = json["custom_patterns"]
+    coded_patterns = json["coded_patterns"]
+    assert_includes(custom_patterns, "/custompattern/")
+    assert_includes(coded_patterns, "/somepattern/")
+    assert_includes(coded_patterns, "/anotherpattern/")
+
+    Logster.store.ignore = nil
+    record.destroy
+
+    response = request.get("/logsie/settings.json")
+    assert_equal(200, response.status)
+    json = JSON.parse(response.body)
+    assert_equal([], json["custom_patterns"])
+    assert_equal([], json["coded_patterns"])
+  end
+
+  def test_settings_page_responds_with_html
+    response = request.get("/logsie/settings")
+    assert_equal(200, response.status)
+    assert_includes(response.content_type, "text/html")
+  end
+
+  def test_patterns_endpoint_doesnt_accept_GETs
+    Logster.config.enable_custom_patterns_via_ui = true
+
+    response = request.get("/logsie/patterns/suppression.json",
+      params: { pattern: "patternfromuser" }
+    )
+    assert_equal(405, response.status)
+    assert_equal(0, Logster::SuppressionPattern.find_all.size)
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_patterns_endpoint_doesnt_work_when_its_disabled_from_config
+    Logster.config.enable_custom_patterns_via_ui = false
+
+    response = request.post("/logsie/patterns/suppression.json",
+      params: { pattern: "patternfromuser" }
+    )
+    assert_equal(403, response.status)
+    assert_equal(0, Logster::SuppressionPattern.find_all.size)
+  end
+
+  def test_patterns_endpoint_doesnt_work_with_undefined_set
+    Logster.config.enable_custom_patterns_via_ui = true
+
+    response = request.post("/logsie/patterns/weirdset.json",
+      params: { pattern: "disallowedpattern" }
+    )
+    assert_equal(404, response.status)
+    Logster::PATTERNS.each do |klass|
+      assert_equal(0, klass.find_all.size)
+    end
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_creating_patterns_works
+    Logster.config.enable_custom_patterns_via_ui = true
+
+    response = request.post("/logsie/patterns/suppression.json",
+      params: { pattern: "newpattern" }
+    )
+    assert_equal(200, response.status)
+    assert_equal(/newpattern/, Logster::SuppressionPattern.find_all.first)
+
+    json = JSON.parse(response.body)
+    assert_equal("/newpattern/", json["pattern"])
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_modifying_patterns_returns_404_for_non_existing_patterns
+    Logster.config.enable_custom_patterns_via_ui = true
+
+    response = request.put("/logsie/patterns/suppression.json",
+      params: { new_pattern: "doesntexists", pattern: "doesntexisttoo" }
+    )
+
+    assert_equal(404, response.status)
+    assert_equal(0, Logster::SuppressionPattern.find_all.size)
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_modifying_doesnt_accept_empty_regexp
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::SuppressionPattern.new("goodcitizen").save
+
+    response = request.put("/logsie/patterns/suppression.json",
+      params: { new_pattern: "", pattern: "goodcitizen" }
+    )
+
+    assert_equal(400, response.status)
+    patterns = Logster::SuppressionPattern.find_all
+    assert_equal(1, patterns.size)
+    assert_equal(/goodcitizen/, patterns.first)
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_modifying_patterns_works
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::SuppressionPattern.new("oldpattern").save
+    Logster::SuppressionPattern.new("notgoinganywhere").save
+
+    response = request.put("/logsie/patterns/suppression.json",
+      params: { pattern: "oldpattern", new_pattern: "brandnewpattern" }
+    )
+
+    assert_equal(200, response.status)
+    patterns = Logster::SuppressionPattern.find_all
+    assert_equal(2, patterns.size)
+    assert_includes(patterns, /brandnewpattern/)
+    assert_includes(patterns, /notgoinganywhere/)
+
+    json = JSON.parse(response.body)
+    assert_equal("/brandnewpattern/", json["pattern"])
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_removing_patterns_works
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::SuppressionPattern.new("tobedeleted").save
+    Logster::SuppressionPattern.new("notgoinganywhere").save
+
+    response = request.delete("/logsie/patterns/suppression.json",
+      params: { pattern: "tobedeleted" }
+    )
+    assert_equal(200, response.status)
+
+    response = request.delete("/logsie/patterns/suppression.json",
+      params: { pattern: "doesntexistanymore" }
+    )
+    assert_equal(404, response.status)
+
+    patterns = Logster::SuppressionPattern.find_all
+    assert_equal(1, patterns.size)
+    assert_includes(patterns, /notgoinganywhere/)
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_clear_all_button_shouldnt_clear_custom_patterns
+    Logster::SuppressionPattern.new("testpattern").save
+
+    Logster.store.report(Logger::INFO, "test", "mysmalltest")
+    Logster.store.report(Logger::INFO, "test", "another test")
+
+    response = request.post("/logsie/clear")
+
+    assert_equal(200, response.status)
+    assert_equal(0, Logster.store.latest.size)
+    records = Logster::SuppressionPattern.find_all
+    assert_equal(1, records.size)
+    assert_equal(/testpattern/, records.first)
   end
 
   def test_linking_to_a_valid_js_files

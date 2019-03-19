@@ -15,8 +15,10 @@ const message2 = Message.create({
 
 const message3 = Message.create({
   env: [
-    { env_key_2: "an_env_value", notExpanded: "dsdcz" },
-    { env_key_2: "anotherthing", notExpanded: "cxc" }
+    { env_key_2: "value1", default_expanded: "vvv1", notExpanded: "dsdcz" },
+    { env_key_2: "value2", default_expanded: "vvv2", notExpanded: "uerue" },
+    { env_key_2: "value3", notExpanded: "weeww" },
+    { env_key_2: "value4", notExpanded: "cxc" }
   ]
 });
 
@@ -90,17 +92,26 @@ module("Integration | Component | env-tab", function(hooks) {
     document.getElementById(
       "preloaded-data"
     ).dataset.preloaded = JSON.stringify({
-      env_expandable_keys: ["env_key_2"]
+      env_expandable_keys: ["env_key_2", "default_expanded"]
     });
     init();
     this.set("message", message3);
     await render(hbs`{{env-tab message=message}}`);
 
-    const expandable = find(".env-table tr");
+    const trs = findAll(".env-table tr");
+    const expandable = trs[0];
+    const defaultExpanded = trs[1];
+
     assert.equal(
       expandable.children[1].textContent.trim(),
-      "an_env_value, 1 more",
+      "value1, 3 more",
       "expandable env keys shown correctly"
+    );
+
+    assert.equal(
+      defaultExpanded.children[1].textContent.trim(),
+      "[vvv1, vvv2]",
+      "list is expanded by default when its length is 3 or less"
     );
 
     assert.equal(
@@ -110,13 +121,13 @@ module("Integration | Component | env-tab", function(hooks) {
     );
 
     const expandBtn = find("a.expand-list");
-    assert.equal(expandBtn.textContent.trim(), "1 more");
+    assert.equal(expandBtn.textContent.trim(), "3 more");
     await click(expandBtn);
 
     const expanded = find(".env-table tr");
     assert.equal(
       expanded.children[1].textContent.trim(),
-      "[an_env_value, anotherthing]",
+      "[value1, value2, value3, value4]",
       "expanded env keys shown correctly"
     );
   });
