@@ -1,5 +1,6 @@
 import Route from "@ember/routing/route";
 import { ajax } from "client-app/lib/utilities";
+import Pattern from "client-app/models/pattern-item";
 
 export default Route.extend({
   model() {
@@ -8,8 +9,20 @@ export default Route.extend({
 
   setupController(controller, model) {
     this._super(...arguments);
-    const showCodedPatterns =
-      model.coded_patterns && model.coded_patterns.length > 0;
-    controller.set("showCodedPatterns", showCodedPatterns);
+    const suppression = model.suppression;
+    const codedSuppression = suppression
+      .filter(p => p.hard)
+      .map(hash => Pattern.create(hash));
+
+    const customSuppression = suppression
+      .reject(p => p.hard)
+      .map(hash => Pattern.create(hash));
+
+    const showCodedSuppression = codedSuppression.length > 0;
+    controller.setProperties({
+      showCodedSuppression,
+      codedSuppression,
+      customSuppression
+    });
   }
 });

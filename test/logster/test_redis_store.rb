@@ -580,6 +580,30 @@ class TestRedisStore < Minitest::Test
     assert_equal("testtesttesttest", latest.first.message)
   end
 
+  def test_suppressed_logs_are_counted
+    @store.ignore = [/store ignore/, Logster::IgnorePattern.new(/ignore pattern/), "an ignore string"]
+    @store.allow_custom_patterns = true
+    Logster::SuppressionPattern.new(/sup pattern/, store: @store).save
+
+    2.times do
+      @store.report(Logger::INFO, "test", "this is store ignore")
+      @store.report(Logger::INFO, "test", "this is ignore pattern")
+      @store.report(Logger::INFO, "test", "this is sup pattern")
+      @store.report(Logger::INFO, "test", "this is an ignore string")
+    end
+
+    ignore_pattern = Logster::IgnorePattern.new(/ignore pattern/)
+    hash = @store.get_all_ignore_count
+    assert_equal("2", hash[ignore_pattern.to_s])
+    assert_equal("2", hash[/sup pattern/.inspect])
+    assert_equal("2", hash[/store ignore/.inspect])
+    assert_equal("2", hash["an ignore string"])
+
+    @store.remove_ignore_count(ignore_pattern.to_s)
+    hash = @store.get_all_ignore_count
+    assert_nil(hash[ignore_pattern.to_s])
+  end
+
   def test_rate_limits
     %w{minute hour}.each do |duration|
       begin

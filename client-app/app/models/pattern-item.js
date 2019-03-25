@@ -6,6 +6,7 @@ export default EmberObject.extend({
   valueBuffer: "",
   error: null,
   saving: false,
+  count: 0,
 
   init() {
     this._super(...arguments);
@@ -21,5 +22,9 @@ export default EmberObject.extend({
 
   hasBuffer: computed("value", "valueBuffer", function() {
     return this.get("value") !== this.get("valueBuffer");
+  }),
+
+  zeroCount: computed("count", function() {
+    return this.get("count") <= 0;
   })
 });

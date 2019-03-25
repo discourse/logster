@@ -101,6 +101,20 @@ module Logster
       not_implemented
     end
 
+    # increments the number of messages that have been suppressed by a pattern
+    def increment_ignore_count(pattern)
+    end
+
+    # removes number of suppressed messages by a pattern
+    def remove_ignore_count(pattern)
+    end
+
+    # returns a hash that maps patterns to the number of messages they
+    # have suppressed
+    def get_all_ignore_count
+      {}
+    end
+
     def report(severity, progname, msg, opts = {})
       return if (!msg || (String === msg && msg.empty?)) && skip_empty
       return if level && severity < level
@@ -125,13 +139,24 @@ module Logster
         message.backtrace = caller.join("\n")
       end
 
-      return if ignore && ignore.any? { |pattern| message =~ pattern }
+      return if ignore && ignore.any? do |pattern|
+        if message =~ pattern
+          val = Regexp === pattern ? pattern.inspect : pattern.to_s
+          increment_ignore_count(val)
+          true
+        end
+      end
 
       if Logster.config.enable_custom_patterns_via_ui || allow_custom_patterns
         custom_ignore = @patterns_cache.fetch do
           Logster::SuppressionPattern.find_all(store: self)
         end
-        return if custom_ignore.any? { |pattern| message =~ pattern }
+        return if custom_ignore.any? do |pattern|
+          if message =~ pattern
+            increment_ignore_count(pattern.inspect)
+            true
+          end
+        end
       end
 
       similar = nil
