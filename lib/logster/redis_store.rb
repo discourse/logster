@@ -272,6 +272,7 @@ module Logster
       @redis.del(env_key)
       @redis.del(grouping_key)
       @redis.del(solved_key)
+      @redis.del(ignored_logs_count_key)
       Logster::PATTERNS.each do |klass|
         @redis.del(klass.set_name)
       end
@@ -358,6 +359,18 @@ module Logster
 
     def get_patterns(set_name)
       @redis.smembers(set_name)
+    end
+
+    def increment_ignore_count(pattern)
+      @redis.hincrby(ignored_logs_count_key, pattern, 1)
+    end
+
+    def remove_ignore_count(pattern)
+      @redis.hdel(ignored_logs_count_key, pattern)
+    end
+
+    def get_all_ignore_count
+      @redis.hgetall(ignored_logs_count_key)
     end
 
     protected
@@ -564,6 +577,10 @@ module Logster
 
     def grouping_key
       @grouping_key ||= "__LOGSTER__GMAP"
+    end
+
+    def ignored_logs_count_key
+      @ignored_logs_count_key ||= "__LOGSTER__IGNORED_LOGS_COUNT_KEY__MAP"
     end
 
     private

@@ -623,11 +623,24 @@ label span {
   line-height: 18px;
 }
 
-.pattern-wrapper .btn {
+.pattern-wrapper .shrink {
   height: 100%;
+  width: 40px;
+  text-align: center;
   box-sizing: border-box;
   vertical-align: middle;
   flex-grow: 0;
   flex-shrink: 0;
   margin-left: 10px;
+}
+
+.fa {
+  opacity: 0.7;
+}
+
+.pattern-wrapper .shrink.reset {
+  background: unset;
+  width: unset;
+  padding: 0;
+  margin-left: 8px;
 }

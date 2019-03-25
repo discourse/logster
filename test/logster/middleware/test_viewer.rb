@@ -67,12 +67,15 @@ class TestViewer < Minitest::Test
     record = Logster::SuppressionPattern.new("custompattern")
     record.save
 
+    Logster.store.report(Logger::INFO, "test", "somepattern")
     response = request.get("/logsie/settings.json")
     assert_equal(200, response.status)
     assert_includes(response.content_type, "application/json")
+
     json = JSON.parse(response.body)
-    custom_patterns = json["custom_patterns"]
-    coded_patterns = json["coded_patterns"]
+    suppression = json["suppression"]
+    custom_patterns = suppression.reject { |p| p["hard"] }.map { |p| p["value"] }
+    coded_patterns = suppression.select { |p| p["hard"] }.map { |p| p["value"] }
     assert_includes(custom_patterns, "/custompattern/")
     assert_includes(coded_patterns, "/somepattern/")
     assert_includes(coded_patterns, "/anotherpattern/")
@@ -83,8 +86,9 @@ class TestViewer < Minitest::Test
     response = request.get("/logsie/settings.json")
     assert_equal(200, response.status)
     json = JSON.parse(response.body)
-    assert_equal([], json["custom_patterns"])
-    assert_equal([], json["coded_patterns"])
+    assert_equal([], json["suppression"])
+  ensure
+    Logster.store.ignore = nil
   end
 
   def test_settings_page_responds_with_html
@@ -229,6 +233,35 @@ class TestViewer < Minitest::Test
     records = Logster::SuppressionPattern.find_all
     assert_equal(1, records.size)
     assert_equal(/testpattern/, records.first)
+  end
+
+  def test_reset_ignore_count_works
+    Logster.store.ignore = [/whatever store/]
+    Logster.store.allow_custom_patterns = true
+    Logster::SuppressionPattern.new(/custom pattern/).save
+
+    Logster.store.report(Logger::INFO, "test", "something whatever store")
+    Logster.store.report(Logger::INFO, "test", "this is for custom pattern")
+
+    response = request.get("/logsie/settings.json")
+    assert_equal(200, response.status)
+    json = JSON.parse(response.body)
+    suppression = json["suppression"]
+    assert_equal("1", suppression.find { |p| p["value"] == "/whatever store/" }["count"])
+    assert_equal("1", suppression.find { |p| p["value"] == "/custom pattern/" }["count"])
+
+    response = request.put("/logsie/reset-count.json",
+      params: { pattern: "/whatever store/", hard: true }
+    )
+    assert_equal(200, response.status)
+
+    response = request.put("/logsie/reset-count.json",
+      params: { pattern: "/custom pattern/", hard: false }
+    )
+    assert_equal(200, response.status)
+
+    hash = Logster.store.get_all_ignore_count
+    assert_equal({}, hash)
   end
 
   def test_linking_to_a_valid_js_files

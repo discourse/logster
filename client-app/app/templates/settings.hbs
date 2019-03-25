@@ -9,17 +9,17 @@
     <h2 class="section-title">Suppression Patterns</h2>
     <div>New messages that match these Regular Expression patterns will be suppressed.</div>
 
-    {{#if showCodedPatterns}}
+    {{#if showCodedSuppression}}
       <h3 class="subsection-title">Hard-coded patterns:</h3>
       <div class="tip">These patterns can't be removed via the UI because they are commited to the source code of your app.</div>
       {{patterns-list
-        patterns=model.coded_patterns
+        patterns=codedSuppression
         mutable=false}}
     {{/if}}
 
     <h3 class="subsection-title">Custom patterns:</h3>
     {{patterns-list
-      patterns=model.custom_patterns
+      patterns=customSuppression
       key="suppression"
       mutable=true}}
   </div>

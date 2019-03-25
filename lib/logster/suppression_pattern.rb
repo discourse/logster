@@ -11,6 +11,7 @@ module Logster
 
     def destroy(clear_cache: true) # arg used in tests
       super()
+      @store.remove_ignore_count(self.to_s)
       @store.clear_suppression_patterns_cache if clear_cache
     end
   end

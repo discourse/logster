@@ -12,10 +12,19 @@
     }}
     {{#if mutable}}
       {{#if pattern.hasBuffer}}
-        <button {{action "save" pattern}} disabled={{pattern.saving}} class="btn ok no-text save"><i class="fa fa-check"></i></button>
+        <button {{action "save" pattern}} disabled={{pattern.saving}} class="btn ok no-text save shrink">
+          <i class="fa fa-check"></i>
+        </button>
       {{/if}}
-      <button {{action "trash" pattern}} disabled={{pattern.saving}} class="btn no-text trash"><i class="fa fa-trash"></i></button>
+      <button {{action "trash" pattern}} disabled={{pattern.saving}} class="btn no-text trash shrink">
+        <i class="fa fa-trash"></i>
+      </button>
     {{/if}}
+
+    <input disabled=true title="Number of logs that have been suppressed by this pattern" class="count shrink" value={{pattern.count}}>
+    <button {{action "resetCount" pattern}} class="btn no-text reset shrink" title="Reset count of suppressed logs" disabled={{pattern.zeroCount}}>
+      <i class="fa fa-rotate-right"></i>
+    </button>
   </div>
   {{~#if pattern.error~}}
     <pre class="api-error">

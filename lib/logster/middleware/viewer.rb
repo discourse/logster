@@ -109,9 +109,20 @@ module Logster
           elsif resource =~ /\/settings(\.json)?$/
             json = $1 == ".json"
             if json
-              coded_patterns = Logster.store.ignore&.map(&:inspect) || []
-              custom_patterns = Logster::SuppressionPattern.find_all(raw: true)
-              [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(coded_patterns: coded_patterns, custom_patterns: custom_patterns)]]
+              ignore_count = Logster.store.get_all_ignore_count
+              suppression = []
+
+              Logster.store.ignore&.each do |pattern|
+                string_pattern = Regexp === pattern ? pattern.inspect : pattern.to_s
+                count = ignore_count[string_pattern] || 0
+                suppression << { value: string_pattern, count: count, hard: true }
+              end
+
+              Logster::SuppressionPattern.find_all(raw: true).each do |pattern|
+                count = ignore_count[pattern] || 0
+                suppression << { value: pattern, count: count }
+              end
+              [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(suppression: suppression)]]
             else
               [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload_json)]]
             end
@@ -125,6 +136,24 @@ module Logster
             return method_not_allowed if req.request_method == "GET"
 
             update_patterns(set_name, req)
+          elsif resource == "/reset-count.json"
+            req = Rack::Request.new(env)
+            return method_not_allowed("PUT is needed for this endpoint") if req.request_method != "PUT"
+            pattern = nil
+            if [true, "true"].include?(req.params["hard"])
+              pattern = Logster.store.ignore.find do |patt|
+                str = Regexp === patt ? patt.inspect : patt.to_s
+                str == req.params["pattern"]
+              end
+            else
+              pattern = Logster::SuppressionPattern.find_all(raw: true).find do |patt|
+                patt == req.params["pattern"]
+              end
+            end
+            return not_found("Pattern not found") unless pattern
+            pattern = Regexp === pattern ? pattern.inspect : pattern.to_s
+            Logster.store.remove_ignore_count(pattern)
+            [200, {}, ["OK"]]
           elsif resource == "/"
             [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload_json)]]
           else

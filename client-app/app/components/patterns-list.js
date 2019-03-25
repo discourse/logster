@@ -15,9 +15,7 @@ export default Component.extend({
   },
 
   allPatterns: computed("patterns.[]", "newPatterns.[]", function() {
-    const patterns = this.get("patterns").map(pattern =>
-      Pattern.create({ value: pattern })
-    );
+    const patterns = this.get("patterns");
     const newPatterns = this.get("newPatterns") || [];
     return [...newPatterns.reverse(), ...patterns.reverse()];
   }),
@@ -67,7 +65,7 @@ export default Component.extend({
           pattern: pattern.get("value")
         })
           .then(() => {
-            this.get("patterns").removeObject(pattern.get("value"));
+            this.get("patterns").removeObject(pattern);
             pattern.destroy();
           })
           .catch(response => this.catchBlock(pattern, response))
@@ -85,7 +83,7 @@ export default Component.extend({
         }).then(response => {
           pattern.updateValue(response.pattern);
           pattern.set("isNew", false);
-          this.get("patterns").pushObject(pattern.get("value"));
+          this.get("patterns").pushObject(pattern);
           this.get("newPatterns").removeObject(pattern);
         });
       } else {
@@ -94,15 +92,27 @@ export default Component.extend({
           pattern: pattern.get("value"),
           new_pattern: pattern.get("valueBuffer")
         }).then(response => {
-          const index = this.get("patterns").indexOf(pattern.get("value"));
           pattern.updateValue(response.pattern);
-          this.get("patterns")[index] = pattern.get("value");
+          pattern.set("count", 0);
         });
       }
       promise
         .catch(response => {
           this.catchBlock(pattern, response);
         })
+        .always(() => this.alwaysBlock(pattern));
+    },
+
+    resetCount(pattern) {
+      pattern.set("saving", true);
+      ajax("/reset-count.json", {
+        method: "PUT",
+        data: { pattern: pattern.get("value"), hard: !!pattern.get("hard") }
+      })
+        .then(() => {
+          pattern.set("count", 0);
+        })
+        .catch(response => this.catchBlock(pattern, response))
         .always(() => this.alwaysBlock(pattern));
     }
   }
