@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2019-03-26: 2.3.0
+
+  - FEATURE: track count of suppressed logs for each pattern
+
 - 2019-03-19: 2.2.0
 
   - FEATURE: custom suppression patterns via UI
