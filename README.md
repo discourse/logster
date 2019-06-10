@@ -92,7 +92,7 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 1. Fork it ( https://github.com/discourse/logster/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Run `cd client-app && npm install`
-4. Run `rake client_dev` to start Sinatra server (port 9292) and Ember server (port 4200). Use Ember server for hot reload for client code.
+4. Run `bundle exec rake client_dev` to start Sinatra server (port 9292) and Ember server (port 4200). Use Ember server for hot reload for client code.
 5. Once you're done making changes, run `./build_client_app.sh` to make and copy a production build to the assets folder.
 6. Commit your changes (`git commit -am 'Add some feature'`)
 7. Push to the branch (`git push origin my-new-feature`)
