@@ -4,11 +4,11 @@ require 'logster/ignore_pattern'
 class TestIgnorePattern < Minitest::Test
 
   def test_string_message_pattern
-    msg = Logster::Message.new(Logger::WARN, "test", "my error")
+    msg = Logster::Message.new(Logger::WARN, "test", "my error (oh no!)")
     msg_frog = Logster::Message.new(Logger::WARN, "test", "a frog")
     msg_nil = Logster::Message.new(Logger::WARN, "test", nil)
 
-    pattern = Logster::IgnorePattern.new("ERROR")
+    pattern = Logster::IgnorePattern.new("my error (")
 
     assert pattern.matches? msg
     assert !pattern.matches?(msg_frog)
