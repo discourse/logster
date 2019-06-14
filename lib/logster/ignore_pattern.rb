@@ -35,7 +35,7 @@ module Logster
       when Regexp
         message.to_s =~ pattern
       when String
-        message.to_s =~ Regexp.new(pattern, Regexp::IGNORECASE)
+        message.to_s =~ Regexp.new(Regexp.escape(pattern), Regexp::IGNORECASE)
       when Hash
         if Hash === message
           compare_hash(message, pattern)
