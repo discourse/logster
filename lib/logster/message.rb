@@ -173,7 +173,7 @@ module Logster
             params[k] = v && v[0..100]
           end
         end
-        scrubbed["params"] = params if params.length > 0
+        scrubbed["params"] = scrub_params(params) if params.length > 0
         ALLOWED_ENV.map { |k|
           scrubbed[k] = env[k] if env[k]
         }
@@ -200,6 +200,23 @@ module Logster
         pattern.matches? self
         else
         nil
+      end
+    end
+
+    def self.scrub_params(params)
+      if Array === params
+        params.map! { |p| scrub_params(p) }
+        params
+      elsif Hash === params
+        params.each do |k, v|
+          params[k] = scrub_params(v)
+        end
+        params
+      elsif String === params
+        scrubbed = params.scrub if !params.valid_encoding?
+        scrubbed || params
+      else
+        params
       end
     end
 

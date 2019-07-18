@@ -1,5 +1,6 @@
 require_relative '../test_helper'
 require 'logster/message'
+require 'rack'
 
 class TestMessage < MiniTest::Test
 
@@ -74,6 +75,19 @@ class TestMessage < MiniTest::Test
     save_env = msg1.merge_similar_message(msg2)
     assert(save_env)
     assert_equal(msg1.count, 15 + 13)
+  end
+
+  def test_scrub_request_params
+    params = {
+      a: "45\xC0\xBE",
+      b: ["45\xC0\xBE"]
+    }
+    env = Rack::Request.new(Rack::MockRequest.env_for("", params: params)).env
+    msg = Logster::Message.new(0, "test", "message with dodgy params", 10)
+    msg.populate_from_env(env)
+    scrubbed = msg.env["params"]
+    assert scrubbed["a"].valid_encoding?
+    assert scrubbed["b"].first.valid_encoding?
   end
 
   def test_populate_from_env_works_on_array
