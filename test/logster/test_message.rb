@@ -1,6 +1,5 @@
 require_relative '../test_helper'
 require 'logster/message'
-require 'rack'
 
 class TestMessage < MiniTest::Test
 
