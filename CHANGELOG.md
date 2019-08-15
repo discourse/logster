@@ -1,5 +1,11 @@
 # CHANGELOG
 
+- 2019-08-15: 2.3.1
+
+  - DEV: upgrade Ember to 3.8 and jQuery to 3.4.1 (#84)
+  - FIX: properly escape string ignore pattern (#88)
+  - FIX: scrub params if they have invalid encoding (#92)
+
 - 2019-03-26: 2.3.0
 
   - FEATURE: track count of suppressed logs for each pattern
