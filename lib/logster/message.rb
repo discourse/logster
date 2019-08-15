@@ -73,6 +73,10 @@ module Logster
       msg
     end
 
+    def env=(env)
+      @env = self.class.scrub_params(env)
+    end
+
     def self.hostname
       @hostname ||= `hostname`.strip! rescue "<unknown>"
     end
@@ -173,7 +177,7 @@ module Logster
             params[k] = v && v[0..100]
           end
         end
-        scrubbed["params"] = scrub_params(params) if params.length > 0
+        scrubbed["params"] = params if params.length > 0
         ALLOWED_ENV.map { |k|
           scrubbed[k] = env[k] if env[k]
         }
