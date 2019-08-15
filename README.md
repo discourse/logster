@@ -58,6 +58,10 @@ then you are using a conflicting gem like `better_errors` or `web-console`.
 
 To avoid this error, make sure logster is added behind those conflicting gems in your Gemfile.
 
+If you're using Logster with a non-rails app, you'll need to be careful that the env hashes of messages that Logster receives don't contain strings with invalid encoding because at some point Logster calls `#to_json` on the message env and the method will fail with `JSON::GeneratorError`.
+
+The reason this doesn't happen in rails apps is because ActiveSupport has a monkey patch for [`#to_json`](https://github.com/rails/rails/blob/master/activesupport/lib/active_support/core_ext/object/json.rb).
+
 ### Mount using warden (devise)
 ```
   admin_constraint = lambda do |request|

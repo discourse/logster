@@ -73,6 +73,10 @@ module Logster
       msg
     end
 
+    def env=(env)
+      @env = self.class.scrub_params(env)
+    end
+
     def self.hostname
       @hostname ||= `hostname`.strip! rescue "<unknown>"
     end
@@ -200,6 +204,23 @@ module Logster
         pattern.matches? self
         else
         nil
+      end
+    end
+
+    def self.scrub_params(params)
+      if Array === params
+        params.map! { |p| scrub_params(p) }
+        params
+      elsif Hash === params
+        params.each do |k, v|
+          params[k] = scrub_params(v)
+        end
+        params
+      elsif String === params
+        scrubbed = params.scrub if !params.valid_encoding?
+        scrubbed || params
+      else
+        params
       end
     end
 

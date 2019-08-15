@@ -76,6 +76,24 @@ class TestMessage < MiniTest::Test
     assert_equal(msg1.count, 15 + 13)
   end
 
+  def test_messages_with_bad_encoding_dont_break_logster
+    hash = {
+      severity: 0,
+      progname: "test",
+      message: "invalid encoding",
+      env: {
+        a: "bad_value",
+        b: ["bad_value"]
+      }
+    }
+    json = hash.to_json.gsub("bad_value", "45\xC0\xBE")
+    message = Logster::Message.from_json(json)
+    message.to_json # test failure would be this raising exception
+
+    message.env = JSON.parse(json)["env"]
+    message.to_json
+  end
+
   def test_populate_from_env_works_on_array
     msg = Logster::Message.new(0, '', 'test', 10)
     hash = { "custom_key" => "key" }
