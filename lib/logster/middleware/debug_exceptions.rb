@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Logster::Middleware::DebugExceptions < ActionDispatch::DebugExceptions
   private
 
@@ -13,13 +15,14 @@ class Logster::Middleware::DebugExceptions < ActionDispatch::DebugExceptions
 
     Logster.config.current_context.call(env) do
       location = exception.backtrace[0]
-      exception_string = exception.to_s
 
-      Logster.logger.add_with_opts(::Logger::Severity::FATAL,
-                        exception.class.to_s << " (" << exception_string << ")\n#{location}",
-                        "web-exception",
-                        backtrace: exception.backtrace.join("\n"),
-                        env: env)
+      Logster.logger.add_with_opts(
+        ::Logger::Severity::FATAL,
+        "#{exception.class} (#{exception})\n#{location}",
+        "web-exception",
+        backtrace: exception.backtrace.join("\n"),
+        env: env
+      )
     end
 
   end

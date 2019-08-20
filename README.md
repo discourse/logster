@@ -35,6 +35,15 @@ To run logster in other environments, in `config/application.rb`
 Logster.set_environments([:development, :staging, :production])
 ```
 
+### Configuration
+
+Logster can be configured using `Logster.config`:
+
+- `Logster.config.application_version`: set to a unique identifier denoting version of your app. The "solve" function takes this version into account when suppressing errors.
+- `Logster.config.enable_js_error_reporting` : enable js error reporting from clients
+- `Logster.config.rate_limit_error_reporting` : controls automatic 1 minute rate limiting for JS error reporting.
+- `Logster.config.web_title` : `<title>` tag for logster error page.
+
 ### Tracking Error Rate
 Logster allows you to register a callback when the rate of errors has exceeded
 a given limit.

@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 module Logster
   module Middleware
     class Reporter
 
-      PATH_INFO = "PATH_INFO".freeze
-      SCRIPT_NAME = "SCRIPT_NAME".freeze
+      PATH_INFO = "PATH_INFO"
+      SCRIPT_NAME = "SCRIPT_NAME"
 
       def initialize(app, config = {})
         @app = app
@@ -21,7 +23,18 @@ module Logster
         end
 
         if path == @error_path
+
+          if !Logster.config.enable_js_error_reporting
+            return [403, {}, "Access Denied"]
+          end
+
           Logster.config.current_context.call(env) do
+            if Logster.config.rate_limit_error_reporting
+              req = Rack::Request.new(env)
+              if Logster.store.rate_limited?(req.ip, perform: true)
+                return [429, {}, "Rate Limited"]
+              end
+            end
             report_js_error(env)
           end
           return [200, {}, ["OK"]]
@@ -34,9 +47,10 @@ module Logster
 
       def report_js_error(env)
         req = Rack::Request.new(env)
+
         params = req.params
 
-        message = params["message"] || ""
+        message = (params["message"] || "").dup
         message << "\nUrl: " << params["url"] if params["url"]
         message << "\nLine: " << params["line"] if params["line"]
         message << "\nColumn: " << params["column"] if params["column"]
@@ -48,6 +62,8 @@ module Logster
                             message,
                             backtrace: backtrace,
                             env: env)
+
+        true
       end
 
     end

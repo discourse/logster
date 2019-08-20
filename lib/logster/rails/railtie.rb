@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Logster::Rails
 
   # this magically registers logster.js in the asset pipeline
@@ -30,7 +32,9 @@ module Logster::Rails
     return unless Logster.config.environments.include?(Rails.env.to_sym)
 
     if Logster::Logger === Rails.logger
-      app.middleware.insert_before ActionDispatch::ShowExceptions, Logster::Middleware::Reporter
+      if Logster.config.enable_js_error_reporting
+        app.middleware.insert_before ActionDispatch::ShowExceptions, Logster::Middleware::Reporter
+      end
 
       if Rails::VERSION::MAJOR == 3
         app.middleware.insert_before ActionDispatch::DebugExceptions, Logster::Middleware::DebugExceptions

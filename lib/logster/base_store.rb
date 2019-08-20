@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Logster
   class BaseStore
 
@@ -113,6 +115,10 @@ module Logster
     # have suppressed
     def get_all_ignore_count
       {}
+    end
+
+    def rate_limited?(ip_address, perform: false, limit: 60)
+      not_implemented
     end
 
     def report(severity, progname, msg, opts = {})

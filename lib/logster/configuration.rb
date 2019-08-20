@@ -1,7 +1,18 @@
+# frozen_string_literal: true
+
 module Logster
   class Configuration
-    attr_accessor :current_context, :allow_grouping, :environments,
-      :application_version, :web_title, :env_expandable_keys, :enable_custom_patterns_via_ui
+    attr_accessor(
+      :allow_grouping,
+      :application_version,
+      :current_context,
+      :env_expandable_keys,
+      :enable_custom_patterns_via_ui,
+      :enable_js_error_reporting,
+      :environments,
+      :rate_limit_error_reporting,
+      :web_title
+    )
 
     attr_writer :subdirectory
 
@@ -12,6 +23,8 @@ module Logster
       @subdirectory = nil
       @env_expandable_keys = []
       @enable_custom_patterns_via_ui = false
+      @rate_limit_error_reporting = true
+      @enable_js_error_reporting = true
 
       @allow_grouping = false
 
