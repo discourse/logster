@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2019-08-20: 2.3.2
+
+  - FEATURE: automatic 1 minute rate limiting for js error reporting per IP
+
 - 2019-08-15: 2.3.1
 
   - DEV: upgrade Ember to 3.8 and jQuery to 3.4.1 (#84)
