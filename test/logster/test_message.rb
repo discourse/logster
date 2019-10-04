@@ -23,6 +23,20 @@ class TestMessage < MiniTest::Test
     assert({ "a" => "2", "c" => "3" } <= msg1.env[1])
   end
 
+  def test_merge_adds_timestamp_to_env
+    time1 = Time.new(2010, 1, 1, 1, 1).to_i
+    msg1 = Logster::Message.new(0, '', 'test', time1)
+    msg1.env = { a: "aa", b: "bb" }
+
+    time2 = Time.new(2011, 1, 1, 1, 1).to_i
+    msg2 = Logster::Message.new(0, '', 'test', time2)
+    msg2.env = { e: "ee", f: "ff" }
+
+    msg1.merge_similar_message(msg2)
+    assert_equal(time1, msg1.env[0]["time"])
+    assert_equal(time2, msg1.env[1]["time"])
+  end
+
   def test_merge_messages_both_with_array_envs
     msg1 = Logster::Message.new(0, '', 'test', 10)
     msg1.env = [{ a: "aa", b: "bb" }, { c: "cc", d: "dd" }]
@@ -49,8 +63,8 @@ class TestMessage < MiniTest::Test
     msg1.merge_similar_message(msg2)
 
     assert_equal(msg1.env.size, 3)
-    assert_equal(msg1.env.map(&:keys).flatten(1).map(&:to_s), %w{a b c d e f})
-    assert_equal(msg1.env.map(&:values).flatten(1).map(&:to_s), %w{aa bb cc dd ee ff})
+    assert_equal(msg1.env.map(&:keys).flatten(1).map(&:to_s), %w{a b c d e f time})
+    assert_equal(msg1.env.map(&:values).flatten(1).map(&:to_s), %w{aa bb cc dd ee ff 20})
   end
 
   def test_adds_application_version
