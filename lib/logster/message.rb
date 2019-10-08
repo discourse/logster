@@ -141,6 +141,13 @@ module Logster
       return false if self.count > Logster::MAX_GROUPING_LENGTH
 
       other_env = JSON.load JSON.fast_generate other.env
+      if Hash === other_env && !other_env.key?("time")
+        other_env["time"] = other.timestamp
+      end
+      if Hash === self.env && !self.env.key?("time")
+        self.env["time"] = self.first_timestamp
+      end
+
       if Array === self.env
         Array === other_env ? self.env.concat(other_env) : self.env << other_env
       else

@@ -104,23 +104,24 @@ function a(){var e=document.getElementById("preloaded-data").dataset
 t=Em.$.extend(JSON.parse(e.preloaded),{rootPath:e.rootPath}),n=!0}var s={get:function(e){return n||a(),Em.get(t,e)}}
 e.default=s}),define("client-app/lib/utilities",["exports","@babel/runtime/helpers/esm/typeof","client-app/lib/preload"],function(e,t,n){Object.defineProperty(e,"__esModule",{value:!0}),e.escapeHtml=o,e.ajax=l,e.preloadOrAjax=function(e,t){var a=n.default.get(e.replace(".json",""))
 return a?Em.RSVP.resolve(a):l(e,t)},e.updateHiddenProperty=function(e){a=e},e.isHidden=u,e.increaseTitleCount=function(e){if(!u())return
-s=s||document.title,i=i||0,i+=e,document.title="".concat(s," (").concat(i,")")},e.resetTitleCount=function(){i=0,document.title=s||document.title},e.formatTime=function(e){var t,n=moment(e),a=moment()
-t=n.diff(a.startOf("day"))>0?n.format("h:mm a"):n.diff(a.startOf("week"))>0?n.format("dd h:mm a"):n.diff(a.startOf("year"))>0?n.format("D MMM h:mm a"):n.format("D MMM YY")
-return t},e.buildArrayString=c,e.buildHashString=function e(a,s){var i=arguments.length>2&&void 0!==arguments[2]?arguments[2]:[]
+s=s||document.title,i=i||0,i+=e,document.title="".concat(s," (").concat(i,")")},e.resetTitleCount=function(){i=0,document.title=s||document.title},e.formatTime=c,e.buildArrayString=d,e.buildHashString=function e(a,s){var i=arguments.length>2&&void 0!==arguments[2]?arguments[2]:[]
 if(!a)return""
 var r=[]
 var l=[]
 var u=n.default.get("env_expandable_keys")||[]
 _.each(a,function(e,n){if(null===e)r.push("null")
 else if("[object Array]"===Object.prototype.toString.call(e)){var a=""
-a=-1!==u.indexOf(n)&&!s&&-1===i.indexOf(n)&&e.length>3?"".concat(o(e[0]),', <a class="expand-list" data-key=').concat(n,">").concat(e.length-1," more</a>"):c(e),r.push("<tr><td>"+o(n)+"</td><td>"+a+"</td></tr>")}else"object"===(0,t.default)(e)?l.push(n):r.push("<tr><td>"+o(n)+"</td><td>"+o(e)+"</td></tr>")})
+a=-1!==u.indexOf(n)&&!s&&-1===i.indexOf(n)&&e.length>3?"".concat(o(e[0]),', <a class="expand-list" data-key=').concat(n,">").concat(e.length-1," more</a>"):d(e),r.push("<tr><td>"+o(n)+"</td><td>"+a+"</td></tr>")}else if("object"===(0,t.default)(e))l.push(n)
+else if("time"===n&&"number"==typeof e){var p=moment(e).format(),f=c(e)
+r.push('<tr title="'.concat(p,'"><td>').concat(n,"</td><td>").concat(f,"</td></tr>"))}else r.push("<tr><td>".concat(o(n),"</td><td>").concat(o(e),"</td></tr>"))})
 _.size(l)>0&&_.each(l,function(t){var n=a[t]
 r.push("<tr><td></td><td><table>"),r.push("<td>"+o(t)+"</td><td>"+e(n,!0)+"</td>"),r.push("</table></td></tr>")})
-var d=s?"":"env-table"
-return"<table class='"+d+"'>"+r.join("\n")+"</table>"}
+var p=s?"":"env-table"
+return"<table class='"+p+"'>"+r.join("\n")+"</table>"}
 var a,s,i,r={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","/":"&#x2F;"}
-function o(e){return String(e).replace(/[&<>"'\/]/g,function(e){return r[e]})}function l(e,t){return(t=t||{}).headers=t.headers||{},t.headers["X-SILENCE-LOGGER"]=!0,Em.$.ajax(n.default.get("rootPath")+e,t)}function u(){return void 0!==a?document[a]:!document.hasFocus}function c(e){var t=[]
-return e.forEach(function(e){null===e?t.push("null"):"[object Array]"===Object.prototype.toString.call(e)?t.push(c(e)):t.push(o(e.toString()))}),"["+t.join(", ")+"]"}}),define("client-app/models/message-collection",["exports","client-app/lib/utilities","client-app/models/message"],function(e,t,n){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
+function o(e){return String(e).replace(/[&<>"'\/]/g,function(e){return r[e]})}function l(e,t){return(t=t||{}).headers=t.headers||{},t.headers["X-SILENCE-LOGGER"]=!0,Em.$.ajax(n.default.get("rootPath")+e,t)}function u(){return void 0!==a?document[a]:!document.hasFocus}function c(e){var t=moment(e),n=moment()
+return t.diff(n.startOf("day"))>0?t.format("h:mm a"):t.diff(n.startOf("week"))>0?t.format("dd h:mm a"):t.diff(n.startOf("year"))>0?t.format("D MMM h:mm a"):t.format("D MMM YY")}function d(e){var t=[]
+return e.forEach(function(e){null===e?t.push("null"):"[object Array]"===Object.prototype.toString.call(e)?t.push(d(e)):t.push(o(e.toString()))}),"["+t.join(", ")+"]"}}),define("client-app/models/message-collection",["exports","client-app/lib/utilities","client-app/models/message"],function(e,t,n){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
 var a=Em.Object.extend({messages:Em.A(),currentMessage:null,total:0,solve:function(e){var t=this
 e.solve().then(function(){t.reload()})},destroy:function(e){var t=this.get("messages"),n=t.indexOf(e)
 e.destroy(),e.set("selected",!1),this.set("total",this.get("total")-1),this.get("messages").removeObject(e),n>0?((e=t[n-1]).set("selected",!0),this.set("currentMessage",e)):this.get("total")>0?((e=t[0]).set("selected",!0),this.set("currentMessage",e)):this.reload()},load:function(e){var n=this
@@ -194,4 +195,4 @@ var t=Ember.HTMLBars.template({id:"K64jJk76",block:'{"symbols":[],"statements":[
 e.default=t}),define("client-app/templates/show",["exports"],function(e){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
 var t=Ember.HTMLBars.template({id:"V916vpg9",block:'{"symbols":[],"statements":[[4,"link-to",["index"],null,{"statements":[[0,"Recent"]],"parameters":[]},null],[0,"\\n"],[7,"div"],[11,"id","bottom-panel"],[11,"class","full"],[9],[0,"\\n  "],[1,[27,"message-info",null,[["currentMessage","showTitle","actionsInMenu"],[[23,["model"]],"true",false]]],false],[0,"\\n"],[10],[0,"\\n"]],"hasEval":false}',meta:{moduleName:"client-app/templates/show.hbs"}})
 e.default=t}),define("client-app/config/environment",[],function(){try{var e="client-app/config/environment",t=document.querySelector('meta[name="'+e+'"]').getAttribute("content"),n={default:JSON.parse(decodeURIComponent(t))}
-return Object.defineProperty(n,"__esModule",{value:!0}),n}catch(a){throw new Error('Could not read config from meta tag with name "'+e+'".')}}),runningTests||require("client-app/app").default.create({name:"client-app",version:"0.0.0+acb9fc29"})
+return Object.defineProperty(n,"__esModule",{value:!0}),n}catch(a){throw new Error('Could not read config from meta tag with name "'+e+'".')}}),runningTests||require("client-app/app").default.create({name:"client-app",version:"v2.3.2+3ee689f3"})

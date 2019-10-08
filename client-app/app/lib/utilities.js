@@ -125,9 +125,15 @@ export function buildHashString(hash, recurse, expanded = []) {
     } else if (typeof v === "object") {
       hashes.push(k);
     } else {
-      buffer.push(
-        "<tr><td>" + escapeHtml(k) + "</td><td>" + escapeHtml(v) + "</td></tr>"
-      );
+      if (k === "time" && typeof v === "number") {
+        const title = moment(v).format();
+        const time = formatTime(v);
+        buffer.push(`<tr title="${title}"><td>${k}</td><td>${time}</td></tr>`);
+      } else {
+        buffer.push(
+          `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(v)}</td></tr>`
+        );
+      }
     }
   });
 

@@ -5,8 +5,11 @@ import hbs from "htmlbars-inline-precompile";
 import Message from "client-app/models/message";
 import { init } from "client-app/lib/preload";
 
+const time1 = new Date("2010-01-01T01:00:00").getTime();
+const time2 = new Date("2015-01-01T01:00:00").getTime();
+
 const message = Message.create({
-  env: [{ a: "aa", b: "bb" }, { c: "cc", d: "dd" }]
+  env: [{ a: "aa", b: "bb", time: time1 }, { c: "cc", d: "dd", time: time2 }]
 });
 
 const message2 = Message.create({
@@ -41,9 +44,14 @@ module("Integration | Component | env-tab", function(hooks) {
       "shows the current over the total number of env objects"
     );
     let trs = findAll("tr");
-    assert.equal(trs.length, 2);
+    assert.equal(trs.length, 3);
     assert.equal(reduceToContent(trs[0]), "a: aa", "has the right content");
     assert.equal(reduceToContent(trs[1]), "b: bb", "has the right content");
+    assert.equal(
+      reduceToContent(trs[2]),
+      "time: 1 Jan 10",
+      "has the right content"
+    );
 
     const buttons = findAll("button.nav-btn");
     // at first page, you can't go back
@@ -76,9 +84,14 @@ module("Integration | Component | env-tab", function(hooks) {
     );
 
     const trs = findAll("tr");
-    assert.equal(trs.length, 2);
+    assert.equal(trs.length, 3);
     assert.equal(reduceToContent(trs[0]), "c: cc", "has the right content");
     assert.equal(reduceToContent(trs[1]), "d: dd", "has the right content");
+    assert.equal(
+      reduceToContent(trs[2]),
+      "time: 1 Jan 15",
+      "has the right content"
+    );
 
     // at last page, you can't go forward but you can go back
     assert.notOk(buttons[0].disabled, "back buttons are not disabled");
