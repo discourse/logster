@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2019-10-08: 2.3.3
+
+  - FEATURE: keep track of message timestamp when it's merged into another message
+
 - 2019-08-20: 2.3.2
 
   - FEATURE: automatic 1 minute rate limiting for js error reporting per IP
