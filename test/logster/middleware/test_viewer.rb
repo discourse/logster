@@ -148,6 +148,37 @@ class TestViewer < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = false
   end
 
+  def test_suppression_patterns_have_optional_retroactive_effect
+    Logster.config.enable_custom_patterns_via_ui = true
+
+    Logster.store.report(Logger::INFO, "test", "non-matching message")
+    Logster.store.report(Logger::INFO, "test", "apple orange")
+    Logster.store.report(Logger::INFO, "test", "apples oranges")
+
+    request.post("/logsie/patterns/suppression.json",
+      params: { pattern: "apple" }
+    )
+    messages = Logster.store.latest
+    assert_includes(messages.map(&:message), "apple orange")
+    assert_includes(messages.map(&:message), "apples oranges")
+    assert_includes(messages.map(&:message), "non-matching message")
+
+    request.post("/logsie/patterns/suppression.json",
+      params: { pattern: "orange", retroactive: true }
+    )
+    messages = Logster.store.latest
+    assert_equal(1, messages.size)
+    assert_equal("non-matching message", messages.first.message)
+
+    response = request.post("/logsie/patterns/suppression.json",
+      params: { pattern: "doesntmatchanything", retroactive: true }
+    )
+    # assert no error occures if it doesn't delete anything retroactively
+    assert_equal(200, response.status)
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
   def test_modifying_patterns_returns_404_for_non_existing_patterns
     Logster.config.enable_custom_patterns_via_ui = true
 

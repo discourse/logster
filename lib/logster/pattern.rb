@@ -57,7 +57,7 @@ module Logster
       pattern.inspect
     end
 
-    def save
+    def save(args = {})
       ensure_valid!
       @store.insert_pattern(set_name, self.to_s)
     end

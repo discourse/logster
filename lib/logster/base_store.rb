@@ -53,6 +53,11 @@ module Logster
       not_implemented
     end
 
+    # Get all messages that you have in the store
+    def get_all_messages
+      not_implemented
+    end
+
     # Get a message's env by its message_key
     def get_env(message_key)
       not_implemented
@@ -64,6 +69,11 @@ module Logster
     end
 
     def delete(message_key)
+      not_implemented
+    end
+
+    # Delete messages associated with given message_keys
+    def bulk_delete(message_keys, grouping_keys)
       not_implemented
     end
 

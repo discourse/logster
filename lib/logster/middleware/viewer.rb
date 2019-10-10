@@ -214,7 +214,11 @@ module Logster
 
         case request_method
         when "POST"
-          record.save
+          args = {}
+          if Logster::SuppressionPattern === record && [true, "true"].include?(req.params["retroactive"])
+            args[:retroactive] = true
+          end
+          record.save(args)
         when "PUT"
           record.modify(req.params["new_pattern"])
         when "DELETE"
