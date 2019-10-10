@@ -1,5 +1,10 @@
 # CHANGELOG
 
+- 2019-10-10: 2.4.0
+
+  - FEATURE: Allow having retroactive affect when adding suppression patterns
+  - DEV: Bump JS dependencies
+
 - 2019-10-08: 2.3.3
 
   - FEATURE: keep track of message timestamp when it's merged into another message
