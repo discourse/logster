@@ -71,6 +71,7 @@ $loader = SampleLoader.new
 $loader.ensure_samples_loaded
 $loader.load_samples unless ENV['NO_DATA']
 Logster.config.allow_grouping = true
+Logster.config.enable_custom_patterns_via_ui = ENV["LOGSTER_ENABLE_CUSTOM_PATTERNS_VIA_UI"] == "1"
 
 class Sample < Sinatra::Base
   use Logster::Middleware::Viewer

@@ -79,7 +79,8 @@ export default Component.extend({
       if (pattern.get("isNew")) {
         promise = this.makeAPICall({
           method: "POST",
-          pattern: pattern.get("valueBuffer")
+          pattern: pattern.get("valueBuffer"),
+          retroactive: pattern.retroactive
         }).then(response => {
           pattern.updateValue(response.pattern);
           pattern.set("isNew", false);
@@ -114,6 +115,10 @@ export default Component.extend({
         })
         .catch(response => this.catchBlock(pattern, response))
         .always(() => this.alwaysBlock(pattern));
+    },
+
+    checkboxChanged(pattern) {
+      pattern.toggleProperty("retroactive");
     }
   }
 });

@@ -619,6 +619,15 @@ label span {
   flex-shrink: 1;
 }
 
+.retro-checkbox .checkbox {
+  margin: 0;
+}
+
+.retro-checkbox {
+  margin-top: 7px;
+  margin-bottom: 15px;
+}
+
 .btn.new-pattern {
   height: 100%;
   line-height: 18px;

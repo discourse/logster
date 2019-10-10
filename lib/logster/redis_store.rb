@@ -46,6 +46,17 @@ module Logster
       end
     end
 
+    def bulk_delete(message_keys, grouping_keys)
+      @redis.multi do
+        @redis.hdel(hash_key, message_keys)
+        @redis.hdel(env_key, message_keys)
+        @redis.hdel(grouping_key, grouping_keys)
+        message_keys.each do |k|
+          @redis.lrem(list_key, -1, k)
+        end
+      end
+    end
+
     def replace_and_bump(message, save_env: true)
       # TODO make it atomic
       exists = @redis.hexists(hash_key, message.key)
@@ -187,6 +198,10 @@ module Logster
         message.env = get_env(message_key) || {}
       end
       message
+    end
+
+    def get_all_messages
+      bulk_get(@redis.lrange(list_key, 0, -1))
     end
 
     def bulk_get(message_keys)
