@@ -2,6 +2,7 @@ import Controller from "@ember/controller";
 import { ajax } from "client-app/lib/utilities";
 import { observer, computed } from "@ember/object";
 import Preload from "client-app/lib/preload";
+import { debounce } from "@ember/runloop";
 
 export default Controller.extend({
   showDebug: true,
@@ -109,7 +110,7 @@ export default Controller.extend({
     }
   }),
 
-  searchChanged: observer("search", function() {
+  doSearch() {
     const search = this.get("search");
     const model = this.get("model");
     model.set("search", search);
@@ -117,5 +118,9 @@ export default Controller.extend({
     if (this.get("initialized")) {
       model.reload().then(() => this.updateSelectedMessage());
     }
+  },
+
+  searchChanged: observer("search", function() {
+    debounce(this, this.doSearch, 250);
   })
 });
