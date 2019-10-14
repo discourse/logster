@@ -121,6 +121,10 @@ export default Controller.extend({
   },
 
   searchChanged: observer("search", function() {
+    const termSize = this.get("search.length");
+    if (!termSize || termSize <= 1) {
+      return;
+    }
     debounce(this, this.doSearch, 250);
   })
 });
