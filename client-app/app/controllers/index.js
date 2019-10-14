@@ -110,10 +110,9 @@ export default Controller.extend({
     }
   }),
 
-  doSearch() {
-    const search = this.get("search");
+  doSearch(term) {
     const model = this.get("model");
-    model.set("search", search);
+    model.set("search", term);
 
     if (this.get("initialized")) {
       model.reload().then(() => this.updateSelectedMessage());
@@ -121,10 +120,11 @@ export default Controller.extend({
   },
 
   searchChanged: observer("search", function() {
-    const termSize = this.get("search.length");
-    if (!termSize || termSize <= 1) {
+    const term = this.search;
+    const termSize = term && term.length;
+    if (termSize && termSize === 1) {
       return;
     }
-    debounce(this, this.doSearch, 250);
+    debounce(this, this.doSearch, term, 250);
   })
 });

@@ -56,9 +56,9 @@ confirm("Clear the logs?\n\nCancel = No, OK = Clear")&&(0,t.ajax)("/clear",{type
 if(e&&t){var n=t.find(function(t){return t.key===e})
 n?n.set("selected",!0):this.set("currentMessage",null)}},filter:Ember.computed("showDebug","showInfo","showWarn","showErr","showFatal",function(){var e=this,t=[]
 return["Debug","Info","Warn","Err","Fatal"].forEach(function(n,a){e.get("show".concat(n))&&t.push(a)}),t.push(5),t}),filterChanged:Ember.observer("filter.length",function(){var e=this,t=this.get("filter"),n=this.get("model")
-n.set("filter",t),t&&this.get("initialized")&&n.reload().then(function(){return e.updateSelectedMessage()})}),doSearch:function(){var e=this,t=this.get("search"),n=this.get("model")
-n.set("search",t),this.get("initialized")&&n.reload().then(function(){return e.updateSelectedMessage()})},searchChanged:Ember.observer("search",function(){var e=this.get("search.length")
-!e||e<=1||Ember.run.debounce(this,this.doSearch,250)})})
+n.set("filter",t),t&&this.get("initialized")&&n.reload().then(function(){return e.updateSelectedMessage()})}),doSearch:function(e){var t=this,n=this.get("model")
+n.set("search",e),this.get("initialized")&&n.reload().then(function(){return t.updateSelectedMessage()})},searchChanged:Ember.observer("search",function(){var e=this.search,t=e&&e.length
+t&&1===t||Ember.run.debounce(this,this.doSearch,e,250)})})
 e.default=a}),define("client-app/controllers/show",["exports"],function(e){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
 var t=Ember.Controller.extend({actions:{protect:function(){this.get("model").protect()},unprotect:function(){this.get("model").unprotect()}}})
 e.default=t}),define("client-app/helpers/app-version",["exports","client-app/config/environment","ember-cli-app-version/utils/regexp"],function(e,t,n){function a(e){var a=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},s=t.default.APP.version,i=a.versionOnly||a.hideSha,r=a.shaOnly||a.hideVersion,o=null
@@ -196,4 +196,4 @@ var t=Ember.HTMLBars.template({id:"ZVQ4fCm0",block:'{"symbols":[],"statements":[
 e.default=t}),define("client-app/templates/show",["exports"],function(e){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
 var t=Ember.HTMLBars.template({id:"V916vpg9",block:'{"symbols":[],"statements":[[4,"link-to",["index"],null,{"statements":[[0,"Recent"]],"parameters":[]},null],[0,"\\n"],[7,"div"],[11,"id","bottom-panel"],[11,"class","full"],[9],[0,"\\n  "],[1,[27,"message-info",null,[["currentMessage","showTitle","actionsInMenu"],[[23,["model"]],"true",false]]],false],[0,"\\n"],[10],[0,"\\n"]],"hasEval":false}',meta:{moduleName:"client-app/templates/show.hbs"}})
 e.default=t}),define("client-app/config/environment",[],function(){try{var e="client-app/config/environment",t=document.querySelector('meta[name="'+e+'"]').getAttribute("content"),n={default:JSON.parse(decodeURIComponent(t))}
-return Object.defineProperty(n,"__esModule",{value:!0}),n}catch(a){throw new Error('Could not read config from meta tag with name "'+e+'".')}}),runningTests||require("client-app/app").default.create({name:"client-app",version:"0.0.0+6c443ba9"})
+return Object.defineProperty(n,"__esModule",{value:!0}),n}catch(a){throw new Error('Could not read config from meta tag with name "'+e+'".')}}),runningTests||require("client-app/app").default.create({name:"client-app",version:"0.0.0+cf00926f"})
