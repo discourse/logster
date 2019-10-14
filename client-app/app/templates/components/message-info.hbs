@@ -1,5 +1,5 @@
 <div class="message-info">
-  {{#tabbed-section}}
+  {{#tabbed-section onTabChange=(action "tabChanged")}}
     {{#tab-contents name="info" hint="show info" currentMessage=currentMessage}}
       {{#if showTitle}}
         <h3>Message
@@ -16,14 +16,18 @@
       {{/if}}
       <pre>{{currentMessage.backtrace}}</pre>
     {{/tab-contents}}
-    {{#if currentMessage.env}}
-      {{#tab-contents className="env" name="env" hint="show environment" currentMessage=currentMessage}}
+    {{#tab-contents className="env" name="env" hint="show environment" currentMessage=currentMessage }}
+      {{#if currentMessage.env}}
         {{#if showTitle}}
           <h3>Env</h3>
         {{/if}}
         {{env-tab message=currentMessage}}
-      {{/tab-contents}}
-    {{/if}}
+      {{else if loadingEnv}}
+        Loading env...
+      {{else}}
+        No env for this message.
+      {{/if}}
+    {{/tab-contents}}
   {{/tabbed-section}}
 
   {{#if currentMessage}}

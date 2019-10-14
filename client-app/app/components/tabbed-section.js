@@ -14,6 +14,7 @@ export default Component.extend({
     }
     this.set("selected", view);
     view.set("active", true);
+    this.onTabChange(view.name);
   },
 
   addTab(tab) {

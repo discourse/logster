@@ -328,4 +328,44 @@ class TestViewer < Minitest::Test
       assert_equal(404, response.status, "#{path} should have 404'ed")
     end
   end
+
+  def test_messages_endpoint_doesnt_include_envs_when_search_term_absent
+    Logster.store.clear_all
+    env = { "b" => 1, "c" => 2 }
+    msg = Logster.store.report(Logger::INFO, "test", "something hello", env: env)
+    response = request.get("/logsie/messages.json")
+    assert_equal(200, response.status)
+    messages = JSON.parse(response.body)["messages"]
+    assert_equal(1, messages.size)
+    msg = messages.first
+    assert_equal("something hello", msg["message"])
+    assert_nil(msg["env"])
+  end
+
+  def test_messages_endpoint_includes_env_when_there_is_search_term
+    Logster.store.clear_all
+    env = { "b" => 1, "c" => 2 }
+    msg = Logster.store.report(Logger::INFO, "test", "something hello", env: env)
+    response = request.get("/logsie/messages.json?search=something")
+    assert_equal(200, response.status)
+    messages = JSON.parse(response.body)["messages"]
+    assert_equal(1, messages.size)
+    msg = messages.first
+    assert_equal("something hello", msg["message"])
+    assert_includes(msg["env"].values, 1, 2)
+  end
+
+  def test_fetch_env_returns_env_associated_with_message
+    env = { "b" => 1, "c" => 2 }
+    msg = Logster.store.report(Logger::INFO, "test", "something whatever store", env: env)
+    response = request.get("/logsie/fetch-env/#{msg.key}.json")
+    assert_equal(200, response.status)
+    res = JSON.parse(response.body)
+    assert_includes(res.values, 1, 2)
+  end
+
+  def test_fetch_env_returns_404_when_invalid_key
+    response = request.get("/logsie/fetch-env/123456abc.json")
+    assert_equal(404, response.status)
+  end
 end
