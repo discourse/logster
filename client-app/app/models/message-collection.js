@@ -63,45 +63,48 @@ export default Em.Object.extend({
       data.after = opts.after;
     }
 
+    this.set("loading", true);
     return ajax("/messages.json", {
       data: data
-    }).then(data => {
-      // guard against race: ensure the results we're trying to apply
-      //                     match the current search terms
-      if (compare(data.filter, this.get("filter")) != 0) {
-        return;
-      }
-      if (compare(data.search, this.get("search")) != 0) {
-        return;
-      }
+    })
+      .then(data => {
+        // guard against race: ensure the results we're trying to apply
+        //                     match the current search terms
+        if (compare(data.filter, this.get("filter")) != 0) {
+          return;
+        }
+        if (compare(data.search, this.get("search")) != 0) {
+          return;
+        }
 
-      if (data.messages.length > 0) {
-        const newRows = this.toMessages(data.messages);
-        const messages = this.get("messages");
-        if (opts.before) {
-          messages.unshiftObjects(newRows);
-        } else {
-          newRows.forEach(nmsg => {
-            messages.forEach(emsg => {
-              if (emsg.key == nmsg.key) {
-                messages.removeObject(emsg);
-                if (this.get("currentMessage") === emsg) {
-                  // TODO would updateFromJson() work here?
-                  this.set("currentMessage", nmsg);
-                  nmsg.set("selected", emsg.get("selected"));
+        if (data.messages.length > 0) {
+          const newRows = this.toMessages(data.messages);
+          const messages = this.get("messages");
+          if (opts.before) {
+            messages.unshiftObjects(newRows);
+          } else {
+            newRows.forEach(nmsg => {
+              messages.forEach(emsg => {
+                if (emsg.key == nmsg.key) {
+                  messages.removeObject(emsg);
+                  if (this.get("currentMessage") === emsg) {
+                    // TODO would updateFromJson() work here?
+                    this.set("currentMessage", nmsg);
+                    nmsg.set("selected", emsg.get("selected"));
+                  }
                 }
-              }
+              });
             });
-          });
-          messages.addObjects(newRows);
-          if (newRows.length > 0) {
-            increaseTitleCount(newRows.length);
+            messages.addObjects(newRows);
+            if (newRows.length > 0) {
+              increaseTitleCount(newRows.length);
+            }
           }
         }
-      }
-      this.set("total", data.total);
-      return data;
-    });
+        this.set("total", data.total);
+        return data;
+      })
+      .always(() => this.set("loading", false));
   },
 
   reload() {

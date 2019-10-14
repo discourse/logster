@@ -18,6 +18,9 @@ export default Route.extend({
     let backoff = 1;
 
     this.refreshInterval = setInterval(() => {
+      if (model.loading) {
+        return;
+      }
       times += 1;
       const hidden = isHidden();
       let load = !hidden;
