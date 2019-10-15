@@ -12,6 +12,7 @@ export default Controller.extend({
   showFatal: true,
   search: "",
   currentMessage: Em.computed.alias("model.currentMessage"),
+  currentTab: null,
 
   showSettings: computed(function() {
     return Preload.get("patterns_enabled");
@@ -26,6 +27,16 @@ export default Controller.extend({
     return this.site.isMobile;
   }),
 
+  fetchEnv() {
+    const message = this.get("currentMessage");
+    if (message) {
+      this.set("loadingEnv", true);
+      return ajax(`/fetch-env/${message.key}.json`)
+        .then(env => message.set("env", env))
+        .always(() => this.set("loadingEnv", false));
+    }
+  },
+
   actions: {
     expandMessage(message) {
       message.expand();
@@ -38,7 +49,23 @@ export default Controller.extend({
       }
 
       message.set("selected", true);
-      this.set("currentMessage", message);
+      this.setProperties({
+        currentMessage: message,
+        loadingEnv: false
+      });
+      if (!message.env && this.currentTab === "env") {
+        this.fetchEnv();
+      }
+    },
+
+    tabChanged(newTab) {
+      this.setProperties({
+        currentTab: newTab,
+        loadingEnv: false
+      });
+      if (newTab === "env" && !this.get("currentMessage.env")) {
+        this.fetchEnv();
+      }
     },
 
     showMoreBefore() {

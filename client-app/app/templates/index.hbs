@@ -17,8 +17,10 @@
 <div id="bottom-panel">
   {{message-info
     currentMessage=currentMessage
+    loadingEnv=loadingEnv
     removeMessage=(action "removeMessage")
     solveMessage=(action "solveMessage")
+    onTabChange=(action "tabChanged")
     actionsInMenu=actionsInMenu}}
 
   <div class="action-panel">

@@ -98,6 +98,7 @@ module Logster
       before = opts[:before]
       after = opts[:after]
       search = opts[:search]
+      with_env = opts.key?(:with_env) ? opts[:with_env] : true
 
       start, finish = find_location(before, after, limit)
 
@@ -110,7 +111,7 @@ module Logster
       begin
         keys = @redis.lrange(list_key, start, finish) || []
         break unless keys && (keys.count > 0)
-        rows = bulk_get(keys)
+        rows = bulk_get(keys, with_env: with_env)
 
         temp = []
 
@@ -204,14 +205,16 @@ module Logster
       bulk_get(@redis.lrange(list_key, 0, -1))
     end
 
-    def bulk_get(message_keys)
-      envs = @redis.hmget(env_key, message_keys)
-      @redis.hmget(hash_key, message_keys).map!.with_index do |json, ind|
+    def bulk_get(message_keys, with_env: true)
+      envs = @redis.mapped_hmget(env_key, *message_keys) if with_env
+      @redis.hmget(hash_key, message_keys).map! do |json|
         message = Message.from_json(json)
-        env = envs[ind]
-        if !message.env || message.env.size == 0
-          env = env && env.size > 0 ? ::JSON.parse(env) : {}
-          message.env = env
+        if with_env
+          env = envs[message.key]
+          if !message.env || message.env.size == 0
+            env = env && env.size > 0 ? ::JSON.parse(env) : {}
+            message.env = env
+          end
         end
         message
       end

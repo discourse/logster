@@ -156,6 +156,14 @@ module Logster
             [200, {}, ["OK"]]
           elsif resource == "/"
             [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload_json)]]
+          elsif resource =~ /\/fetch-env\/([0-9a-f]+)\.json$/
+            key = $1
+            env = Logster.store.get_env(key)
+            if env
+              [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(env)]]
+            else
+              not_found
+            end
           else
             not_found
           end
@@ -190,6 +198,8 @@ module Logster
           search = (parse_regex(search) || search) if params["regex_search"] == "true"
           opts[:search] = search
         end
+        search = opts[:search]
+        opts[:with_env] = (String === search && search.size > 0) || Regexp === search
 
         payload = {
           messages: @store.latest(opts),

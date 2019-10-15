@@ -46,6 +46,12 @@ export default Component.extend({
   }),
 
   actions: {
+    tabChanged(newTab) {
+      if (this.onTabChange) {
+        this.onTabChange(newTab);
+      }
+    },
+
     protect() {
       this.get("currentMessage").protect();
     },
