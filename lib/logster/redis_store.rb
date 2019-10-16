@@ -24,6 +24,7 @@ module Logster
           return true if @redis.hget(solved_key, solved)
         end
       end
+      apply_max_size_limit(message)
 
       @redis.multi do
         @redis.hset(grouping_key, message.grouping_key, message.key)
@@ -64,7 +65,7 @@ module Logster
 
       @redis.multi do
         @redis.hset(hash_key, message.key, message.to_json(exclude_env: true))
-        @redis.hset(env_key, message.key, (message.env || {}).to_json) if save_env
+        @redis.hset(env_key, message.key, message.env_json) if save_env
         @redis.lrem(list_key, -1, message.key)
         @redis.rpush(list_key, message.key)
       end
@@ -340,7 +341,7 @@ module Logster
 
     def update_message(message)
       @redis.hset(hash_key, message.key, message.to_json(exclude_env: true))
-      @redis.hset(env_key, message.key, (message.env || {}).to_json)
+      @redis.hset(env_key, message.key, message.env_json)
       if message.protected
         @redis.sadd(protected_key, message.key)
       else
@@ -515,6 +516,22 @@ module Logster
     end
 
     private
+
+    def apply_max_size_limit(message)
+      size = message.to_json(exclude_env: true).bytesize
+      env_size = message.env_json.bytesize
+      max_size = Logster.config.maximum_message_size_bytes
+      if size + env_size > max_size
+        # env is most likely the reason for the large size
+        # truncate it so the overall size is < the limit
+        if Array === message.env
+          # the - 1 at the end ensures the size goes a little bit below the limit
+          truncate_at = (message.env.size.to_f * max_size.to_f / (env_size + size)).to_i - 1
+          truncate_at = 1 if truncate_at < 1
+          message.env = message.env[0...truncate_at]
+        end
+      end
+    end
 
     def register_rate_limit(severities, limit, duration, callback)
       severities = [severities] unless severities.is_a?(Array)
