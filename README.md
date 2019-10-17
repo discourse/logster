@@ -43,6 +43,8 @@ Logster can be configured using `Logster.config`:
 - `Logster.config.enable_js_error_reporting` : enable js error reporting from clients
 - `Logster.config.rate_limit_error_reporting` : controls automatic 1 minute rate limiting for JS error reporting.
 - `Logster.config.web_title` : `<title>` tag for logster error page.
+- `Logster.config.enable_custom_patterns_via_ui` : enables a setting page that allows adding suppression patterns via the UI.
+- `Logster.config.maximum_message_size_bytes` : specifiy a size in bytes that a message cannot exceed. Note this isn't 100% accurate, meaning a message may still grow above the limit, but it shouldn't grow by more tha, say, 2000 bytes.
 
 ### Tracking Error Rate
 Logster allows you to register a callback when the rate of errors has exceeded
