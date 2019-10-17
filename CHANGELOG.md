@@ -1,5 +1,13 @@
 # CHANGELOG
 
+- 2019-10-17: 2.4.1
+
+  - PERF: Debounce search field so it doesn't fire a search query at every keystroke.
+  - PERF: Disallow search terms that are fewer than 2 characters long.
+  - PERF: Bypass refresh cycle if previous cycle hasn't finished.
+  - PERF: Defer sending message envs to client until the user requests them.
+  - PERF: Cap message size to 60,000 bytes by default.
+
 - 2019-10-10: 2.4.0
 
   - FEATURE: Allow having retroactive affect when adding suppression patterns
