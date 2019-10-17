@@ -61,6 +61,13 @@ class TestLogger < Minitest::Test
     end
   end
 
+  def test_add_with_one_argument
+    @logger.add(2) { "test" }
+    @logger.add(2)
+    assert_equal 2, @store.calls.length
+    assert_equal "test", @store.calls.first[2]
+  end
+
   class NewLogger < Logster::Logger; end
 
   def test_inherited_logger_backtrace_with_chain

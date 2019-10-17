@@ -57,7 +57,7 @@ module Logster
       (ol && ol[Thread.current.object_id]) || @level
     end
 
-    def add_with_opts(severity, message, progname = progname(), opts = nil, &block)
+    def add_with_opts(severity, message = nil, progname = progname(), opts = nil, &block)
       if severity < level
         return true
       end
