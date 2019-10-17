@@ -705,6 +705,21 @@ class TestRedisStore < Minitest::Test
     end
   end
 
+  def test_store_trims_too_big_envs
+    default = Logster.config.maximum_message_size_bytes
+    Logster.config.maximum_message_size_bytes = 1000
+    message = Logster::Message.new(Logger::INFO, "test", "message")
+    env = [{ key1: "this is my first key", key2: "this is my second key" }] * 40
+    message.env = env
+    @store.save(message)
+    trimmed_message = @store.latest.first
+    assert_equal(13, trimmed_message.env.size)
+    size = message.to_json(exclude_env: true).bytesize + message.env_json.bytesize
+    assert_operator(1000, :>, size)
+  ensure
+    Logster.config.maximum_message_size_bytes = default
+  end
+
   private
 
   def reset_redis

@@ -4,6 +4,7 @@ require 'securerandom'
 module Logster
 
   MAX_GROUPING_LENGTH = 50
+  MAX_MESSAGE_LENGTH = 600
 
   class Message
     LOGSTER_ENV = "_logster_env".freeze
@@ -21,13 +22,14 @@ module Logster
       application_version
     }
 
-    attr_accessor :timestamp, :severity, :progname, :message, :key, :backtrace, :count, :env, :protected, :first_timestamp
+    attr_accessor :timestamp, :severity, :progname, :key, :backtrace, :count, :protected, :first_timestamp
+    attr_reader :message, :env
 
     def initialize(severity, progname, message, timestamp = nil, key = nil, count: 1)
       @timestamp = timestamp || get_timestamp
       @severity = severity
       @progname = progname
-      @message = message
+      @message = truncate_message(message)
       @key = key || SecureRandom.hex
       @backtrace = nil
       @count = count || 1
@@ -53,6 +55,10 @@ module Logster
       h
     end
 
+    def message=(m)
+      @message = truncate_message(m)
+    end
+
     def to_json(opts = nil)
       exclude_env = Hash === opts && opts.delete(:exclude_env)
       JSON.fast_generate(to_h(exclude_env: exclude_env), opts)
@@ -74,6 +80,7 @@ module Logster
     end
 
     def env=(env)
+      @env_json = nil
       @env = self.class.scrub_params(env)
     end
 
@@ -90,6 +97,7 @@ module Logster
       else
         env = self.class.default_env.merge(env)
       end
+      @env_json = nil
       @env = Message.populate_from_env(env)
     end
 
@@ -140,6 +148,10 @@ module Logster
       self.count += other.count || 1
       return false if self.count > Logster::MAX_GROUPING_LENGTH
 
+      size = self.to_json(exclude_env: true).bytesize + self.env_json.bytesize
+      extra_env_size = other.env_json.bytesize
+      return false if size + extra_env_size > Logster.config.maximum_message_size_bytes
+
       other_env = JSON.load JSON.fast_generate other.env
       if Hash === other_env && !other_env.key?("time")
         other_env["time"] = other.timestamp
@@ -153,6 +165,7 @@ module Logster
       else
         Array === other_env ? self.env = [self.env, *other_env] : self.env = [self.env, other_env]
       end
+      @env_json = nil
       true
     end
 
@@ -214,6 +227,10 @@ module Logster
       end
     end
 
+    def env_json
+      @env_json ||= (self.env || {}).to_json
+    end
+
     def self.scrub_params(params)
       if Array === params
         params.map! { |p| scrub_params(p) }
@@ -232,6 +249,11 @@ module Logster
     end
 
     protected
+
+    def truncate_message(msg)
+      return msg unless msg
+      msg.size <= MAX_MESSAGE_LENGTH ? msg : msg[0...MAX_MESSAGE_LENGTH] + "..."
+    end
 
     def get_timestamp
       (Time.new.to_f * 1000).to_i

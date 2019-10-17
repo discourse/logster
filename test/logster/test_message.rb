@@ -148,4 +148,28 @@ class TestMessage < MiniTest::Test
     assert_includes(msg.to_json, test_hash.to_json)
     refute_includes(msg.to_json(exclude_env: true), test_hash.to_json)
   end
+
+  def test_title_is_truncated_when_too_large
+    msg = Logster::Message.new(0, "", "a" * 1000)
+    # 3 is the ... at the end to indicate truncated message
+    assert_equal(600 + 3, msg.message.size)
+  end
+
+  def test_env_is_not_merged_into_similar_message_if_size_will_be_too_large
+    default = Logster.config.maximum_message_size_bytes
+    Logster.config.maximum_message_size_bytes = 1000
+    message = Logster::Message.new(Logger::INFO, "test", "message", count: 13)
+    env = [{ key1: "this is my first key", key2: "this is my second key" }] * 13
+    message.env = env
+
+    message2 = Logster::Message.new(Logger::INFO, "test", "message")
+    message2.env = env.first
+    message.merge_similar_message(message2)
+
+    # env isn't merged, but count is incremented
+    assert_equal(13, message.env.size)
+    assert_equal(14, message.count)
+  ensure
+    Logster.config.maximum_message_size_bytes = default
+  end
 end

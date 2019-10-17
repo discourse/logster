@@ -11,7 +11,8 @@ module Logster
       :enable_js_error_reporting,
       :environments,
       :rate_limit_error_reporting,
-      :web_title
+      :web_title,
+      :maximum_message_size_bytes
     )
 
     attr_writer :subdirectory
@@ -25,6 +26,7 @@ module Logster
       @enable_custom_patterns_via_ui = false
       @rate_limit_error_reporting = true
       @enable_js_error_reporting = true
+      @maximum_message_size_bytes = 60_000
 
       @allow_grouping = false
 
