@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2019-10-28: 2.4.2
+
+  - FIX: wrong number of arguments when adding message using a block (#98)
+
 - 2019-10-17: 2.4.1
 
   - PERF: Debounce search field so it doesn't fire a search query at every keystroke.
