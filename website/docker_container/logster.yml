@@ -1,4 +1,4 @@
-base_image: "samsaffron/discourse_base_21:1.0"
+base_image: "discourse/base:release"
 
 update_pups: false
 
@@ -7,11 +7,9 @@ params:
 
 templates:
   - "templates/redis.template.yml"
-  - "templates/sshd.template.yml"
 
 expose:
   - "8081:80"
-  - "2228:22"
 
 volumes:
   - volume:
@@ -20,6 +18,7 @@ volumes:
 
 hooks:
   after_redis:
+    - exec: gem install bundler
     - exec:
         cmd:
           - useradd logster -s /bin/bash -m -U
@@ -92,4 +91,3 @@ hooks:
           #!/bin/sh
           exec 2>&1
           exec /usr/sbin/nginx
-
