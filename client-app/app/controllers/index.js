@@ -14,6 +14,8 @@ export default Controller.extend({
   currentMessage: Em.computed.alias("model.currentMessage"),
   currentTab: null,
 
+  queryParams: ["search"],
+
   showSettings: computed(function() {
     return Preload.get("patterns_enabled");
   }),
