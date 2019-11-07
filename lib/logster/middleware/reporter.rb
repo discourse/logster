@@ -25,14 +25,14 @@ module Logster
         if path == @error_path
 
           if !Logster.config.enable_js_error_reporting
-            return [403, {}, "Access Denied"]
+            return [403, {}, ["Access Denied"]]
           end
 
           Logster.config.current_context.call(env) do
             if Logster.config.rate_limit_error_reporting
               req = Rack::Request.new(env)
               if Logster.store.rate_limited?(req.ip, perform: true)
-                return [429, {}, "Rate Limited"]
+                return [429, {}, ["Rate Limited"]]
               end
             end
             report_js_error(env)
