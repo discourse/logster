@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../../test_helper'
 require 'rack'
 require 'logster/redis_store'
@@ -126,7 +128,7 @@ class TestViewer < Minitest::Test
       params: { pattern: "disallowedpattern" }
     )
     assert_equal(404, response.status)
-    Logster::PATTERNS.each do |klass|
+    Logster::Pattern::ALL.each do |klass|
       assert_equal(0, klass.find_all.size)
     end
   ensure

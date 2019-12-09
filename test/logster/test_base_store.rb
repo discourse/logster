@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../test_helper'
 require 'logster/base_store'
 require 'logster/ignore_pattern'

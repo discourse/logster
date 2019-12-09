@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SidekiqLogsterReporter
   def call(ex, context = {})
     # Pass context to Logster

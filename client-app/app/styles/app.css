@@ -246,6 +246,17 @@ i.warning {
   right: 0;
 }
 
+#bottom-panel.group-view .message-info {
+  top: 43px;
+}
+
+.nav-controls.group-nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-bottom: 1px solid #ddd;
+}
+
 .action-panel {
   position: absolute;
   left: 0;
@@ -529,7 +540,7 @@ label span {
   padding: 10px;
 }
 
-#bottom-panel:not(.full) .nav-controls {
+#bottom-panel:not(.full) .nav-controls.env-nav {
   position: sticky;
   position: -webkit-sticky;
   position: -moz-sticky;
@@ -541,7 +552,7 @@ label span {
   border-bottom: 1px solid #ddd;
 }
 
-.env-number {
+.current-number {
   margin: 0 7px;
 }
 

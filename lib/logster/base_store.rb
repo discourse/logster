@@ -131,6 +131,18 @@ module Logster
       not_implemented
     end
 
+    # find all pattern groups; returns an array of Logster::Group
+    def find_pattern_groups(load_messages: true)
+    end
+
+    # saves an instance of Logster::Group
+    def save_pattern_group(group)
+    end
+
+    # removes the Logster::Group instance associated with the given pattern
+    def remove_pattern_group(pattern)
+    end
+
     def report(severity, progname, msg, opts = {})
       return if (!msg || (String === msg && msg.empty?)) && skip_empty
       return if level && severity < level
@@ -164,7 +176,7 @@ module Logster
       end
 
       if Logster.config.enable_custom_patterns_via_ui || allow_custom_patterns
-        custom_ignore = @patterns_cache.fetch do
+        custom_ignore = @patterns_cache.fetch(Logster::SuppressionPattern::CACHE_KEY) do
           Logster::SuppressionPattern.find_all(store: self)
         end
         return if custom_ignore.any? do |pattern|
@@ -194,10 +206,29 @@ module Logster
         save message
         message
       end
+
+      message = similar || message
+
+      if Logster.config.enable_custom_patterns_via_ui || allow_custom_patterns
+        grouping_patterns = @patterns_cache.fetch(Logster::GroupingPattern::CACHE_KEY) do
+          Logster::GroupingPattern.find_all(store: self)
+        end
+
+        grouping_patterns.each do |pattern|
+          if message =~ pattern
+            group = find_pattern_groups() { |pat| pat == pattern }[0]
+            group ||= Logster::Group.new(pattern.inspect)
+            group.add_message(message)
+            save_pattern_group(group) if group.changed?
+            break
+          end
+        end
+      end
+      message
     end
 
-    def clear_suppression_patterns_cache
-      @patterns_cache.clear
+    def clear_patterns_cache(key)
+      @patterns_cache.clear(key)
     end
 
     private

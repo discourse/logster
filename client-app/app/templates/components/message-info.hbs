@@ -17,15 +17,20 @@
       <pre>{{currentMessage.backtrace}}</pre>
     {{/tab-contents}}
     {{#tab-contents className="env" name="env" hint="show environment" currentMessage=currentMessage }}
-      {{#if currentMessage.env}}
-        {{#if showTitle}}
-          <h3>Env</h3>
+      {{#if currentMessage}}
+        {{#if currentMessage.env}}
+          {{#if showTitle}}
+            <h3>Env</h3>
+          {{/if}}
+          {{env-tab 
+            message=currentMessage
+            currentEnvPosition=currentEnvPosition
+            envChangedAction=envChangedAction}}
+        {{else if loadingEnv}}
+          Loading env...
+        {{else}}
+          No env for this message.
         {{/if}}
-        {{env-tab message=currentMessage}}
-      {{else if loadingEnv}}
-        Loading env...
-      {{else}}
-        No env for this message.
       {{/if}}
     {{/tab-contents}}
   {{/tabbed-section}}

@@ -9,18 +9,28 @@
         {{/if}}
       </div>
     {{/if}}
-    {{#each model.messages as |message|}}
-      {{message-row model=message selectedMessage=(action "selectMessage")}}
+    {{#each model.rows as |row|}}
+      {{message-row model=row selectRow=(action "selectRowAction" row)}}
     {{/each}}
   </div>
 </div>
-<div id="bottom-panel">
+<div id="bottom-panel" class="{{if model.currentRow.group "group-view"}}">
+  {{#if model.currentRow.group}}
+    {{page-nav
+      list=model.currentRow.messages
+      position=model.currentGroupedMessagesPosition
+      resetPositionOnChange=model.currentRow.key
+      extraClasses="group-nav"
+      navigate=(action "groupedMessageChangedAction")}}
+  {{/if}}
   {{message-info
-    currentMessage=currentMessage
+    currentMessage=model.currentMessage
     loadingEnv=loadingEnv
     removeMessage=(action "removeMessage")
     solveMessage=(action "solveMessage")
-    onTabChange=(action "tabChanged")
+    onTabChange=(action "tabChangedAction")
+    envChangedAction=(action "envChangedAction")
+    currentEnvPosition=model.currentEnvPosition
     actionsInMenu=actionsInMenu}}
 
   <div class="action-panel">

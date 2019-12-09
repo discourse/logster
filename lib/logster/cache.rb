@@ -1,20 +1,21 @@
+# frozen_string_literal: true
+
 module Logster
   class Cache
     def initialize(age = 2)
       @age = age
-      @hash = { created_at: Process.clock_gettime(Process::CLOCK_MONOTONIC) }
+      @hash = {}
     end
 
-    def fetch
-      if !@hash.key?(:data) || @hash[:created_at] + @age < Process.clock_gettime(Process::CLOCK_MONOTONIC)
-        @hash[:data] = yield
-        @hash[:created_at] = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    def fetch(key)
+      if !@hash.key?(key) || @hash[key][:created_at] + @age < Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        @hash[key] = { data: yield, created_at: Process.clock_gettime(Process::CLOCK_MONOTONIC) }
       end
-      @hash[:data]
+      @hash[key][:data]
     end
 
-    def clear
-      @hash.delete(:data)
+    def clear(key)
+      @hash.delete(key)
     end
   end
 end

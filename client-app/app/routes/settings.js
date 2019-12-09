@@ -18,11 +18,13 @@ export default Route.extend({
       .reject(p => p.hard)
       .map(hash => Pattern.create(hash));
 
+    const grouping = model.grouping.map(hash => Pattern.create(hash));
     const showCodedSuppression = codedSuppression.length > 0;
     controller.setProperties({
       showCodedSuppression,
       codedSuppression,
-      customSuppression
+      customSuppression,
+      grouping
     });
   }
 });

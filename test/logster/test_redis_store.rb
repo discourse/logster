@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../test_helper'
 require 'logster/redis_store'
 require 'rack'
@@ -21,6 +23,55 @@ class TestRedisStore < Minitest::Test
 
     assert_equal(0, latest.length)
     assert_nil(@store.get_env(msg.key))
+  end
+
+  def test_delete_with_custom_grouping_patterns
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::GroupingPattern.new(/delete/, store: @store).save
+    msg1 = @store.report(Logger::WARN, '', 'this will be deleted')
+    msg2 = @store.report(Logger::WARN, '', 'delete this plz')
+
+    groups = @store.find_pattern_groups
+    assert_equal 1, groups.size
+    assert_equal [msg1.key, msg2.key], groups[0].messages_keys
+
+    @store.delete(msg1)
+    groups = @store.find_pattern_groups
+    assert_equal 1, groups.size
+    assert_equal [msg2.key], groups[0].messages_keys
+
+    @store.delete(msg2)
+    groups = @store.find_pattern_groups
+    assert_equal 0, groups.size
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_bulk_delete_with_custom_grouping_patterns
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::GroupingPattern.new(/delete/, store: @store).save
+    keys = []
+    gkeys = []
+    6.times do |n|
+      m = @store.report(Logger::WARN, '', "#{n} delete")
+      keys << m.key
+      gkeys << m.grouping_key
+    end
+
+    groups = @store.find_pattern_groups
+    assert_equal 1, groups.size
+    assert_equal keys, groups[0].messages_keys
+
+    @store.bulk_delete(keys[0..2], gkeys[0..2])
+    groups = @store.find_pattern_groups
+    assert_equal 1, groups.size
+    assert_equal keys[3..5], groups[0].messages_keys
+
+    @store.bulk_delete(keys, gkeys)
+    groups = @store.find_pattern_groups
+    assert_equal 0, groups.size
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
   end
 
   def test_latest
@@ -76,7 +127,58 @@ class TestRedisStore < Minitest::Test
     messages = @store.latest(limit: 10, before: messages[0].key)
     assert_equal("A", messages[0].message)
     assert_equal(10, messages.length)
+  end
 
+  def test_latest_with_custom_grouping
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::GroupingPattern.new(/group 1/, store: @store).save
+    Logster::GroupingPattern.new(/group 2/, store: @store).save
+    msg1 = @store.report(Logger::WARN, '', 'first message')
+    group_1_keys = []
+    3.times { |n| group_1_keys << @store.report(Logger::WARN, '', "group 1 #{n}").key }
+    msg2 = @store.report(Logger::WARN, '', 'second message')
+    group_1_keys << @store.report(Logger::WARN, '', "group 1 3").key
+    msg3 = @store.report(Logger::WARN, '', 'third message')
+    group_2_keys = []
+    3.times { |n| group_2_keys << @store.report(Logger::WARN, '', "group 2 #{n}").key }
+    msg4 = @store.report(Logger::WARN, '', 'fourth message')
+
+    results = @store.latest
+    assert_equal [msg1.key, msg2.key, "/group 1/", msg3.key, "/group 2/", msg4.key], results.map(&:key)
+    groups = results.select { |r| r.class == Logster::Group::GroupWeb }
+    assert_equal(
+      [group_1_keys.last, group_2_keys.last],
+      groups.map(&:row_id)
+    )
+    assert_equal 4, groups[0].messages.size
+    assert_equal 3, groups[1].messages.size
+
+    results = @store.latest(before: groups[0].row_id, included_groups: groups.map(&:key))
+    assert_equal [msg1.key, msg2.key], results.map(&:key)
+
+    results = @store.latest(before: groups[1].row_id, included_groups: [groups[1].key])
+    assert_equal [msg1.key, msg2.key, "/group 1/", msg3.key], results.map(&:key)
+
+    results = @store.latest(before: msg2.key, included_groups: groups.map(&:key))
+    assert_equal [msg1.key], results.map(&:key)
+
+    results = @store.latest(after: groups[0].row_id)
+    assert_equal [msg3.key, "/group 2/", msg4.key], results.map(&:key)
+
+    results = @store.latest(after: msg2.key)
+    assert_equal ["/group 1/", msg3.key, "/group 2/", msg4.key], results.map(&:key)
+    assert_equal 4, results[0].messages.size
+
+    results = @store.latest(after: msg4.key)
+    assert_equal 0, results.size
+
+    group_2_keys << @store.report(Logger::WARN, '', "group 2 3").key
+    results = @store.latest(after: msg4.key)
+    assert_equal ["/group 2/"], results.map(&:key)
+    assert_equal group_2_keys.last, results[0].row_id
+    assert_equal 4, results[0].messages.size
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
   end
 
   def test_get
@@ -259,6 +361,32 @@ class TestRedisStore < Minitest::Test
     assert_equal("C", latest[1].message)
     assert(env <= latest[0].env)
     assert(env <= latest[1].env)
+  end
+
+  def test_clear_deletes_pattern_groups_if_not_protected
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster.config.allow_grouping = true
+    Logster::GroupingPattern.new(/discourse/, store: @store).save
+    Logster::GroupingPattern.new(/logster/, store: @store).save
+    msg = @store.report(Logger::WARN, '', 'discourse')
+    @store.protect(msg.key)
+    @store.report(Logger::WARN, '', 'logster')
+    groups = @store.find_pattern_groups
+    assert_equal 2, groups.size
+
+    @store.clear
+    groups = @store.find_pattern_groups
+    assert_equal 1, groups.size
+    assert_equal msg.key, groups[0].messages_keys[0]
+    assert_equal '/discourse/', groups[0].key
+
+    @store.unprotect(msg.key)
+    @store.clear
+    groups = @store.find_pattern_groups
+    assert_equal 0, groups.size
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+    Logster.config.allow_grouping = false
   end
 
   def test_hash_cleanup
@@ -718,6 +846,103 @@ class TestRedisStore < Minitest::Test
     assert_operator(1000, :>, size)
   ensure
     Logster.config.maximum_message_size_bytes = default
+  end
+
+  def test_custom_grouping_patterns
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::GroupingPattern.new(/delete/, store: @store).save
+    msg1 = @store.report(Logger::WARN, '', 'delete this plz')
+    msg2 = @store.report(Logger::WARN, '', 'delete that plz')
+    group = @store.find_pattern_groups(load_messages: true)[0]
+    assert_equal 2, group.count
+    assert_equal "/delete/", group.key
+    assert_equal [msg1.key, msg2.key], group.messages_keys
+    assert_equal msg2.timestamp, group.timestamp
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_custom_grouping_patterns_with_similar_messages_grouping
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster.config.allow_grouping = true
+    Logster::GroupingPattern.new(/delete/, store: @store).save
+    backtrace = caller
+    @store.report(Logger::WARN, '', 'delete this plz', backtrace: backtrace, timestamp: 1)
+    msg2 = @store.report(Logger::WARN, '', 'delete that plz', backtrace: backtrace, timestamp: 2)
+    msg3 = @store.report(Logger::WARN, '', 'delete this plz', backtrace: backtrace, timestamp: 3)
+    group = @store.find_pattern_groups(load_messages: false)[0]
+    assert_equal 2, group.count
+    assert_equal [msg2.key, msg3.key], group.messages_keys
+    assert_equal msg3.timestamp, group.timestamp
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+    Logster.config.allow_grouping = false
+  end
+
+  def test_a_single_message_can_be_in_one_grouping_pattern
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::GroupingPattern.new(/delete/, store: @store).save
+    Logster::GroupingPattern.new(/env/, store: @store).save
+    @store.report(Logger::WARN, '', 'delete and env')
+    groups = @store.find_pattern_groups
+    assert_equal 1, groups.size
+    assert_includes ["/delete/", "/env/"], groups[0].key
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_find_pattern_groups_works_correctly
+    Logster.config.enable_custom_patterns_via_ui = true
+    with_search = Logster::GroupingPattern.new(/with search/, store: @store)
+    with_search.save
+    Logster::GroupingPattern.new(/pattern group/, store: @store).save
+
+    groups = @store.find_pattern_groups
+    assert_equal 0, groups.size # because there are no messages yet
+
+    2.times do |n|
+      @store.report(Logger::WARN, '', "with search #{n}")
+      @store.report(Logger::WARN, '', "pattern group #{n}")
+    end
+    groups = @store.find_pattern_groups
+    assert_equal 2, groups.size
+    groups.each do |g|
+      assert_equal 2, g.count
+      assert_nil g.messages
+    end
+
+    groups = @store.find_pattern_groups(load_messages: true)
+    assert_equal 2, groups.size
+    groups.each do |g|
+      assert_equal 2, g.count
+      assert_equal 2, g.messages.size
+      g.messages.each { |m| assert Logster::Message === m }
+    end
+
+    groups = @store.find_pattern_groups(load_messages: true) { |pat| pat == with_search.pattern }
+    assert_equal 1, groups.size
+    assert_equal 2, groups[0].count
+    assert groups[0].messages.all? { |m| m.message =~ /with search/ }
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_trimming_backlog_removes_messages_from_custom_grouping
+    prev_max_backlog = @store.max_backlog
+    @store.max_backlog = 4
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::GroupingPattern.new(/trim/, store: @store).save
+    keys = []
+    5.times do |n|
+      keys << @store.report(Logger::WARN, '', "trim backlog #{n}").key
+    end
+    groups = @store.find_pattern_groups
+    assert_equal 1, groups.size
+    assert_equal 4, groups[0].count
+    assert_equal keys[1..-1], groups[0].messages_keys
+  ensure
+    @store.max_backlog = prev_max_backlog
+    Logster.config.enable_custom_patterns_via_ui = false
   end
 
   private

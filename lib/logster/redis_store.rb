@@ -39,7 +39,12 @@ module Logster
     end
 
     def delete(msg)
+      groups = find_pattern_groups() { |pat| msg.message =~ pat }
       @redis.multi do
+        groups.each do |group|
+          group.remove_message(msg)
+          save_pattern_group(group) if group.changed?
+        end
         @redis.hdel(hash_key, msg.key)
         @redis.hdel(env_key, msg.key)
         @redis.hdel(grouping_key, msg.grouping_key)
@@ -48,7 +53,12 @@ module Logster
     end
 
     def bulk_delete(message_keys, grouping_keys)
+      groups = find_pattern_groups(load_messages: true)
       @redis.multi do
+        groups.each do |group|
+          group.messages = group.messages.reject { |m| message_keys.include?(m.key) }
+          save_pattern_group(group) if group.changed?
+        end
         @redis.hdel(hash_key, message_keys)
         @redis.hdel(env_key, message_keys)
         @redis.hdel(grouping_key, grouping_keys)
@@ -100,19 +110,21 @@ module Logster
       after = opts[:after]
       search = opts[:search]
       with_env = opts.key?(:with_env) ? opts[:with_env] : true
+      included_groups = opts[:included_groups]&.dup || []
 
       start, finish = find_location(before, after, limit)
 
       return [] unless start && finish
 
       results = []
+      pattern_groups = find_pattern_groups(load_messages: true)
 
       direction = after ? 1 : -1
 
       begin
         keys = @redis.lrange(list_key, start, finish) || []
-        break unless keys && (keys.count > 0)
-        rows = bulk_get(keys, with_env: with_env)
+        break if !keys || keys.count <= 0
+        rows = bulk_get(keys, with_env: with_env).reverse
 
         temp = []
 
@@ -121,9 +133,18 @@ module Logster
           row = nil if severity && !severity.include?(row.severity)
 
           row = filter_search(row, search)
-          temp << row if row
+          if row
+            group = pattern_groups.find { |g| g.messages_keys.include?(row.key) }
+            if group && !included_groups.include?(group.key)
+              included_groups << group.key
+              temp << serialize_group(group, row.key)
+            elsif !group
+              temp << row
+            end
+          end
         end
 
+        temp.reverse!
         if direction == -1
           results = temp + results
         else
@@ -147,6 +168,8 @@ module Logster
       if keys.empty?
         @redis.del(hash_key)
         @redis.del(env_key)
+        @redis.del(pattern_groups_key)
+        @redis.del(grouping_key)
       else
         protected = @redis.mapped_hmget(hash_key, *keys)
         protected_env = @redis.mapped_hmget(env_key, *keys)
@@ -169,6 +192,10 @@ module Logster
             @redis.rpush(list_key, message_key)
           end
         end
+        find_pattern_groups(load_messages: true).each do |group|
+          group.messages = group.messages.select { |m| sorted.include?(m.key) }
+          save_pattern_group(group) if group.changed?
+        end
       end
     end
 
@@ -182,7 +209,8 @@ module Logster
       @redis.del(grouping_key)
       @redis.del(solved_key)
       @redis.del(ignored_logs_count_key)
-      Logster::PATTERNS.each do |klass|
+      @redis.del(pattern_groups_key)
+      Logster::Pattern::ALL.each do |klass|
         @redis.del(klass.set_name)
       end
       @redis.keys.each do |key|
@@ -202,13 +230,15 @@ module Logster
       message
     end
 
-    def get_all_messages
-      bulk_get(@redis.lrange(list_key, 0, -1))
+    def get_all_messages(with_env: true)
+      bulk_get(@redis.lrange(list_key, 0, -1), with_env: with_env)
     end
 
     def bulk_get(message_keys, with_env: true)
+      return [] if !message_keys || message_keys.size == 0
       envs = @redis.mapped_hmget(env_key, *message_keys) if with_env
-      @redis.hmget(hash_key, message_keys).map! do |json|
+      messages = @redis.hmget(hash_key, message_keys).map! do |json|
+        next if !json || json.size == 0
         message = Message.from_json(json)
         if with_env
           env = envs[message.key]
@@ -219,6 +249,8 @@ module Logster
         end
         message
       end
+      messages.compact!
+      messages
     end
 
     def get_env(message_key)
@@ -301,6 +333,45 @@ module Logster
       limited
     end
 
+    def find_pattern_groups(load_messages: false)
+      patterns = @patterns_cache.fetch(Logster::GroupingPattern::CACHE_KEY) do
+        Logster::GroupingPattern.find_all(store: self)
+      end
+      patterns = patterns.select do |pattern|
+        if block_given?
+          yield(pattern)
+        else
+          true
+        end
+      end
+      return [] if patterns.size == 0
+      mapped = patterns.map(&:inspect)
+      jsons = @redis.hmget(pattern_groups_key, mapped)
+      jsons.map! do |json|
+        if json && json.size > 0
+          group = Logster::Group.from_json(json)
+          if load_messages
+            group.messages = bulk_get(group.messages_keys, with_env: false)
+          end
+          group
+        end
+      end
+      jsons.compact!
+      jsons
+    end
+
+    def save_pattern_group(group)
+      if group.count == 0
+        @redis.hdel(pattern_groups_key, group.key)
+      else
+        @redis.hset(pattern_groups_key, group.key, group.to_json)
+      end
+    end
+
+    def remove_pattern_group(pattern)
+      @redis.hdel(pattern_groups_key, pattern.inspect)
+    end
+
     protected
 
     def clear_solved(count = nil)
@@ -325,9 +396,7 @@ module Logster
         while removed_key = @redis.lpop(list_key)
           unless @redis.sismember(protected_key, removed_key)
             rmsg = get removed_key
-            @redis.hdel(hash_key, rmsg.key)
-            @redis.hdel(env_key, rmsg.key)
-            @redis.hdel(grouping_key, rmsg.grouping_key)
+            delete(rmsg)
             break
           else
             removed_keys << removed_key
@@ -515,7 +584,27 @@ module Logster
       "__LOGSTER__IP_RATE_LIMIT_#{ip_address}"
     end
 
+    def pattern_groups_key
+      @pattern_groups_key ||= "__LOGSTER__PATTERN_GROUPS_KEY__MAP"
+    end
+
     private
+
+    def serialize_group(group, row_id)
+      # row_id should be the key of the most recent *message* that is
+      # included in the group.
+      # It's used by the client in the before (not after) query param
+      # when you hit load more and the first row is a group.
+      # The server uses this info (row_id) to know where it needs to
+      # start scanning messages when looking up older messages.
+      Logster::Group::GroupWeb.new(
+        group.key,
+        group.count,
+        group.timestamp,
+        group.messages,
+        row_id
+      )
+    end
 
     def apply_max_size_limit(message)
       size = message.to_json(exclude_env: true).bytesize

@@ -1,19 +1,22 @@
+# frozen_string_literal: true
+
 module Logster
   class SuppressionPattern < Pattern
+    CACHE_KEY = :suppression
     def self.set_name
       "__LOGSTER__suppression_patterns_set".freeze
     end
 
     def save(args = {})
       super
-      @store.clear_suppression_patterns_cache
+      @store.clear_patterns_cache(CACHE_KEY)
       retro_delete_messages if args[:retroactive]
     end
 
     def destroy(clear_cache: true) # arg used in tests
       super()
       @store.remove_ignore_count(self.to_s)
-      @store.clear_suppression_patterns_cache if clear_cache
+      @store.clear_patterns_cache(CACHE_KEY) if clear_cache
     end
 
     private

@@ -4,27 +4,27 @@ import { buildHashString } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
 
 export default Component.extend({
-  current: 1,
-
   didUpdateAttrs() {
-    this.setProperties({
-      current: 1,
-      expanded: null
-    });
+    this.set("expanded", null);
   },
+
+  currentEnv: computed("isEnvArray", "currentEnvPosition", function() {
+    if (this.isEnvArray) {
+      return this.message.env[this.currentEnvPosition];
+    } else {
+      return this.message.env;
+    }
+  }),
 
   isEnvArray: computed("message.env", function() {
     return Array.isArray(this.get("message.env"));
   }),
 
-  html: computed("isEnvArray", "current", "expanded.[]", function() {
-    if (!this.get("isEnvArray")) {
+  html: computed("isEnvArray", "currentEnv", "expanded.[]", function() {
+    if (!this.isEnvArray) {
       return buildHashString(this.get("message.env"));
     } else {
-      const currentEnv = Em.$.extend(
-        {},
-        this.get("message.env")[this.get("current") - 1]
-      );
+      const currentEnv = Em.$.extend({}, this.get("currentEnv"));
       const expandableKeys = Preload.get("env_expandable_keys") || [];
       expandableKeys.forEach(key => {
         if (currentEnv.hasOwnProperty(key) && !Array.isArray(currentEnv[key])) {
@@ -55,26 +55,6 @@ export default Component.extend({
       } else {
         this.get("expanded").pushObject(dataKey);
       }
-    }
-  },
-
-  disableBackButtons: computed("current", function() {
-    return this.get("current") === 1;
-  }),
-
-  disableForwardButtons: computed("current", "message.env.length", function() {
-    return this.get("current") === this.get("message.env.length");
-  }),
-
-  actions: {
-    takeStep(dir) {
-      const amount = dir === "back" ? -1 : 1;
-      this.set("current", this.get("current") + amount);
-    },
-
-    bigJump(dir) {
-      const newCurrent = dir === "back" ? 1 : this.get("message.env.length");
-      this.set("current", newCurrent);
     }
   }
 });
