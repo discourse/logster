@@ -945,6 +945,34 @@ class TestRedisStore < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = false
   end
 
+  def test_adding_grouping_pattern_works_retroactively
+    Logster.config.enable_custom_patterns_via_ui = true
+    @store.report(Logger::WARN, '', 'trim this plz')
+    @store.report(Logger::WARN, '', 'trim that plz')
+    Logster::GroupingPattern.new(/trim/, store: @store).save
+    results = @store.latest
+    assert_equal 1, results.size
+    assert_equal 2, results[0].messages.size
+
+    @store.report(Logger::WARN, '', 'trim this more plz')
+    results = @store.latest
+    assert_equal 1, results.size
+    assert_equal 3, results[0].messages.size
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_adding_grouping_pattern_doesnt_add_a_message_to_more_than_one_group
+    Logster.config.enable_custom_patterns_via_ui = true
+    @store.report(Logger::WARN, '', 'trim this plz')
+    Logster::GroupingPattern.new(/trim/, store: @store).save
+    Logster::GroupingPattern.new(/this/, store: @store).save
+    groups = @store.find_pattern_groups
+    assert_equal 1, groups.size
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
   private
 
   def reset_redis
