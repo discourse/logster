@@ -1,6 +1,6 @@
 import Controller from "@ember/controller";
 import { ajax } from "client-app/lib/utilities";
-import { observer, computed } from "@ember/object";
+import { computed } from "@ember/object";
 import Preload from "client-app/lib/preload";
 import { debounce } from "@ember/runloop";
 
@@ -65,11 +65,14 @@ export default Controller.extend({
       msg.set("selected", false);
       this.model.set("total", this.model.total - 1);
       let removedRow = false;
+      let messageIndex = 0;
 
       if (group) {
+        messageIndex = group.messages.indexOf(msg);
         group.messages.removeObject(msg);
-        group.set("count", group.count - 1);
-        if (group.count === 0) {
+        messageIndex = Math.min(messageIndex, group.messages.length - 1);
+        group.decrementProperty("count");
+        if (group.messages.length === 0) {
           rows.removeObject(group);
           removedRow = true;
         }
@@ -86,6 +89,8 @@ export default Controller.extend({
         } else {
           this.model.reload();
         }
+      } else if (group) {
+        this.model.selectRow(rows[idx], { messageIndex });
       }
     },
 

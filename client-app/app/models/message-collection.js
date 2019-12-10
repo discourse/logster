@@ -52,12 +52,16 @@ export default EmberObject.extend({
     }
     row.set("selected", true);
     const currentGroupedMessagesPosition = opts["messageIndex"] || 0;
+    const shouldRefresh =
+      currentGroupedMessagesPosition === this.currentGroupedMessagesPosition;
     this.setProperties({
       currentRow: row,
       loadingEnv: false,
       currentGroupedMessagesPosition,
       currentEnvPosition: 0
     });
+    if (shouldRefresh)
+      this.notifyPropertyChange("currentGroupedMessagesPosition");
     this.fetchEnv();
   },
 
@@ -141,6 +145,9 @@ export default EmberObject.extend({
 
     if (opts.before) {
       data.before = opts.before;
+      if (opts.knownGroups) {
+        data.known_groups = opts.knownGroups;
+      }
     }
 
     if (opts.after) {
@@ -242,11 +249,11 @@ export default EmberObject.extend({
     const rows = this.rows;
     const firstLog = rows[0];
     const firstKey = firstLog.group ? firstLog.row_id : firstLog.key;
-    const includedGroups = rows.filterBy("group").mapBy("regex");
+    const knownGroups = rows.filterBy("group").mapBy("regex");
 
     this.load({
       before: firstKey,
-      included_groups: includedGroups
+      knownGroups
     }).then(data => this.updateCanLoadMore(data));
   },
 

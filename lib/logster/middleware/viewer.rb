@@ -205,8 +205,8 @@ module Logster
           opts[:search] = search
         end
         search = opts[:search]
-        if params["included_groups"]
-          opts[:included_groups] = params["included_groups"]
+        if params["known_groups"]
+          opts[:known_groups] = params["known_groups"]
         end
         opts[:with_env] = (String === search && search.size > 0) || Regexp === search
 

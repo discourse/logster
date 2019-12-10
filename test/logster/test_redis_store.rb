@@ -153,13 +153,13 @@ class TestRedisStore < Minitest::Test
     assert_equal 4, groups[0].messages.size
     assert_equal 3, groups[1].messages.size
 
-    results = @store.latest(before: groups[0].row_id, included_groups: groups.map(&:key))
+    results = @store.latest(before: groups[0].row_id, known_groups: groups.map(&:key))
     assert_equal [msg1.key, msg2.key], results.map(&:key)
 
-    results = @store.latest(before: groups[1].row_id, included_groups: [groups[1].key])
+    results = @store.latest(before: groups[1].row_id, known_groups: [groups[1].key])
     assert_equal [msg1.key, msg2.key, "/group 1/", msg3.key], results.map(&:key)
 
-    results = @store.latest(before: msg2.key, included_groups: groups.map(&:key))
+    results = @store.latest(before: msg2.key, known_groups: groups.map(&:key))
     assert_equal [msg1.key], results.map(&:key)
 
     results = @store.latest(after: groups[0].row_id)

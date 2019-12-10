@@ -110,7 +110,7 @@ module Logster
       after = opts[:after]
       search = opts[:search]
       with_env = opts.key?(:with_env) ? opts[:with_env] : true
-      included_groups = opts[:included_groups]&.dup || []
+      known_groups = opts[:known_groups]&.dup || []
 
       start, finish = find_location(before, after, limit)
 
@@ -135,8 +135,8 @@ module Logster
           row = filter_search(row, search)
           if row
             group = pattern_groups.find { |g| g.messages_keys.include?(row.key) }
-            if group && !included_groups.include?(group.key)
-              included_groups << group.key
+            if group && !known_groups.include?(group.key)
+              known_groups << group.key
               temp << serialize_group(group, row.key)
             elsif !group
               temp << row
