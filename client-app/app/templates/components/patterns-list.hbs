@@ -23,8 +23,6 @@
 
     {{#if showCounter}}
       <input disabled=true title="Number of logs that have been suppressed by this pattern" class="count shrink" value={{pattern.count}}>
-    {{/if}}
-    {{#if showResetCounter}}
       <button {{action "resetCount" pattern}} class="btn no-text reset shrink" title="Reset count of suppressed logs" disabled={{pattern.zeroCount}}>
         <i class="fa fa-rotate-right"></i>
       </button>

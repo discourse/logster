@@ -37,5 +37,8 @@ class Logster::TestStore < Logster::BaseStore
     # Do nothing
   end
 
+  def increment_ignore_count(pattern)
+  end
+
   # get, protect, unprotect: unimplemented
 end

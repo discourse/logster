@@ -210,7 +210,7 @@ module Logster
       @redis.del(solved_key)
       @redis.del(ignored_logs_count_key)
       @redis.del(pattern_groups_key)
-      Logster::Pattern::ALL.each do |klass|
+      Logster::Pattern.child_classes.each do |klass|
         @redis.del(klass.set_name)
       end
       @redis.keys.each do |key|

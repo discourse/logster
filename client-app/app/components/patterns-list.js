@@ -7,7 +7,6 @@ import { ajax } from "client-app/lib/utilities";
 export default Component.extend({
   immutable: not("mutable"),
   showCounter: equal("key", "suppression"),
-  showResetCounter: equal("key", "suppression"),
 
   init() {
     this._super(...arguments);

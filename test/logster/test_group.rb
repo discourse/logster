@@ -56,7 +56,7 @@ class TestGroup < MiniTest::Test
   end
 
   def test_doesnt_exceed_max_size
-    Logster::Group.max_size = 5
+    Logster::Group.instance_variable_set(:@max_size, 5)
     group = get_group
     messages = [
       get_message(10),
@@ -77,7 +77,7 @@ class TestGroup < MiniTest::Test
     assert_equal 390, group.timestamp
     refute_includes group.messages.map(&:timestamp), 5
   ensure
-    Logster::Group.max_size = nil
+    Logster::Group.remove_instance_variable(:@max_size)
   end
 
   private

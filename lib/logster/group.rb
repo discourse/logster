@@ -7,10 +7,10 @@ module Logster
     attr_reader :key, :messages_keys, :timestamp, :messages
     attr_accessor :changed
 
-    def initialize(key, messages_keys = [], timestamp: nil)
+    def initialize(key, messages_keys = [], timestamp: 0)
       @key = key
       @messages_keys = messages_keys || []
-      @timestamp = timestamp || 0
+      @timestamp = timestamp
       @changed = true
     end
 
@@ -19,7 +19,7 @@ module Logster
       group = new(
         hash["key"],
         hash["messages_keys"],
-        timestamp: hash["timestamp"]
+        timestamp: hash["timestamp"] || 0
       )
       group.changed = false
       group
@@ -27,10 +27,6 @@ module Logster
 
     def self.max_size
       (defined?(@max_size) && @max_size) || MAX_SIZE
-    end
-
-    def self.max_size=(num) # used in tests
-      @max_size = num
     end
 
     def to_h

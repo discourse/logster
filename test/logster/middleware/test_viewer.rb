@@ -128,7 +128,7 @@ class TestViewer < Minitest::Test
       params: { pattern: "disallowedpattern" }
     )
     assert_equal(404, response.status)
-    Logster::Pattern::ALL.each do |klass|
+    Logster::Pattern.child_classes.each do |klass|
       assert_equal(0, klass.find_all.size)
     end
   ensure

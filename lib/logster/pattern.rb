@@ -2,12 +2,17 @@
 
 module Logster
   class Pattern
-    ALL = []
+    @child_classes = []
+
     class PatternError < StandardError; end
 
     def self.inherited(subclass)
-      Logster::Pattern::ALL << subclass
+      @child_classes << subclass
       super
+    end
+
+    def self.child_classes
+      @child_classes
     end
 
     def self.set_name
