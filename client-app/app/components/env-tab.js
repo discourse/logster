@@ -24,12 +24,12 @@ export default Component.extend({
     if (!this.isEnvArray) {
       return buildHashString(this.get("message.env"));
     } else {
-      const currentEnv = Em.$.extend({}, this.get("currentEnv"));
+      const currentEnv = Em.$.extend({}, this.currentEnv);
       const expandableKeys = Preload.get("env_expandable_keys") || [];
       expandableKeys.forEach(key => {
         if (currentEnv.hasOwnProperty(key) && !Array.isArray(currentEnv[key])) {
           const list = [currentEnv[key]];
-          this.get("message.env").forEach(env => {
+          this.message.env.forEach(env => {
             if (env[key] && list.indexOf(env[key]) === -1) {
               list.push(env[key]);
             }
@@ -37,7 +37,7 @@ export default Component.extend({
           currentEnv[key] = list.length > 1 ? list : list[0];
         }
       });
-      return buildHashString(currentEnv, false, this.get("expanded") || []);
+      return buildHashString(currentEnv, false, this.expanded || []);
     }
   }),
 
@@ -50,10 +50,10 @@ export default Component.extend({
       $elem.hasClass("expand-list")
     ) {
       e.preventDefault();
-      if (!this.get("expanded")) {
+      if (!this.expanded) {
         this.set("expanded", [dataKey]);
       } else {
-        this.get("expanded").pushObject(dataKey);
+        this.expanded.pushObject(dataKey);
       }
     }
   }

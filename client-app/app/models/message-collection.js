@@ -6,14 +6,24 @@ import { default as EmberObject, computed } from "@ember/object";
 import { A } from "@ember/array";
 
 const BATCH_SIZE = 50;
+const DEFAULT_FILTER = [0, 1, 2, 3, 4, 5];
 
 export default EmberObject.extend({
   total: 0,
-  rows: A(),
+  rows: null,
   currentRow: null,
   currentTab: null,
   currentEnvPosition: 0,
   currentGroupedMessagesPosition: 0,
+
+  init() {
+    this._super(...arguments);
+    this.setProperties({
+      filter: DEFAULT_FILTER,
+      search: "",
+      rows: A()
+    });
+  },
 
   currentMessage: computed(
     "currentRow",
@@ -52,8 +62,10 @@ export default EmberObject.extend({
   },
 
   tabChanged(newTab) {
-    this.set("currentTab", newTab);
-    this.set("loadingEnv", false);
+    this.setProperties({
+      currentTab: newTab,
+      loadingEnv: false
+    });
     this.fetchEnv();
   },
 
@@ -89,9 +101,7 @@ export default EmberObject.extend({
       this.currentRow.group &&
       row.key === this.currentRow.key
     ) {
-      messageIndex = row.messages
-        .map(m => m.key)
-        .indexOf(this.currentMessage.key);
+      messageIndex = row.messages.mapBy("key").indexOf(this.currentMessage.key);
       messageIndex = Math.max(0, messageIndex);
     }
     return messageIndex;
@@ -99,14 +109,17 @@ export default EmberObject.extend({
 
   updateSelectedRow() {
     const currentKey = this.get("currentRow.key");
-    const rows = this.rows;
-    if (currentKey && rows) {
-      const match = rows.find(m => m.key === currentKey);
+    if (currentKey && this.rows) {
+      const match = this.rows.find(m => m.key === currentKey);
       if (match) {
         const messageIndex = this.findEquivalentMessageIndex(match);
         this.selectRow(match, { messageIndex });
       } else {
-        this.set("currentRow", null);
+        this.setProperties({
+          currentRow: null,
+          currentEnvPosition: 0,
+          currentGroupedMessagesPosition: 0
+        });
       }
     }
   },
@@ -118,9 +131,8 @@ export default EmberObject.extend({
       filter: this.filter.join("_")
     };
 
-    const search = this.search;
-    if (!_.isEmpty(search)) {
-      data.search = search;
+    if (!_.isEmpty(this.search)) {
+      data.search = this.search;
       const regexSearch = this.regexSearch;
       if (regexSearch) {
         data.regex_search = "true";
@@ -212,9 +224,10 @@ export default EmberObject.extend({
   },
 
   hideCountInLoadMore: computed("search", "filter", function() {
-    const search = this.search;
     const filter = this.filter;
-    return (search && search.length > 0) || (filter && filter.length < 6);
+    return (
+      (this.search && this.search.length > 0) || (filter && filter.length < 6)
+    );
   }),
 
   moreBefore: computed("rows.length", "canLoadMore", function() {
@@ -229,7 +242,7 @@ export default EmberObject.extend({
     const rows = this.rows;
     const firstLog = rows[0];
     const firstKey = firstLog.group ? firstLog.row_id : firstLog.key;
-    const includedGroups = rows.filterBy("group").map(g => g.regex);
+    const includedGroups = rows.filterBy("group").mapBy("regex");
 
     this.load({
       before: firstKey,

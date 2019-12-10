@@ -12,6 +12,7 @@ export default Controller.extend({
   showFatal: true,
   search: "",
   queryParams: ["search"],
+  checked: true,
 
   showSettings: computed(function() {
     return Preload.get("patterns_enabled");
@@ -98,51 +99,31 @@ export default Controller.extend({
 
     envChangedAction(newPosition) {
       this.model.envChanged(newPosition);
-    }
-  },
+    },
 
-  filter: computed(
-    "showDebug",
-    "showInfo",
-    "showWarn",
-    "showErr",
-    "showFatal",
-    function() {
+    updateFilter(name) {
+      this.toggleProperty(name);
       const filter = [];
       ["Debug", "Info", "Warn", "Err", "Fatal"].forEach((severity, index) => {
         if (this.get(`show${severity}`)) {
           filter.push(index);
         }
       });
-
-      // always show unknown, rare
-      filter.push(5);
-      return filter;
-    }
-  ),
-
-  filterChanged: observer("filter.length", function() {
-    const filter = this.get("filter");
-    this.model.set("filter", filter);
-    if (filter && this.get("initialized")) {
+      filter.push(5); // always show unknown, rare
+      this.model.set("filter", filter);
       this.model.reload().then(() => this.model.updateSelectedRow());
-    }
-  }),
+    },
 
-  doSearch(term) {
-    this.model.set("search", term);
-
-    if (this.get("initialized")) {
-      this.model.reload().then(() => this.model.updateSelectedRow());
+    updateSearch(term) {
+      if (term && term.length === 1) {
+        return;
+      }
+      debounce(this, this.doSearch, term, 250);
     }
   },
 
-  searchChanged: observer("search", function() {
-    const term = this.search;
-    const termSize = term && term.length;
-    if (termSize && termSize === 1) {
-      return;
-    }
-    debounce(this, this.doSearch, term, 250);
-  })
+  doSearch(term) {
+    this.model.set("search", term);
+    this.model.reload().then(() => this.model.updateSelectedRow());
+  }
 });
