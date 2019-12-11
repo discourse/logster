@@ -12,7 +12,6 @@ export default Controller.extend({
   showFatal: true,
   search: "",
   queryParams: ["search"],
-  checked: true,
 
   showSettings: computed(function() {
     return Preload.get("patterns_enabled");
