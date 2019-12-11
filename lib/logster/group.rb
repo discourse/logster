@@ -54,16 +54,16 @@ module Logster
 
     def add_message(message)
       if !@messages_keys.include?(message.key)
-        @messages_keys << message.key
+        @messages_keys.unshift(message.key)
         @changed = true
       end
       if @timestamp < message.timestamp
         @timestamp = message.timestamp
-        @messages_keys << @messages_keys.slice!(@messages_keys.index(message.key))
+        @messages_keys.unshift(@messages_keys.slice!(@messages_keys.index(message.key)))
         @changed = true
       end
       if self.count > max_size
-        @messages_keys = @messages_keys[-max_size..-1]
+        @messages_keys.slice!(max_size..-1)
         @changed = true
       end
     end
@@ -81,10 +81,12 @@ module Logster
       messages.uniq!(&:key)
       if messages.size > 0
         messages.sort_by!(&:timestamp)
-        @messages = messages.size > max_size ? messages[-max_size..-1] : messages
+        messages.reverse!
+        messages.slice!(max_size..-1) if messages.size > max_size
+        @messages = messages
         before = @messages_keys.sort
         @messages_keys = @messages.map(&:key)
-        @timestamp = @messages.max_by(&:timestamp).timestamp
+        @timestamp = @messages[0].timestamp
         @changed = before != @messages_keys.sort
       else
         @messages_keys = []

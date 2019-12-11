@@ -33,7 +33,7 @@ class TestRedisStore < Minitest::Test
 
     groups = @store.find_pattern_groups
     assert_equal 1, groups.size
-    assert_equal [msg1.key, msg2.key], groups[0].messages_keys
+    assert_equal [msg2.key, msg1.key], groups[0].messages_keys
 
     @store.delete(msg1)
     groups = @store.find_pattern_groups
@@ -60,12 +60,12 @@ class TestRedisStore < Minitest::Test
 
     groups = @store.find_pattern_groups
     assert_equal 1, groups.size
-    assert_equal keys, groups[0].messages_keys
+    assert_equal keys.reverse, groups[0].messages_keys
 
     @store.bulk_delete(keys[0..2], gkeys[0..2])
     groups = @store.find_pattern_groups
     assert_equal 1, groups.size
-    assert_equal keys[3..5], groups[0].messages_keys
+    assert_equal keys[3..5].reverse, groups[0].messages_keys
 
     @store.bulk_delete(keys, gkeys)
     groups = @store.find_pattern_groups
@@ -851,12 +851,12 @@ class TestRedisStore < Minitest::Test
   def test_custom_grouping_patterns
     Logster.config.enable_custom_patterns_via_ui = true
     Logster::GroupingPattern.new(/delete/, store: @store).save
-    msg1 = @store.report(Logger::WARN, '', 'delete this plz')
-    msg2 = @store.report(Logger::WARN, '', 'delete that plz')
+    msg1 = @store.report(Logger::WARN, '', 'delete this plz', timestamp: 1)
+    msg2 = @store.report(Logger::WARN, '', 'delete that plz', timestamp: 2)
     group = @store.find_pattern_groups(load_messages: true)[0]
     assert_equal 2, group.count
     assert_equal "/delete/", group.key
-    assert_equal [msg1.key, msg2.key], group.messages_keys
+    assert_equal [msg2.key, msg1.key], group.messages_keys
     assert_equal msg2.timestamp, group.timestamp
   ensure
     Logster.config.enable_custom_patterns_via_ui = false
@@ -872,7 +872,7 @@ class TestRedisStore < Minitest::Test
     msg3 = @store.report(Logger::WARN, '', 'delete this plz', backtrace: backtrace, timestamp: 3)
     group = @store.find_pattern_groups(load_messages: false)[0]
     assert_equal 2, group.count
-    assert_equal [msg2.key, msg3.key], group.messages_keys
+    assert_equal [msg3.key, msg2.key], group.messages_keys
     assert_equal msg3.timestamp, group.timestamp
   ensure
     Logster.config.enable_custom_patterns_via_ui = false
@@ -939,7 +939,7 @@ class TestRedisStore < Minitest::Test
     groups = @store.find_pattern_groups
     assert_equal 1, groups.size
     assert_equal 4, groups[0].count
-    assert_equal keys[1..-1], groups[0].messages_keys
+    assert_equal keys[1..-1].reverse, groups[0].messages_keys
   ensure
     @store.max_backlog = prev_max_backlog
     Logster.config.enable_custom_patterns_via_ui = false

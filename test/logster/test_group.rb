@@ -51,7 +51,7 @@ class TestGroup < MiniTest::Test
     group.messages = messages
     assert_equal 4, group.count
     assert_equal 74, group.timestamp
-    expected = messages.uniq(&:key).sort_by(&:timestamp).map(&:key)
+    expected = messages.uniq(&:key).sort_by(&:timestamp).map(&:key).reverse
     assert_equal expected, group.messages_keys
   end
 

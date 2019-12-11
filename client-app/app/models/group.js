@@ -6,7 +6,7 @@ export default EmberObject.extend({
   selected: false,
   showCount: true,
   key: reads("regex"),
-  displayMessage: reads("regex"),
+  displayMessage: reads("messages.firstObject.message"),
 
   init() {
     this._super(...arguments);
