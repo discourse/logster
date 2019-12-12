@@ -1,5 +1,13 @@
 # CHANGELOG
 
+- 2019-12-12: 2.5.0
+
+  - DEV: Update to latest version of gems
+  - FIX: when rate limiting return an object responding to each
+  - FEATURE: Expose the search phrase in query params
+  - DEV: Update minor frontend dependencies
+  - FEATURE: Custom grouping patterns
+
 - 2019-10-28: 2.4.2
 
   - FIX: wrong number of arguments when adding message using a block (#98)
