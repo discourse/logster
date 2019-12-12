@@ -1,4 +1,6 @@
 # coding: utf-8
+# frozen_string_literal: true
+
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'logster/version'
@@ -31,5 +33,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "guard-minitest"
   spec.add_development_dependency "timecop"
   spec.add_development_dependency "byebug"
-  spec.add_development_dependency "rubocop", "~> 0.61.1"
+  spec.add_development_dependency "rubocop", "~> 0.69.0"
+  spec.add_development_dependency "rubocop-discourse"
 end

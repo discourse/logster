@@ -115,19 +115,36 @@ module Logster
 
     # increments the number of messages that have been suppressed by a pattern
     def increment_ignore_count(pattern)
+      not_implemented
     end
 
     # removes number of suppressed messages by a pattern
     def remove_ignore_count(pattern)
+      not_implemented
     end
 
     # returns a hash that maps patterns to the number of messages they
     # have suppressed
     def get_all_ignore_count
-      {}
+      not_implemented
     end
 
     def rate_limited?(ip_address, perform: false, limit: 60)
+      not_implemented
+    end
+
+    # find all pattern groups; returns an array of Logster::Group
+    def find_pattern_groups(load_messages: true)
+      not_implemented
+    end
+
+    # saves an instance of Logster::Group
+    def save_pattern_group(group)
+      not_implemented
+    end
+
+    # removes the Logster::Group instance associated with the given pattern
+    def remove_pattern_group(pattern)
       not_implemented
     end
 
@@ -164,7 +181,7 @@ module Logster
       end
 
       if Logster.config.enable_custom_patterns_via_ui || allow_custom_patterns
-        custom_ignore = @patterns_cache.fetch do
+        custom_ignore = @patterns_cache.fetch(Logster::SuppressionPattern::CACHE_KEY) do
           Logster::SuppressionPattern.find_all(store: self)
         end
         return if custom_ignore.any? do |pattern|
@@ -194,10 +211,29 @@ module Logster
         save message
         message
       end
+
+      message = similar || message
+
+      if Logster.config.enable_custom_patterns_via_ui || allow_custom_patterns
+        grouping_patterns = @patterns_cache.fetch(Logster::GroupingPattern::CACHE_KEY) do
+          Logster::GroupingPattern.find_all(store: self)
+        end
+
+        grouping_patterns.each do |pattern|
+          if message =~ pattern
+            group = find_pattern_groups() { |pat| pat == pattern }[0]
+            group ||= Logster::Group.new(pattern.inspect)
+            group.add_message(message)
+            save_pattern_group(group) if group.changed?
+            break
+          end
+        end
+      end
+      message
     end
 
-    def clear_suppression_patterns_cache
-      @patterns_cache.clear
+    def clear_patterns_cache(key)
+      @patterns_cache.clear(key)
     end
 
     private

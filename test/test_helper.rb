@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'minitest'
 require 'minitest/unit'
 require 'minitest/autorun'
@@ -11,6 +13,7 @@ require 'byebug'
 class Logster::TestStore < Logster::BaseStore
   attr_accessor :reported
   def initialize
+    super
     @reported = []
   end
 
@@ -32,6 +35,9 @@ class Logster::TestStore < Logster::BaseStore
 
   def check_rate_limits(severity)
     # Do nothing
+  end
+
+  def increment_ignore_count(pattern)
   end
 
   # get, protect, unprotect: unimplemented

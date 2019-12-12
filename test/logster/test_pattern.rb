@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../test_helper'
 require 'logster/redis_store'
 require 'logster/pattern'
@@ -8,8 +10,6 @@ class TestPattern < Minitest::Test
       "__LOGSTER__fake_patterns_set".freeze
     end
   end
-
-  Logster::PATTERNS << FakePattern
 
   class TestRedisStore < Logster::BaseStore
     def get_patterns(set_name)

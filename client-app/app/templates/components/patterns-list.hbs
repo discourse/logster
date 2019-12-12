@@ -21,10 +21,12 @@
       </button>
     {{/if}}
 
-    <input disabled=true title="Number of logs that have been suppressed by this pattern" class="count shrink" value={{pattern.count}}>
-    <button {{action "resetCount" pattern}} class="btn no-text reset shrink" title="Reset count of suppressed logs" disabled={{pattern.zeroCount}}>
-      <i class="fa fa-rotate-right"></i>
-    </button>
+    {{#if showCounter}}
+      <input disabled=true title="Number of logs that have been suppressed by this pattern" class="count shrink" value={{pattern.count}}>
+      <button {{action "resetCount" pattern}} class="btn no-text reset shrink" title="Reset count of suppressed logs" disabled={{pattern.zeroCount}}>
+        <i class="fa fa-rotate-right"></i>
+      </button>
+    {{/if}}
   </div>
   {{#if applyRetroactivelyCheckbox}}
     {{#if pattern.isNew}}

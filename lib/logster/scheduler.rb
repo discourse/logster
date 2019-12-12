@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Logster
   module Deferer
     attr_reader :queue, :thread

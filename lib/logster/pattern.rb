@@ -1,6 +1,19 @@
+# frozen_string_literal: true
+
 module Logster
   class Pattern
+    @child_classes = []
+
     class PatternError < StandardError; end
+
+    def self.inherited(subclass)
+      @child_classes << subclass
+      super
+    end
+
+    def self.child_classes
+      @child_classes
+    end
 
     def self.set_name
       raise "Please override the `set_name` method and specify and a name for this set"

@@ -1,11 +1,12 @@
 import Component from "@ember/component";
-import { not } from "@ember/object/computed";
+import { not, equal } from "@ember/object/computed";
 import { computed } from "@ember/object";
 import Pattern from "client-app/models/pattern-item";
 import { ajax } from "client-app/lib/utilities";
 
 export default Component.extend({
   immutable: not("mutable"),
+  showCounter: equal("key", "suppression"),
 
   init() {
     this._super(...arguments);

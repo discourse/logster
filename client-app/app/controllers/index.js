@@ -1,6 +1,6 @@
 import Controller from "@ember/controller";
 import { ajax } from "client-app/lib/utilities";
-import { observer, computed } from "@ember/object";
+import { computed } from "@ember/object";
 import Preload from "client-app/lib/preload";
 import { debounce } from "@ember/runloop";
 
@@ -11,9 +11,6 @@ export default Controller.extend({
   showErr: true,
   showFatal: true,
   search: "",
-  currentMessage: Em.computed.alias("model.currentMessage"),
-  currentTab: null,
-
   queryParams: ["search"],
 
   showSettings: computed(function() {
@@ -29,131 +26,108 @@ export default Controller.extend({
     return this.site.isMobile;
   }),
 
-  fetchEnv() {
-    const message = this.get("currentMessage");
-    if (message) {
-      this.set("loadingEnv", true);
-      return ajax(`/fetch-env/${message.key}.json`)
-        .then(env => message.set("env", env))
-        .always(() => this.set("loadingEnv", false));
-    }
-  },
-
   actions: {
     expandMessage(message) {
       message.expand();
     },
 
-    selectMessage(message) {
-      const old = this.get("currentMessage");
-      if (old) {
-        old.set("selected", false);
-      }
-
-      message.set("selected", true);
-      this.setProperties({
-        currentMessage: message,
-        loadingEnv: false
-      });
-      if (!message.env && this.currentTab === "env") {
-        this.fetchEnv();
-      }
+    selectRowAction(row, opts = {}) {
+      this.model.selectRow(row, opts);
     },
 
-    tabChanged(newTab) {
-      this.setProperties({
-        currentTab: newTab,
-        loadingEnv: false
-      });
-      if (newTab === "env" && !this.get("currentMessage.env")) {
-        this.fetchEnv();
-      }
+    tabChangedAction(newTab) {
+      this.model.tabChanged(newTab);
     },
 
     showMoreBefore() {
-      this.get("model").showMoreBefore();
+      this.model.showMoreBefore();
     },
 
     loadMore() {
-      return this.get("model").loadMore();
+      return this.model.loadMore();
     },
 
     clear() {
       if (confirm("Clear the logs?\n\nCancel = No, OK = Clear")) {
         ajax("/clear", { type: "POST" }).then(() => {
-          this.get("model").reload();
+          this.model.reload();
         });
       }
     },
 
     removeMessage(msg) {
-      const messages = this.get("model");
-      messages.destroy(msg);
+      const group = this.model.currentRow.group ? this.model.currentRow : null;
+      const rows = this.model.rows;
+      const idx = group ? rows.indexOf(group) : rows.indexOf(msg);
+
+      msg.destroy();
+      msg.set("selected", false);
+      this.model.set("total", this.model.total - 1);
+      let removedRow = false;
+      let messageIndex = 0;
+
+      if (group) {
+        messageIndex = group.messages.indexOf(msg);
+        group.messages.removeObject(msg);
+        messageIndex = Math.min(messageIndex, group.messages.length - 1);
+        group.decrementProperty("count");
+        if (group.messages.length === 0) {
+          rows.removeObject(group);
+          removedRow = true;
+        }
+      } else {
+        rows.removeObject(msg);
+        removedRow = true;
+      }
+
+      if (removedRow) {
+        if (idx > 0) {
+          this.model.selectRow(rows[idx - 1]);
+        } else if (this.model.total > 0) {
+          this.model.selectRow(rows[0]);
+        } else {
+          this.model.reload();
+        }
+      } else if (group) {
+        this.model.selectRow(rows[idx], { messageIndex });
+      }
     },
 
     solveMessage(msg) {
-      const messages = this.get("model");
-      messages.solve(msg);
-    }
-  },
+      this.model.solve(msg);
+    },
 
-  updateSelectedMessage() {
-    const currentKey = this.get("currentMessage.key");
-    const messages = this.get("model.messages");
-    if (currentKey && messages) {
-      const match = messages.find(m => m.key === currentKey);
-      if (match) {
-        match.set("selected", true);
-      } else {
-        this.set("currentMessage", null);
-      }
-    }
-  },
+    groupedMessageChangedAction(newPosition) {
+      this.model.groupedMessageChanged(newPosition);
+    },
 
-  filter: computed(
-    "showDebug",
-    "showInfo",
-    "showWarn",
-    "showErr",
-    "showFatal",
-    function() {
+    envChangedAction(newPosition) {
+      this.model.envChanged(newPosition);
+    },
+
+    updateFilter(name) {
+      this.toggleProperty(name);
       const filter = [];
       ["Debug", "Info", "Warn", "Err", "Fatal"].forEach((severity, index) => {
         if (this.get(`show${severity}`)) {
           filter.push(index);
         }
       });
+      filter.push(5); // always show unknown, rare
+      this.model.set("filter", filter);
+      this.model.reload().then(() => this.model.updateSelectedRow());
+    },
 
-      // always show unknown, rare
-      filter.push(5);
-      return filter;
-    }
-  ),
-
-  filterChanged: observer("filter.length", function() {
-    const filter = this.get("filter");
-    const model = this.get("model");
-    model.set("filter", filter);
-    if (filter && this.get("initialized")) {
-      model.reload().then(() => this.updateSelectedMessage());
-    }
-  }),
-
-  doSearch(term) {
-    const model = this.get("model");
-    model.set("search", term);
-
-    if (this.get("initialized")) {
-      model.reload().then(() => this.updateSelectedMessage());
+    updateSearch(term) {
+      if (term && term.length === 1) {
+        return;
+      }
+      debounce(this, this.doSearch, term, 250);
     }
   },
 
-  searchChanged: observer("search", function() {
-    const term = this.search;
-    const termSize = term && term.length;
-    if (termSize && termSize === 1) {
-      return;
-    }
-    debounce(this, this.doSearch, term, 250);
-  })
+  doSearch(term) {
+    this.model.set("search", term);
+    this.model.reload().then(() => this.model.updateSelectedRow());
+  }
 });

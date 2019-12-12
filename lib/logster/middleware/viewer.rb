@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'json'
 
 module Logster
@@ -122,7 +124,11 @@ module Logster
                 count = ignore_count[pattern] || 0
                 suppression << { value: pattern, count: count }
               end
-              [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(suppression: suppression)]]
+
+              grouping = Logster::GroupingPattern.find_all(raw: true).map do |pattern|
+                { value: pattern }
+              end
+              [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(suppression: suppression, grouping: grouping)]]
             else
               [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload_json)]]
             end
@@ -199,6 +205,9 @@ module Logster
           opts[:search] = search
         end
         search = opts[:search]
+        if params["known_groups"]
+          opts[:known_groups] = params["known_groups"]
+        end
         opts[:with_env] = (String === search && search.size > 0) || Regexp === search
 
         payload = {
@@ -253,6 +262,8 @@ module Logster
         case set_name
         when "suppression"
           Logster::SuppressionPattern
+        when "grouping"
+          Logster::GroupingPattern
         else
           nil
         end

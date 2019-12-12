@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'digest/sha1'
 require 'securerandom'
 
@@ -112,7 +114,7 @@ module Logster
 
     # in its own method so it can be overridden
     def grouping_hash
-      return { message: self.message, severity: self.severity, backtrace: self.backtrace }
+      { message: self.message, severity: self.severity, backtrace: self.backtrace }
     end
 
     # todo - memoize?

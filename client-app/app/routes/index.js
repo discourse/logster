@@ -10,9 +10,7 @@ export default Route.extend({
 
   setupController(controller, model) {
     this._super(controller, model);
-    model.setProperties(controller.getProperties("filter", "search"));
     model.reload();
-    controller.set("initialized", true);
 
     let times = 0;
     let backoff = 1;

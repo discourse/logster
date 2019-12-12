@@ -9,50 +9,84 @@
         {{/if}}
       </div>
     {{/if}}
-    {{#each model.messages as |message|}}
-      {{message-row model=message selectedMessage=(action "selectMessage")}}
+    {{#each model.rows as |row|}}
+      {{message-row model=row selectRow=(action "selectRowAction" row)}}
     {{/each}}
   </div>
 </div>
-<div id="bottom-panel">
+<div id="bottom-panel" class="{{if model.currentRow.group "group-view"}}">
+  {{#if model.currentRow.group}}
+    {{page-nav
+      list=model.currentRow.messages
+      position=model.currentGroupedMessagesPosition
+      extraClasses="group-nav"
+      navigate=(action "groupedMessageChangedAction")}}
+  {{/if}}
   {{message-info
-    currentMessage=currentMessage
+    currentMessage=model.currentMessage
     loadingEnv=loadingEnv
     removeMessage=(action "removeMessage")
     solveMessage=(action "solveMessage")
-    onTabChange=(action "tabChanged")
+    onTabChange=(action "tabChangedAction")
+    envChangedAction=(action "envChangedAction")
+    currentEnvPosition=model.currentEnvPosition
     actionsInMenu=actionsInMenu}}
 
   <div class="action-panel">
     <div class="severity-filters">
     <div class="more-wrapping">
       <label class="debug">
-        {{input type="checkbox" checked=showDebug}}
+        <input
+          type="checkbox"
+          checked={{showDebug}}
+          onchange={{action (action 'updateFilter' 'showDebug')}}
+        />
         <span>Debug</span>
       </label>
       <label class="info">
-        {{input type="checkbox" checked=showInfo}}
+        <input
+          type="checkbox"
+          checked={{showInfo}}
+          onchange={{action (action 'updateFilter' 'showInfo')}}
+        />
         <span>Info</span>
       </label>
       <label class="warn">
-        {{input type="checkbox" checked=showWarn}}
+        <input
+          type="checkbox"
+          checked={{showWarn}}
+          onchange={{action (action 'updateFilter' 'showWarn')}}
+        />
         <i class='fa fa-exclamation-circle warning'></i>
         <span>Warning</span>
       </label>
       <label class="error">
-        {{input type="checkbox" checked=showErr}}
+        <input
+          type="checkbox"
+          checked={{showErr}}
+          onchange={{action (action 'updateFilter' 'showErr')}}
+        />
         <i class='fa fa-times-circle error'></i>
         <span>Error</span>
       </label>
       <label class="fatal">
-        {{input type="checkbox" checked=showFatal}}
+        <input
+          type="checkbox"
+          checked={{showFatal}}
+          onchange={{action (action 'updateFilter' 'showFatal')}}
+        />
         <i class='fa fa-times-circle fatal'></i>
         <span>Fatal</span>
       </label>
     </div>
     </div>
     <div class="search-clear-all">
-      {{input type="textfield" class="search" placeholder="Search" value=search}}
+      <input
+        type="text"
+        class="search"
+        placeholder="Search"
+        onkeyup={{action "updateSearch" value="target.value"}}
+      />
       <div class="footer-btns">
         {{#if showSettings}}
           {{#link-to "settings" class="settings btn no-text"}}

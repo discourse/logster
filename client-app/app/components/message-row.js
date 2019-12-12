@@ -13,7 +13,7 @@ export default Component.extend({
   ],
 
   click() {
-    this.selectedMessage(this.get("model"));
+    this.selectRow();
   },
 
   willInsertElement() {

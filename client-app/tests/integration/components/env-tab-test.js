@@ -35,11 +35,18 @@ module("Integration | Component | env-tab", function(hooks) {
   setupRenderingTest(hooks);
 
   test("it renders", async function(assert) {
-    this.set("message", message);
-    await render(hbs`{{env-tab message=message}}`);
+    const callback = newPosition => this.set("envPosition", newPosition);
+    this.setProperties({
+      message,
+      callback,
+      envPosition: 0
+    });
+    await render(
+      hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
+    );
 
     assert.equal(
-      find(".env-number").textContent,
+      find(".current-number").textContent,
       "1/2",
       "shows the current over the total number of env objects"
     );
@@ -71,14 +78,21 @@ module("Integration | Component | env-tab", function(hooks) {
   });
 
   test("it works correctly", async function(assert) {
-    this.set("message", message);
-    await render(hbs`{{env-tab message=message}}`);
+    const callback = newPosition => this.set("envPosition", newPosition);
+    this.setProperties({
+      message,
+      callback,
+      envPosition: 0
+    });
+    await render(
+      hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
+    );
 
     const buttons = findAll("button.nav-btn");
     await click(buttons[2]);
 
     assert.equal(
-      find(".env-number").textContent,
+      find(".current-number").textContent,
       "2/2",
       "shows the current over the total number of env objects"
     );
@@ -108,8 +122,15 @@ module("Integration | Component | env-tab", function(hooks) {
       env_expandable_keys: ["env_key_2", "default_expanded"]
     });
     init();
-    this.set("message", message3);
-    await render(hbs`{{env-tab message=message}}`);
+    const callback = newPosition => this.set("envPosition", newPosition);
+    this.setProperties({
+      message: message3,
+      callback,
+      envPosition: 0
+    });
+    await render(
+      hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
+    );
 
     const trs = findAll(".env-table tr");
     const expandable = trs[0];

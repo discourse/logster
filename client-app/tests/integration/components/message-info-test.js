@@ -17,14 +17,22 @@ module("Integration | Component | message-info", function(hooks) {
   setupRenderingTest(hooks);
 
   test("it renders", async function(assert) {
+    const callback = newPosition => this.set("currentEnvPosition", newPosition);
     this.setProperties({
       actionsInMenu: true,
       showTitle: false,
-      message
+      envPosition: 0,
+      message,
+      callback
     });
 
     await render(
-      hbs`{{message-info currentMessage=message showTitle=showTitle actionsInMenu=actionsInMenu}}`
+      hbs`{{message-info
+            currentMessage=message
+            showTitle=showTitle
+            currentEnvPosition=envPosition
+            envChangedAction=callback
+            actionsInMenu=actionsInMenu}}`
     );
     let activeTab = find(".message-info .content.active pre");
     assert.equal(

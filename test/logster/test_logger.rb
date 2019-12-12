@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require_relative '../test_helper'
 require 'logster/logger'
 require 'logger'
 
-class TestStore
+class TestStore < Logster::BaseStore
   attr_accessor :calls
 
   def report(*args)

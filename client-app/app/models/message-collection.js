@@ -1,14 +1,43 @@
 import { ajax, increaseTitleCount } from "client-app/lib/utilities";
 import Message from "client-app/models/message";
+import Group from "client-app/models/group";
 import { compare } from "@ember/utils";
-import { computed } from "@ember/object";
+import { default as EmberObject, computed } from "@ember/object";
+import { A } from "@ember/array";
 
 const BATCH_SIZE = 50;
+const DEFAULT_FILTER = [0, 1, 2, 3, 4, 5];
 
-export default Em.Object.extend({
-  messages: Em.A(),
-  currentMessage: null,
+export default EmberObject.extend({
   total: 0,
+  rows: null,
+  currentRow: null,
+  currentTab: null,
+  currentEnvPosition: 0,
+  currentGroupedMessagesPosition: 0,
+
+  init() {
+    this._super(...arguments);
+    this.setProperties({
+      filter: DEFAULT_FILTER,
+      search: "",
+      rows: A()
+    });
+  },
+
+  currentMessage: computed(
+    "currentRow",
+    "currentGroupedMessagesPosition",
+    function() {
+      const row = this.currentRow;
+      const position = this.currentGroupedMessagesPosition;
+      if (row && row.group) {
+        return row.messages[position];
+      } else {
+        return row;
+      }
+    }
+  ),
 
   solve(message) {
     message.solve().then(() => {
@@ -16,25 +45,85 @@ export default Em.Object.extend({
     });
   },
 
-  destroy(message) {
-    const messages = this.get("messages");
-    const idx = messages.indexOf(message);
-    message.destroy();
-    message.set("selected", false);
-    this.set("total", this.get("total") - 1);
-    this.get("messages").removeObject(message);
+  selectRow(row, opts = {}) {
+    const old = this.currentRow;
+    if (old) {
+      old.set("selected", false);
+    }
+    row.set("selected", true);
+    const currentGroupedMessagesPosition = opts["messageIndex"] || 0;
+    const shouldRefresh =
+      currentGroupedMessagesPosition === this.currentGroupedMessagesPosition;
+    this.setProperties({
+      currentRow: row,
+      loadingEnv: false,
+      currentGroupedMessagesPosition,
+      currentEnvPosition: 0
+    });
+    if (shouldRefresh)
+      this.notifyPropertyChange("currentGroupedMessagesPosition");
+    this.fetchEnv();
+  },
 
-    if (idx > 0) {
-      message = messages[idx - 1];
-      message.set("selected", true);
-      this.set("currentMessage", message);
-    } else {
-      if (this.get("total") > 0) {
-        message = messages[0];
-        message.set("selected", true);
-        this.set("currentMessage", message);
+  tabChanged(newTab) {
+    this.setProperties({
+      currentTab: newTab,
+      loadingEnv: false
+    });
+    this.fetchEnv();
+  },
+
+  groupedMessageChanged(newPosition) {
+    this.setProperties({
+      currentGroupedMessagesPosition: newPosition,
+      currentEnvPosition: 0
+    });
+    this.fetchEnv();
+  },
+
+  envChanged(newPosition) {
+    this.set("currentEnvPosition", newPosition);
+    this.fetchEnv();
+  },
+
+  fetchEnv() {
+    const message = this.currentMessage;
+    if (message && !message.env && this.currentTab === "env") {
+      this.set("loadingEnv", true);
+      return ajax(`/fetch-env/${message.key}.json`)
+        .then(env => message.set("env", env))
+        .always(() => this.set("loadingEnv", false));
+    }
+  },
+
+  findEquivalentMessageIndex(row) {
+    let messageIndex = 0;
+    if (
+      row &&
+      row.group &&
+      this.currentRow &&
+      this.currentRow.group &&
+      row.key === this.currentRow.key
+    ) {
+      messageIndex = row.messages.mapBy("key").indexOf(this.currentMessage.key);
+      messageIndex = Math.max(0, messageIndex);
+    }
+    return messageIndex;
+  },
+
+  updateSelectedRow() {
+    const currentKey = this.get("currentRow.key");
+    if (currentKey && this.rows) {
+      const match = this.rows.find(m => m.key === currentKey);
+      if (match) {
+        const messageIndex = this.findEquivalentMessageIndex(match);
+        this.selectRow(match, { messageIndex });
       } else {
-        this.reload();
+        this.setProperties({
+          currentRow: null,
+          currentEnvPosition: 0,
+          currentGroupedMessagesPosition: 0
+        });
       }
     }
   },
@@ -43,13 +132,12 @@ export default Em.Object.extend({
     opts = opts || {};
 
     const data = {
-      filter: this.get("filter").join("_")
+      filter: this.filter.join("_")
     };
 
-    const search = this.get("search");
-    if (!_.isEmpty(search)) {
-      data.search = search;
-      const regexSearch = this.get("regexSearch");
+    if (!_.isEmpty(this.search)) {
+      data.search = this.search;
+      const regexSearch = this.regexSearch;
       if (regexSearch) {
         data.regex_search = "true";
       }
@@ -57,6 +145,9 @@ export default Em.Object.extend({
 
     if (opts.before) {
       data.before = opts.before;
+      if (opts.knownGroups) {
+        data.known_groups = opts.knownGroups;
+      }
     }
 
     if (opts.after) {
@@ -70,32 +161,32 @@ export default Em.Object.extend({
       .then(data => {
         // guard against race: ensure the results we're trying to apply
         //                     match the current search terms
-        if (compare(data.filter, this.get("filter")) != 0) {
+        if (compare(data.filter, this.filter) != 0) {
           return;
         }
-        if (compare(data.search, this.get("search")) != 0) {
+        if (compare(data.search, this.search) != 0) {
           return;
         }
 
         if (data.messages.length > 0) {
-          const newRows = this.toMessages(data.messages);
-          const messages = this.get("messages");
+          const newRows = this.toObjects(data.messages);
+          const rows = this.rows;
           if (opts.before) {
-            messages.unshiftObjects(newRows);
+            rows.unshiftObjects(newRows);
           } else {
-            newRows.forEach(nmsg => {
-              messages.forEach(emsg => {
-                if (emsg.key == nmsg.key) {
-                  messages.removeObject(emsg);
-                  if (this.get("currentMessage") === emsg) {
+            newRows.forEach(nrow => {
+              rows.forEach(erow => {
+                if (erow.key === nrow.key) {
+                  rows.removeObject(erow);
+                  if (this.currentRow === erow) {
                     // TODO would updateFromJson() work here?
-                    this.set("currentMessage", nmsg);
-                    nmsg.set("selected", emsg.get("selected"));
+                    const messageIndex = this.findEquivalentMessageIndex(nrow);
+                    this.selectRow(nrow, { messageIndex });
                   }
                 }
               });
             });
-            messages.addObjects(newRows);
+            rows.addObjects(newRows);
             if (newRows.length > 0) {
               increaseTitleCount(newRows.length);
             }
@@ -109,7 +200,7 @@ export default Em.Object.extend({
 
   reload() {
     this.set("total", 0);
-    this.get("messages").clear();
+    this.rows.clear();
 
     return this.load().then(data => this.updateCanLoadMore(data));
   },
@@ -126,43 +217,48 @@ export default Em.Object.extend({
   },
 
   loadMore() {
-    const messages = this.get("messages");
-    if (messages.length === 0) {
+    const rows = this.rows;
+    if (rows.length === 0) {
       this.load({});
       return;
     }
 
-    const lastKey = messages[messages.length - 1].get("key");
+    const lastLog = rows[rows.length - 1];
+    const lastKey = lastLog.group ? lastLog.row_id : lastLog.key;
     this.load({
       after: lastKey
     });
   },
 
   hideCountInLoadMore: computed("search", "filter", function() {
-    const search = this.get("search");
-    const filter = this.get("filter");
-    return (search && search.length > 0) || (filter && filter.length < 6);
+    const filter = this.filter;
+    return (
+      (this.search && this.search.length > 0) || (filter && filter.length < 6)
+    );
   }),
 
-  moreBefore: computed("messages.length", "canLoadMore", function() {
-    return this.get("messages.length") >= BATCH_SIZE && this.get("canLoadMore");
+  moreBefore: computed("rows.length", "canLoadMore", function() {
+    return this.get("rows.length") >= BATCH_SIZE && this.canLoadMore;
   }),
 
-  totalBefore: computed("total", "messages.length", function() {
-    return this.get("total") - this.get("messages").length;
+  totalBefore: computed("total", "rows.length", function() {
+    return this.total - this.rows.length;
   }),
 
   showMoreBefore: function() {
-    const messages = this.get("messages");
-    const firstKey = messages[0].get("key");
+    const rows = this.rows;
+    const firstLog = rows[0];
+    const firstKey = firstLog.group ? firstLog.row_id : firstLog.key;
+    const knownGroups = rows.filterBy("group").mapBy("regex");
 
     this.load({
-      before: firstKey
+      before: firstKey,
+      knownGroups
     }).then(data => this.updateCanLoadMore(data));
   },
 
   regexSearch: computed("search", function() {
-    const search = this.get("search");
+    const search = this.search;
     if (search && search.length > 2 && search[0] === "/") {
       const match = search.match(/\/(.*)\/(.*)/);
       if (match && match.length === 3) {
@@ -175,7 +271,13 @@ export default Em.Object.extend({
     }
   }),
 
-  toMessages(messages) {
-    return messages.map(m => Message.create(m));
+  toObjects(rows) {
+    return rows.map(m => {
+      if (m.group) {
+        return Group.create(m);
+      } else {
+        return Message.create(m);
+      }
+    });
   }
 });
