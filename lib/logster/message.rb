@@ -254,6 +254,7 @@ module Logster
 
     def truncate_message(msg)
       return msg unless msg
+      msg = msg.inspect unless String === msg
       msg.size <= MAX_MESSAGE_LENGTH ? msg : msg[0...MAX_MESSAGE_LENGTH] + "..."
     end
 
