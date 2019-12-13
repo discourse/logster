@@ -1,5 +1,13 @@
 # CHANGELOG
 
+- 2019-12-13: 2.5.1
+
+  - DEV: Bump puma from 4.2.1 to 4.3.1 in /website (#100)
+  - FIX: Don't include messages that were removed from groups due to max size limit
+  - FIX: loadingEnv is an attribute of model
+  - FIX: Prevent crashing when reporting a non-string message to Logster
+  - UX: Group count attribute should be a long-running number of errors, not just the number of errors the group currently contains
+
 - 2019-12-12: 2.5.0
 
   - DEV: Update to latest version of gems
