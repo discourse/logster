@@ -973,6 +973,27 @@ class TestRedisStore < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = false
   end
 
+  def test_latest_doesnt_include_rows_that_are_removed_from_grouping_patterns_due_to_max_size
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::Group.instance_variable_set(:@max_size, 5)
+    msg1 = @store.report(Logger::WARN, '', 'first message')
+    msg2 = @store.report(Logger::WARN, '', 'second message')
+    Logster::GroupingPattern.new(/noisy/, store: @store).save
+
+    grouped = []
+    7.times do |n|
+      grouped << @store.report(Logger::WARN, '', "noisy message #{n}", timestamp: n).key
+    end
+    msg3 = @store.report(Logger::WARN, '', 'third message')
+    results = @store.latest
+
+    assert_equal [msg1.key, msg2.key, '/noisy/', msg3.key], results.map(&:key)
+    assert_equal grouped.reverse.first(5), results[2].messages.map(&:key)
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+    Logster::Group.remove_instance_variable(:@max_size)
+  end
+
   private
 
   def reset_redis

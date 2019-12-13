@@ -134,11 +134,12 @@ module Logster
 
           row = filter_search(row, search)
           if row
+            matches_pattern = pattern_groups.any? { |g| row.message =~ g.pattern }
             group = pattern_groups.find { |g| g.messages_keys.include?(row.key) }
             if group && !known_groups.include?(group.key)
               known_groups << group.key
               temp << serialize_group(group, row.key)
-            elsif !group
+            elsif !matches_pattern
               temp << row
             end
           end
@@ -350,6 +351,7 @@ module Logster
       jsons.map! do |json|
         if json && json.size > 0
           group = Logster::Group.from_json(json)
+          group.pattern = patterns[mapped.index(group.key)]
           if load_messages
             group.messages = bulk_get(group.messages_keys, with_env: false)
           end

@@ -5,7 +5,7 @@ module Logster
     MAX_SIZE = 100
 
     attr_reader :key, :messages_keys, :timestamp, :messages
-    attr_accessor :changed
+    attr_accessor :changed, :pattern
 
     def initialize(key, messages_keys = [], timestamp: 0)
       @key = key
