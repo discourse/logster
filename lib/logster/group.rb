@@ -5,12 +5,13 @@ module Logster
     MAX_SIZE = 100
 
     attr_reader :key, :messages_keys, :timestamp, :messages
-    attr_accessor :changed, :pattern
+    attr_accessor :changed, :pattern, :count
 
-    def initialize(key, messages_keys = [], timestamp: 0)
+    def initialize(key, messages_keys = [], timestamp: 0, count: 0)
       @key = key
       @messages_keys = messages_keys || []
       @timestamp = timestamp
+      @count = count
       @changed = true
     end
 
@@ -19,7 +20,8 @@ module Logster
       group = new(
         hash["key"],
         hash["messages_keys"],
-        timestamp: hash["timestamp"] || 0
+        timestamp: hash["timestamp"] || 0,
+        count: hash["count"] || 0
       )
       group.changed = false
       group
@@ -33,14 +35,15 @@ module Logster
       {
         key: @key,
         messages_keys: @messages_keys,
-        timestamp: @timestamp
+        timestamp: @timestamp,
+        count: @count
       }
     end
 
     def to_h_web
       {
         regex: @key,
-        count: self.count,
+        count: @count,
         timestamp: @timestamp,
         messages: @messages,
         severity: -1,
@@ -55,6 +58,7 @@ module Logster
     def add_message(message)
       if !@messages_keys.include?(message.key)
         @messages_keys.unshift(message.key)
+        @count += 1
         @changed = true
       end
       if @timestamp < message.timestamp
@@ -99,10 +103,6 @@ module Logster
 
     def changed?
       @changed
-    end
-
-    def count
-      @messages_keys.size
     end
 
     private

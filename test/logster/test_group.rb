@@ -14,7 +14,8 @@ class TestGroup < MiniTest::Test
     json = JSON.generate(
       key: '/somekey/',
       messages_keys: [111, 222, 333].map(&:to_s),
-      timestamp: time
+      timestamp: time,
+      count: 3
     )
     group = Logster::Group.from_json(json)
     refute group.changed?
@@ -49,6 +50,7 @@ class TestGroup < MiniTest::Test
     ]
     messages << messages[0]
     group.messages = messages
+    group.count = 4
     assert_equal 4, group.count
     assert_equal 74, group.timestamp
     expected = messages.uniq(&:key).sort_by(&:timestamp).map(&:key).reverse
@@ -67,13 +69,15 @@ class TestGroup < MiniTest::Test
       get_message(390)
     ]
     messages.each { |m| group.add_message(m) }
-    assert_equal 5, group.count
+    # the count attr keeps track of the number of messages
+    # that has ever been added to the group.
+    # It should never decrease
+    assert_equal 6, group.count
     assert_equal 390, group.timestamp
     refute_includes group.messages_keys, messages.find { |m| m.timestamp == 10 }.key
 
     group = get_group
     group.messages = messages
-    assert_equal 5, group.count
     assert_equal 390, group.timestamp
     refute_includes group.messages.map(&:timestamp), 5
   ensure

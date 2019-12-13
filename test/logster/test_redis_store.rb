@@ -938,7 +938,8 @@ class TestRedisStore < Minitest::Test
     end
     groups = @store.find_pattern_groups
     assert_equal 1, groups.size
-    assert_equal 4, groups[0].count
+    assert_equal 4, groups[0].messages_keys.size
+    assert_equal 5, groups[0].count
     assert_equal keys[1..-1].reverse, groups[0].messages_keys
   ensure
     @store.max_backlog = prev_max_backlog
@@ -965,10 +966,12 @@ class TestRedisStore < Minitest::Test
   def test_adding_grouping_pattern_doesnt_add_a_message_to_more_than_one_group
     Logster.config.enable_custom_patterns_via_ui = true
     @store.report(Logger::WARN, '', 'trim this plz')
+    @store.report(Logger::WARN, '', 'trim this plz 2')
     Logster::GroupingPattern.new(/trim/, store: @store).save
     Logster::GroupingPattern.new(/this/, store: @store).save
     groups = @store.find_pattern_groups
     assert_equal 1, groups.size
+    assert_equal 2, groups[0].count
   ensure
     Logster.config.enable_custom_patterns_via_ui = false
   end

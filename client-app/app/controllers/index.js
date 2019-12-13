@@ -70,7 +70,6 @@ export default Controller.extend({
         messageIndex = group.messages.indexOf(msg);
         group.messages.removeObject(msg);
         messageIndex = Math.min(messageIndex, group.messages.length - 1);
-        group.decrementProperty("count");
         if (group.messages.length === 0) {
           rows.removeObject(group);
           removedRow = true;

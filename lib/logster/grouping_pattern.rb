@@ -16,6 +16,7 @@ module Logster
         m.message =~ self.pattern && existing_groups.none? { |g| g.messages_keys.include?(m.key) }
       end
       group.messages = messages
+      group.count = messages.size
       @store.save_pattern_group(group) if group.changed?
       @store.clear_patterns_cache(CACHE_KEY)
     end

@@ -363,7 +363,7 @@ module Logster
     end
 
     def save_pattern_group(group)
-      if group.count == 0
+      if group.messages_keys.size == 0
         @redis.hdel(pattern_groups_key, group.key)
       else
         @redis.hset(pattern_groups_key, group.key, group.to_json)
