@@ -196,13 +196,10 @@ module Logster
 
       if Logster.config.allow_grouping
         key = self.similar_key(message)
-        similar = get(key, load_env: false) if key
+        similar = get(key, load_env: true) if key
       end
 
       if similar
-        if similar.count < Logster::MAX_GROUPING_LENGTH
-          similar.env = get_env(similar.key) || {}
-        end
         save_env = similar.merge_similar_message(message)
 
         replace_and_bump(similar, save_env: save_env)

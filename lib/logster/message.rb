@@ -146,26 +146,26 @@ module Logster
     def merge_similar_message(other)
       self.first_timestamp ||= self.timestamp
       self.timestamp = [self.timestamp, other.timestamp].max
-
       self.count += other.count || 1
-      return false if self.count > Logster::MAX_GROUPING_LENGTH
 
       size = self.to_json(exclude_env: true).bytesize + self.env_json.bytesize
       extra_env_size = other.env_json.bytesize
       return false if size + extra_env_size > Logster.config.maximum_message_size_bytes
 
-      other_env = JSON.load JSON.fast_generate other.env
-      if Hash === other_env && !other_env.key?("time")
-        other_env["time"] = other.timestamp
+      if Hash === other.env && !other.env.key?("time")
+        other.env["time"] = other.timestamp
       end
       if Hash === self.env && !self.env.key?("time")
         self.env["time"] = self.first_timestamp
       end
 
       if Array === self.env
-        Array === other_env ? self.env.concat(other_env) : self.env << other_env
+        Array === other.env ? self.env.unshift(*other.env) : self.env.unshift(other.env)
       else
-        Array === other_env ? self.env = [self.env, *other_env] : self.env = [self.env, other_env]
+        Array === other.env ? self.env = [*other.env, self.env] : self.env = [other.env, self.env]
+      end
+      if self.env.size > Logster::MAX_GROUPING_LENGTH
+        self.env.slice!(Logster::MAX_GROUPING_LENGTH..-1)
       end
       @env_json = nil
       true

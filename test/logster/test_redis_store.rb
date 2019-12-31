@@ -259,25 +259,15 @@ class TestRedisStore < Minitest::Test
     assert(saved_env == message.env)
   end
 
-  def test_merging_performance
+  def test_ensure_env_doesnt_exceed_50_item
     Logster.config.allow_grouping = true
-    backtrace = "fake backtrace"
-    env = { "some_env" => "some env" }
-    another_env = { "another_env" => "more env" }
-    yet_another_env = { "moaar_env" => "more env" }
-
-    @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: env, count: 49)
-
-    message = @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: another_env)
-    assert_instance_of(Array, message.env)
-    assert_equal(2, message.env.size)
-    assert(env <= message.env[0])
-    assert(another_env <= message.env[1])
-
-    message = @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: yet_another_env)
-    # we don't need to load env from redis cause we don't
-    # need to merge new env samples if count is 50 or more
-    assert_nil(message.env)
+    message = nil
+    52.times do |n|
+      message = @store.report(Logger::WARN, "", "mssage", env: { a: n })
+    end
+    assert_equal(50, message.env.size)
+    assert_equal(52, message.count)
+    assert_equal((2..51).to_a, message.env.map { |e| e[:a] || e["a"] }.sort)
   ensure
     Logster.config.allow_grouping = false
   end
@@ -548,7 +538,7 @@ class TestRedisStore < Minitest::Test
       # message2 shouldn't vanish even if
       # its env matches an ignore pattern
       # however it should be merged with message1
-      assert_equal("business17", message.env[1]["cluster"])
+      assert_equal("business17", message.env[0]["cluster"])
     ensure
       # reset so it doesn't affect other tests
       @store.ignore = nil
