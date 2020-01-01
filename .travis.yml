@@ -6,6 +6,8 @@ matrix:
 rvm:
   - 2.3.4
   - 2.5.3
+  - 2.6.5
+  - 2.7.0
 
 services:
   - redis-server
