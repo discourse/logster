@@ -14,7 +14,9 @@
       {{#if showTitle}}
         <h3>Backtrace</h3>
       {{/if}}
-      <pre>{{currentMessage.backtrace}}</pre>
+      <pre>
+        {{~back-trace class="backtrace" backtrace=currentMessage.backtrace~}}
+      </pre>
     {{/tab-contents}}
     {{#tab-contents className="env" name="env" hint="show environment" currentMessage=currentMessage }}
       {{#if currentMessage}}

@@ -12,7 +12,10 @@ module Logster
       :environments,
       :rate_limit_error_reporting,
       :web_title,
-      :maximum_message_size_bytes
+      :maximum_message_size_bytes,
+      :project_directories,
+      :enable_backtrace_links,
+      :gems_dir
     )
 
     attr_writer :subdirectory
@@ -27,6 +30,9 @@ module Logster
       @rate_limit_error_reporting = true
       @enable_js_error_reporting = true
       @maximum_message_size_bytes = 60_000
+      @project_directories = []
+      @enable_backtrace_links = true
+      @gems_dir = Gem.dir + "/gems/"
 
       @allow_grouping = false
 

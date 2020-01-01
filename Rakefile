@@ -17,6 +17,7 @@ task :client_dev do
     Process.wait pid
     Process.wait pid2
   rescue Interrupt => e
+    sleep 0.5
     puts "Done!"
     exit 0
   end

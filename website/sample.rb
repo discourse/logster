@@ -73,6 +73,15 @@ SampleLoaderInstance.ensure_samples_loaded
 SampleLoaderInstance.load_samples unless ENV['NO_DATA']
 Logster.config.allow_grouping = true
 Logster.config.enable_custom_patterns_via_ui = ENV["LOGSTER_ENABLE_CUSTOM_PATTERNS_VIA_UI"] == "1"
+Logster.config.application_version = "b329e23f8511b7248c0e4aee370a9f8a249e1b84"
+Logster.config.gems_dir = "/home/sam/.rbenv/versions/2.1.2.discourse/lib/ruby/gems/2.1.0/gems/"
+Logster.config.project_directories = [
+  {
+    path: "/home/sam/Source/discourse",
+    url: "https://github.com/discourse/discourse",
+    main_app: true
+  }
+]
 
 class Sample < Sinatra::Base
   use Logster::Middleware::Viewer
