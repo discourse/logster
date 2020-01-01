@@ -321,7 +321,7 @@ module Logster
         gems_data = []
         Gem::Specification.find_all do |gem|
           url = gem.metadata["source_code_uri"] || gem.homepage
-          if url && url.match?(/^https?:\/\/github.com\//)
+          if url && url.match(/^https?:\/\/github.com\//)
             gems_data << { name: gem.name, url: url }
           end
         end
