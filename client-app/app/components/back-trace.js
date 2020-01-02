@@ -21,96 +21,17 @@ function appendSlash(str) {
   }
 }
 
-function assembleURL({ repo, path, filename, lineNumber, versionHash = null }) {
+function assembleURL({ repo, path, filename, lineNumber, commitSha = null }) {
   let url = appendSlash(repo);
   if (!/\/tree\//.test(url)) {
     url += "blob/";
-    url += versionHash ? `${versionHash}/` : "master/";
+    url += commitSha ? `${commitSha}/` : "master/";
   }
   url += path + filename;
   if (/^[0-9]+$/.test(lineNumber)) {
     url += `#L${lineNumber}`;
   }
   return url;
-}
-
-function GithubURLForGem(line) {
-  let url = null;
-  if (!backtraceLinksEnabled()) {
-    return url;
-  }
-
-  const regexResults = line.match(/([^/]+)\/(.+\/)(.+):(\d+):.*/);
-  const [, gemWithVersion, path, filename, lineNumber] = regexResults || [];
-  const gemsData = Preloaded.get("gems_data");
-  const match = gemsData
-    .filter(g => startsWith(gemWithVersion, `${g.name}-`))
-    .sortBy("name.length")
-    .reverse()[0];
-
-  if (match) {
-    url = assembleURL({ repo: match.url, path, filename, lineNumber });
-  }
-  return url;
-}
-
-function GithubURLForApp(line) {
-  let url = null;
-
-  if (!backtraceLinksEnabled()) {
-    return url;
-  }
-
-  const projectDirs = Preloaded.get("directories");
-
-  const match = projectDirs
-    .filter(dir => startsWith(line, dir.path))
-    .sortBy("path.length")
-    .reverse()[0];
-
-  if (match) {
-    const root = appendSlash(match.path);
-    const lineWithoutRoot = line.substring(root.length);
-
-    let path = "",
-      filename,
-      lineNumber,
-      remaining;
-
-    const hasSlash = lineWithoutRoot.indexOf("/") !== -1;
-    const regex = hasSlash ? /(.+\/)(.+):(\d+)(:.*)/ : /(.+):(\d+)(:.*)/;
-
-    if (hasSlash) {
-      [, path, filename, lineNumber, remaining] =
-        lineWithoutRoot.match(regex) || [];
-    } else {
-      [, filename, lineNumber, remaining] = lineWithoutRoot.match(regex) || [];
-    }
-
-    if (filename && lineNumber && remaining) {
-      const versionHash = match.main_app
-        ? Preloaded.get("application_version")
-        : null;
-
-      url = assembleURL({
-        repo: match.url,
-        path,
-        filename,
-        lineNumber,
-        versionHash
-      });
-    }
-  }
-  return url;
-}
-
-function findGithubURL(line, shortenedLine) {
-  const isGem = startsWith(line, Preloaded.get("gems_dir"));
-  if (isGem) {
-    return GithubURLForGem(shortenedLine);
-  } else {
-    return GithubURLForApp(line);
-  }
 }
 
 function shortenLine(line) {
@@ -124,7 +45,95 @@ function shortenLine(line) {
 }
 
 export default Component.extend({
-  lines: computed("backtrace", function() {
+  GithubURLForGem(line) {
+    let url = null;
+    if (!backtraceLinksEnabled()) {
+      return url;
+    }
+
+    const regexResults = line.match(/([^/]+)\/(.+\/)(.+):(\d+):.*/);
+    const [, gemWithVersion, path, filename, lineNumber] = regexResults || [];
+    const gemsData = Preloaded.get("gems_data");
+    const match = gemsData
+      .filter(g => startsWith(gemWithVersion, `${g.name}-`))
+      .sortBy("name.length")
+      .reverse()[0];
+
+    if (match) {
+      url = assembleURL({ repo: match.url, path, filename, lineNumber });
+    }
+    return url;
+  },
+
+  GithubURLForApp(line) {
+    let url = null;
+
+    if (!backtraceLinksEnabled()) {
+      return url;
+    }
+
+    const projectDirs = Preloaded.get("directories");
+
+    const match = projectDirs
+      .filter(dir => startsWith(line, dir.path))
+      .sortBy("path.length")
+      .reverse()[0];
+
+    if (match) {
+      const root = appendSlash(match.path);
+      const lineWithoutRoot = line.substring(root.length);
+
+      let path = "",
+        filename,
+        lineNumber,
+        remaining;
+
+      const hasSlash = lineWithoutRoot.indexOf("/") !== -1;
+      const regex = hasSlash ? /(.+\/)(.+):(\d+)(:.*)/ : /(.+):(\d+)(:.*)/;
+
+      if (hasSlash) {
+        [, path, filename, lineNumber, remaining] =
+          lineWithoutRoot.match(regex) || [];
+      } else {
+        [, filename, lineNumber, remaining] =
+          lineWithoutRoot.match(regex) || [];
+      }
+
+      if (filename && lineNumber && remaining) {
+        const commitSha = match.main_app ? this.commitSha : null;
+
+        url = assembleURL({
+          repo: match.url,
+          path,
+          filename,
+          lineNumber,
+          commitSha
+        });
+      }
+    }
+    return url;
+  },
+
+  findGithubURL(line, shortenedLine) {
+    const isGem = startsWith(line, Preloaded.get("gems_dir"));
+    if (isGem) {
+      return this.GithubURLForGem(shortenedLine);
+    } else {
+      return this.GithubURLForApp(line);
+    }
+  },
+
+  commitSha: computed("env", function() {
+    let env = null;
+    if (Array.isArray(this.env)) {
+      env = this.env.map(e => e.application_version).filter(e => e)[0];
+    } else if (this.env) {
+      env = this.env.application_version;
+    }
+    return env || Preloaded.get("application_version");
+  }),
+
+  lines: computed("backtrace", "commitSha", function() {
     if (!this.backtrace || this.backtrace.length === 0) {
       return [];
     }
@@ -132,7 +141,7 @@ export default Component.extend({
       const shortenedLine = shortenLine(line);
       return {
         line: shortenedLine,
-        url: findGithubURL(line, shortenedLine)
+        url: this.findGithubURL(line, shortenedLine)
       };
     });
   })

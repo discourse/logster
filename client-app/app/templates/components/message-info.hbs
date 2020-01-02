@@ -15,7 +15,10 @@
         <h3>Backtrace</h3>
       {{/if}}
       <pre>
-        {{~back-trace class="backtrace" backtrace=currentMessage.backtrace~}}
+        {{~back-trace
+          class="backtrace"
+          backtrace=currentMessage.backtrace
+          env=currentMessage.env~}}
       </pre>
     {{/tab-contents}}
     {{#tab-contents className="env" name="env" hint="show environment" currentMessage=currentMessage }}

@@ -18,3 +18,15 @@ export default {
     return Em.get(CONTAINER, key);
   }
 };
+
+// used in tests
+export function mutatePreload(key, value) {
+  if (!isInitialized) {
+    init();
+  }
+  Em.set(CONTAINER, key, value);
+}
+
+export function uninitialize() {
+  isInitialized = false;
+}
