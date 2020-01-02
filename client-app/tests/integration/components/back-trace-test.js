@@ -102,7 +102,7 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
     href = find("a").href;
     assert.equal(
       href,
-      "https://github.com/discourse/discourse/blob/masters/lib/permalink_constraint.rb#L6",
+      "https://github.com/discourse/discourse/blob/master/lib/permalink_constraint.rb#L6",
       "falls back to master branch when neither preload nor application_version in env are available"
     );
   });
