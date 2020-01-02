@@ -1,10 +1,6 @@
 import Component from "@ember/component";
 import Preloaded from "client-app/lib/preload";
-import { escapeHtml } from "client-app/lib/utilities";
 import { computed } from "@ember/object";
-
-const COLLAPSED_HTML = `<span class="expand noselect">… </span>`;
-const EXPANDED_HTML = `<span class="noselect">  </span>`;
 
 function startsWith(str, search) {
   if (!str || !search || search.length > str.length) {
@@ -38,34 +34,14 @@ function assembleURL({ repo, path, filename, lineNumber, versionHash = null }) {
   return url;
 }
 
-function parseGemLine(line, expand = false) {
-  const gemsDir = Preloaded.get("gems_dir");
-  const lineWithoutGemDir = line.substring(gemsDir.length);
-
-  const regexResults = lineWithoutGemDir.match(
-    /([^/]+)\/(.+\/)(.+):(\d+)(:.*)/
-  );
-
-  const [, gemWithVersion, path, filename, lineNumber, remaining] =
-    regexResults || [];
-
-  const beforeURLContent = expand
-    ? `${gemsDir}${gemWithVersion}/${path}`
-    : `${gemWithVersion}/${path}`;
-  const URLContent = filename;
-  const afterURLContent = `:${lineNumber}${remaining}`;
-
-  const result = {
-    url: null,
-    beforeURLContent,
-    URLContent,
-    afterURLContent
-  };
-
+function GithubURLForGem(line) {
+  let url = null;
   if (!backtraceLinksEnabled()) {
-    return result;
+    return url;
   }
 
+  const regexResults = line.match(/([^/]+)\/(.+\/)(.+):(\d+):.*/);
+  const [, gemWithVersion, path, filename, lineNumber] = regexResults || [];
   const gemsData = Preloaded.get("gems_data");
   const match = gemsData
     .filter(g => startsWith(gemWithVersion, `${g.name}-`))
@@ -73,22 +49,16 @@ function parseGemLine(line, expand = false) {
     .reverse()[0];
 
   if (match) {
-    const url = assembleURL({ repo: match.url, path, filename, lineNumber });
-    Em.$.extend(result, { url });
+    url = assembleURL({ repo: match.url, path, filename, lineNumber });
   }
-  return result;
+  return url;
 }
 
-function parseAppLine(line) {
-  const result = {
-    url: null,
-    beforeURLContent: "",
-    URLContent: line,
-    afterURLContent: ""
-  };
+function GithubURLForApp(line) {
+  let url = null;
 
   if (!backtraceLinksEnabled()) {
-    return result;
+    return url;
   }
 
   const projectDirs = Preloaded.get("directories");
@@ -122,95 +92,48 @@ function parseAppLine(line) {
         ? Preloaded.get("application_version")
         : null;
 
-      const url = assembleURL({
+      url = assembleURL({
         repo: match.url,
         path,
         filename,
         lineNumber,
         versionHash
       });
-
-      const beforeURLContent = `${root}${path}`;
-      const URLContent = filename;
-      const afterURLContent = `:${lineNumber}${remaining}`;
-
-      Em.$.extend(result, {
-        url,
-        beforeURLContent,
-        URLContent,
-        afterURLContent
-      });
     }
   }
-  return result;
+  return url;
 }
 
-function parseLine(line, expand = false) {
+function findGithubURL(line, shortenedLine) {
   const isGem = startsWith(line, Preloaded.get("gems_dir"));
-  let result = {};
-
   if (isGem) {
-    result = parseGemLine(line, expand);
+    return GithubURLForGem(shortenedLine);
   } else {
-    result = parseAppLine(line);
+    return GithubURLForApp(line);
   }
-
-  Object.keys(result).forEach(key => {
-    const currentValue = result[key];
-    result[key] =
-      typeof currentValue === "string" ? escapeHtml(result[key]) : currentValue;
-  });
-
-  return result;
 }
 
-function generateLineHTML(line, { expand = false } = {}) {
+function shortenLine(line) {
   const isGem = startsWith(line, Preloaded.get("gems_dir"));
-
-  let html = `<div class="backtrace-line" data-line="${escapeHtml(line)}">`;
-  html += !isGem || expand ? EXPANDED_HTML : COLLAPSED_HTML;
-
-  const { url, beforeURLContent, URLContent, afterURLContent } = parseLine(
-    line,
-    expand
-  );
-
-  if (url) {
-    html += `<span>${beforeURLContent}<a target="_blank" href="${url}">${URLContent}</a>${afterURLContent}</span>`;
+  if (isGem) {
+    const gemsDir = Preloaded.get("gems_dir");
+    return line.substring(gemsDir.length);
   } else {
-    html += `<span>${beforeURLContent + URLContent + afterURLContent}</span>`;
+    return line;
   }
-
-  html += `</div>`;
-  return html;
 }
 
 export default Component.extend({
-  htmlContent: computed("backtrace", function() {
-    const backtrace = this.get("backtrace");
-    if (backtrace) {
-      return backtrace
-        .split("\n")
-        .map(line => generateLineHTML(line))
-        .join("");
-    } else {
-      return "";
+  lines: computed("backtrace", function() {
+    if (!this.backtrace || this.backtrace.length === 0) {
+      return [];
     }
-  }),
-
-  click(e) {
-    const { target } = e;
-    if (target.classList.contains("expand")) {
-      const line = target.parentElement;
-      const backtraceLine = line.dataset.line;
-      if (backtraceLine) {
-        const newLineContent = generateLineHTML(backtraceLine, {
-          expand: true
-        });
-        const newLine = document.createElement("DIV");
-        newLine.innerHTML = newLineContent;
-        line.parentElement.replaceChild(newLine, line);
-      }
-    }
-  }
+    return this.backtrace.split("\n").map(line => {
+      const shortenedLine = shortenLine(line);
+      return {
+        line: shortenedLine,
+        url: findGithubURL(line, shortenedLine)
+      };
+    });
+  })
 });

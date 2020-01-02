@@ -669,16 +669,8 @@ label span {
 .grouping-patterns button.new-pattern {
   margin-top: 10px;
 }
-.backtrace-line .expand {
-  cursor: pointer;
-}
 
-.backtrace-line .noselect {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  cursor: pointer;
-  font-size: 14px;
+.backtrace-line .line-link {
+  color: #9e9e9e;
+  margin-left: 3px;
 }
