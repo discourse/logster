@@ -12,7 +12,9 @@ module("Integration | Component | patterns-list", function(hooks) {
       mutable: true,
       patterns: []
     });
-    await render(hbs`{{patterns-list patterns=patterns mutable=mutable}}`);
+    await render(
+      hbs`{{patterns-list patterns=patterns mutable=mutable showCounter=true}}`
+    );
     assert
       .dom(".pattern-input")
       .exists("It shows an input when patterns are emtpy");
@@ -33,7 +35,10 @@ module("Integration | Component | patterns-list", function(hooks) {
       .doesNotExist("No save buttons are shown when there is 0 buffer");
     const counters = findAll("input.count");
     assert.equal(counters.length, 3, "counters shown for all patterns");
-    assert.ok(counters.every(c => c.disabled), "counters are disabled");
+    assert.ok(
+      counters.every(c => c.disabled),
+      "counters are disabled"
+    );
 
     pattern1.set("count", 6);
     this.set("patterns", [pattern1, pattern2]);

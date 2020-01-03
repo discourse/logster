@@ -36,7 +36,7 @@ module("Integration | Component | message-info", function(hooks) {
     );
     let activeTab = find(".message-info .content.active pre");
     assert.equal(
-      activeTab.textContent,
+      activeTab.textContent.trim(),
       backtrace,
       "default active tab is backtrace"
     );

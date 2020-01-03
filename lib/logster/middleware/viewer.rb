@@ -317,6 +317,21 @@ module Logster
         Rack::Utils.escape_html(JSON.fast_generate(payload))
       end
 
+      def preload_backtrace_data
+        gems_data = []
+        Gem::Specification.find_all do |gem|
+          url = gem.metadata["source_code_uri"] || gem.homepage
+          if url && url.match(/^https?:\/\/github.com\//)
+            gems_data << { name: gem.name, url: url }
+          end
+        end
+        {
+          gems_data: gems_data,
+          directories: Logster.config.project_directories,
+          application_version: Logster.config.application_version
+        }
+      end
+
       def body(preload)
         root_url = @logs_path
         root_url += "/" if root_url[-1] != "/"
@@ -324,6 +339,14 @@ module Logster
           env_expandable_keys: Logster.config.env_expandable_keys,
           patterns_enabled: Logster.config.enable_custom_patterns_via_ui
         )
+        backtrace_links_enabled = Logster.config.enable_backtrace_links
+        gems_dir = Logster.config.gems_dir
+        gems_dir += "/" if gems_dir[-1] != "/"
+        preload.merge!(gems_dir: gems_dir, backtrace_links_enabled: backtrace_links_enabled)
+
+        if backtrace_links_enabled
+          preload.merge!(preload_backtrace_data)
+        end
         <<~HTML
           <!doctype html>
           <html>

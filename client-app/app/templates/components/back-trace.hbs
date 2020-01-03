@@ -1,0 +1,8 @@
+{{~#each lines as |line|~}}
+  <div class="backtrace-line">
+    {{~line.line~}}
+    {{~#if line.url~}}
+      <a href="{{line.url}}" target="_blank" class="line-link"><i class="fa fa-external-link-square"></i></a>
+    {{~/if~}}
+  </div>
+{{~/each~}}
