@@ -47,7 +47,7 @@ Logster can be configured using `Logster.config`:
 - `Logster.config.maximum_message_size_bytes` : specify a size in bytes that a message cannot exceed. Note this isn't 100% accurate, meaning a message may still grow above the limit, but it shouldn't grow by more than, say, 2000 bytes.
 - `Logster.config.project_directories` : This should be an array of hashes that map paths on the local filesystem to GitHub repository URLs. If this feature is enabled, Logster will parse backtraces and try to construct a GitHub URL to the exact file and line number for each line in the backtrace. For a Rails app, the config may look like this: `Logster.config.project_directories = [{ path: Rails.root.to_s, url: "https://github.com/<your_org>/<your_repo>" }]`.
 - `Logster.config.enable_backtrace_links` : Enable/disable the backtrace links feature.
-- `Logster.config.gems_dir` : The value of this config is `Gem.dir + "/gems/"` by default. You probably don't need to change this config, but it's available in case your app gems are installed in a different directory. This is used for Logster [demo site](http://logster.info/logs/).
+- `Logster.config.gems_dir` : The value of this config is `Gem.dir + "/gems/"` by default. You probably don't need to change this config, but it's available in case your app gems are installed in a different directory. An example where this config is needed is Logster [demo site](http://logster.info/logs/): [https://github.com/discourse/logster/blob/master/website/sample.rb#L77](https://github.com/discourse/logster/blob/master/website/sample.rb#L77).
 
 ### Tracking Error Rate
 Logster allows you to register a callback when the rate of errors has exceeded
