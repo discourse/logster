@@ -24,7 +24,7 @@ module Logster
       application_version
     }
 
-    attr_accessor :timestamp, :severity, :progname, :key, :backtrace, :count, :protected, :first_timestamp
+    attr_accessor :timestamp, :severity, :progname, :key, :backtrace, :count, :protected, :first_timestamp, :env_buffer
     attr_reader :message, :env
 
     def initialize(severity, progname, message, timestamp = nil, key = nil, count: 1)
@@ -37,6 +37,7 @@ module Logster
       @count = count || 1
       @protected = false
       @first_timestamp = nil
+      @env_buffer = []
     end
 
     def to_h(exclude_env: false)
@@ -82,7 +83,6 @@ module Logster
     end
 
     def env=(env)
-      @env_json = nil
       @env = self.class.scrub_params(env)
     end
 
@@ -94,12 +94,18 @@ module Logster
       env ||= {}
       if Array === env
         env = env.map do |single_env|
-          self.class.default_env.merge(single_env)
+          single_env = self.class.default_env.merge(single_env)
+          if !single_env.key?("time") && !single_env.key?(:time)
+            single_env[:time] = @timestamp || get_timestamp
+          end
+          single_env
         end
       else
         env = self.class.default_env.merge(env)
+        if !env.key?("time") && !env.key?(:time)
+          env[:time] = @timestamp || get_timestamp
+        end
       end
-      @env_json = nil
       @env = Message.populate_from_env(env)
     end
 
@@ -148,27 +154,24 @@ module Logster
       self.timestamp = [self.timestamp, other.timestamp].max
       self.count += other.count || 1
 
-      size = self.to_json(exclude_env: true).bytesize + self.env_json.bytesize
-      extra_env_size = other.env_json.bytesize
-      return false if size + extra_env_size > Logster.config.maximum_message_size_bytes
-
-      if Hash === other.env && !other.env.key?("time")
-        other.env["time"] = other.timestamp
+      if Hash === other.env && !other.env.key?("time") && !other.env.key?(:time)
+        other.env[:time] = other.timestamp
       end
-      if Hash === self.env && !self.env.key?("time")
-        self.env["time"] = self.first_timestamp
+      if Hash === self.env && !self.env.key?("time") && !self.env.key?(:time)
+        self.env[:time] = self.first_timestamp
       end
 
-      if Array === self.env
-        Array === other.env ? self.env.unshift(*other.env) : self.env.unshift(other.env)
+      if Array === other.env
+        env_buffer.unshift(*other.env)
       else
-        Array === other.env ? self.env = [*other.env, self.env] : self.env = [other.env, self.env]
+        env_buffer.unshift(other.env)
       end
-      if self.env.size > Logster::MAX_GROUPING_LENGTH
-        self.env.slice!(Logster::MAX_GROUPING_LENGTH..-1)
-      end
-      @env_json = nil
+      env_buffer.slice!(Logster::MAX_GROUPING_LENGTH..-1)
       true
+    end
+
+    def has_env_buffer?
+      env_buffer.size > 0
     end
 
     def self.populate_from_env(env)
@@ -227,10 +230,6 @@ module Logster
         else
         nil
       end
-    end
-
-    def env_json
-      @env_json ||= (self.env || {}).to_json
     end
 
     def self.scrub_params(params)

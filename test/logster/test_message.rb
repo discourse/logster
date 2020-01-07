@@ -11,32 +11,38 @@ class TestMessage < MiniTest::Test
 
     msg2 = Logster::Message.new(0, '', 'test', 20)
     msg2.populate_from_env(a: "2", c: "3")
-
     assert_equal(msg2.grouping_key, msg1.grouping_key)
-
     msg1.merge_similar_message(msg2)
 
     assert_equal(20, msg1.timestamp)
     assert_equal(10, msg1.first_timestamp)
-
-    assert Array === msg1.env
-    assert_equal(msg1.env.size, 2)
-    assert({ a: "2", c: "3" } <= msg1.env[0])
-    assert({ a: "1", b: "2" } <= msg1.env[1])
+    assert_equal(msg1.env_buffer, [msg2.env])
   end
 
-  def test_merge_adds_timestamp_to_env
-    time1 = Time.new(2010, 1, 1, 1, 1).to_i
-    msg1 = Logster::Message.new(0, '', 'test', time1)
-    msg1.env = { a: "aa", b: "bb" }
+  def test_populate_from_env_will_add_time_to_env_unless_it_already_exists
+    t = (Time.new.to_f * 1000).to_i
+    msg = Logster::Message.new(0, '', 'test', t)
+    msg.populate_from_env({})
+    assert_equal(t, msg.env[:time])
 
-    time2 = Time.new(2011, 1, 1, 1, 1).to_i
-    msg2 = Logster::Message.new(0, '', 'test', time2)
-    msg2.env = { e: "ee", f: "ff" }
+    msg = Logster::Message.new(0, '', 'test', t)
+    msg.populate_from_env(time: 5)
+    assert_nil(msg.env["time"])
+    assert_equal(5, msg.env[:time])
 
-    msg1.merge_similar_message(msg2)
-    assert_equal(time2, msg1.env[0]["time"])
-    assert_equal(time1, msg1.env[1]["time"])
+    msg = Logster::Message.new(0, '', 'test', t)
+    msg.populate_from_env("time" => 6)
+    assert_equal(6, msg.env["time"])
+    assert_nil(msg.env[:time])
+
+    msg = Logster::Message.new(0, '', 'test', t)
+    msg.populate_from_env([{ "time" => 6 }, { "time" => 8 }])
+    assert_equal([6, 8], msg.env.map { |e| e["time"] })
+    assert_equal([nil, nil], msg.env.map { |e| e[:time] })
+
+    msg = Logster::Message.new(0, '', 'test', t)
+    msg.populate_from_env([{ dsd: 6 }, { dsd: 8 }])
+    assert_equal([t, t], msg.env.map { |e| e[:time] })
   end
 
   def test_merge_messages_both_with_array_envs
@@ -47,26 +53,18 @@ class TestMessage < MiniTest::Test
     msg2.env = [{ e: "ee", f: "ff" }, { g: "gg", h: "hh" }]
 
     msg1.merge_similar_message(msg2)
-
-    # new env should be an array, but it should never have
-    # another array of envs within itself (hence flatten(1))
-    assert_equal(msg1.env.size, 4)
-    assert_equal(msg1.env.map(&:keys).flatten(1).map(&:to_s).sort, %w{a b c d e f g h})
-    assert_equal(msg1.env.map(&:values).flatten(1).map(&:to_s).sort, %w{aa bb cc dd ee ff gg hh})
+    assert_equal(msg2.env, msg1.env_buffer)
   end
 
   def test_merge_messages_one_with_array_envs
     msg1 = Logster::Message.new(0, '', 'test', 10)
-    msg1.env = [{ a: "aa", b: "bb" }, { c: "cc", d: "dd" }]
+    msg1.env = { e: "ee", f: "ff" }
 
     msg2 = Logster::Message.new(0, '', 'test', 20)
-    msg2.env = { e: "ee", f: "ff" }
+    msg2.env = [{ a: "aa", b: "bb" }, { c: "cc", d: "dd" }]
 
     msg1.merge_similar_message(msg2)
-
-    assert_equal(msg1.env.size, 3)
-    assert_equal(msg1.env.map(&:keys).flatten(1).map(&:to_s).sort, %w{a b c d e f time})
-    assert_equal(msg1.env.map(&:values).flatten(1).map(&:to_s).sort, %w{aa bb cc dd ee ff 20}.sort)
+    assert_equal(msg2.env, msg1.env_buffer)
   end
 
   def test_adds_application_version
@@ -87,8 +85,7 @@ class TestMessage < MiniTest::Test
 
     assert_equal(msg1.grouping_key, msg2.grouping_key)
 
-    save_env = msg1.merge_similar_message(msg2)
-    assert(save_env)
+    msg1.merge_similar_message(msg2)
     assert_equal(msg1.count, 15 + 13)
   end
 
@@ -120,23 +117,17 @@ class TestMessage < MiniTest::Test
     assert hash <= msg.env[0]
   end
 
-  def test_ensure_env_samples_dont_exceed_50_when_merging_2_env_arrays
+  def test_merging_envs_add_new_envs_to_buffer
     msg1 = Logster::Message.new(0, '', 'test', 10, count: 50)
-    env_1 = 50.times.map { |n| { a: n } }
-    msg1.env = env_1.dup
+    msg1.env = 50.times.map { |n| { a: n } }
     msg2 = Logster::Message.new(0, '', 'test', 20, count: 13)
-    env_2 = 13.times.map { |n| { b: n } }
-    msg2.env = env_2.dup
+    msg2.env = 13.times.map { |n| { b: n } }
 
     assert_equal(msg1.grouping_key, msg2.grouping_key)
 
     msg1.merge_similar_message(msg2)
     assert_equal(63, msg1.count) # update count
-    # 50 - 13 = 37
-    # add the env of msg2 to the front, and eat from the rear
-    # of msg1 env to keep the env total at 50 items
-    assert_equal(env_2 + env_1.first(37), msg1.env)
-    assert_equal(50, msg1.env.size)
+    assert_equal(msg2.env, msg1.env_buffer)
   end
 
   def test_message_to_h_respects_params
@@ -175,6 +166,7 @@ class TestMessage < MiniTest::Test
     # env isn't merged, but count is incremented
     assert_equal(13, message.env.size)
     assert_equal(14, message.count)
+    assert_equal([], message.env_buffer)
   ensure
     Logster.config.maximum_message_size_bytes = default
   end
