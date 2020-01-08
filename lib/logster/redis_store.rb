@@ -25,7 +25,6 @@ module Logster
           return true if @redis.hget(solved_key, solved)
         end
       end
-      apply_max_size_limit(message)
 
       @redis.multi do
         @redis.hset(grouping_key, message.grouping_key, message.key)
@@ -624,22 +623,6 @@ module Logster
       )
     end
 
-    def apply_max_size_limit(message)
-      size = message.to_json(exclude_env: true).bytesize
-      env_size = message.env.to_json.bytesize
-      max_size = Logster.config.maximum_message_size_bytes
-      if size + env_size > max_size
-        # env is most likely the reason for the large size
-        # truncate it so the overall size is < the limit
-        if Array === message.env
-          # the - 1 at the end ensures the size goes a little bit below the limit
-          truncate_at = (message.env.size.to_f * max_size.to_f / (env_size + size)).to_i - 1
-          truncate_at = 1 if truncate_at < 1
-          message.env = message.env[0...truncate_at]
-        end
-      end
-    end
-
     def register_rate_limit(severities, limit, duration, callback)
       severities = [severities] unless severities.is_a?(Array)
       redis = (@redis_raw_connection && @redis_prefix) ? @redis_raw_connection : @redis
@@ -657,7 +640,7 @@ module Logster
       prefixed = env_prefix(message_key)
       env = [env] unless Array === env
       @redis.lpush(prefixed, env.map(&:to_json).reverse)
-      @redis.ltrim(prefixed, 0, Logster::MAX_GROUPING_LENGTH - 1)
+      @redis.ltrim(prefixed, 0, Logster.config.maximum_number_of_env_per_message - 1)
     end
 
     def delete_env(message_key)

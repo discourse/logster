@@ -4,8 +4,6 @@ require 'digest/sha1'
 require 'securerandom'
 
 module Logster
-
-  MAX_GROUPING_LENGTH = 50
   MAX_MESSAGE_LENGTH = 600
 
   class Message
@@ -22,6 +20,7 @@ module Logster
       hostname
       process_id
       application_version
+      time
     }
 
     attr_accessor :timestamp, :severity, :progname, :key, :backtrace, :count, :protected, :first_timestamp, :env_buffer
@@ -96,14 +95,14 @@ module Logster
         env = env.map do |single_env|
           single_env = self.class.default_env.merge(single_env)
           if !single_env.key?("time") && !single_env.key?(:time)
-            single_env[:time] = @timestamp || get_timestamp
+            single_env["time"] = @timestamp || get_timestamp
           end
           single_env
         end
       else
         env = self.class.default_env.merge(env)
         if !env.key?("time") && !env.key?(:time)
-          env[:time] = @timestamp || get_timestamp
+          env["time"] = @timestamp || get_timestamp
         end
       end
       @env = Message.populate_from_env(env)
@@ -155,10 +154,7 @@ module Logster
       self.count += other.count || 1
 
       if Hash === other.env && !other.env.key?("time") && !other.env.key?(:time)
-        other.env[:time] = other.timestamp
-      end
-      if Hash === self.env && !self.env.key?("time") && !self.env.key?(:time)
-        self.env[:time] = self.first_timestamp
+        other.env["time"] = other.timestamp
       end
 
       if Array === other.env
@@ -166,7 +162,6 @@ module Logster
       else
         env_buffer.unshift(other.env)
       end
-      env_buffer.slice!(Logster::MAX_GROUPING_LENGTH..-1)
       true
     end
 
@@ -249,7 +244,76 @@ module Logster
       end
     end
 
+    def drop_redundant_envs(limit)
+      if Array === env
+        env.slice!(limit..-1)
+      end
+    end
+
+    def apply_env_size_limit(size_limit)
+      if Array === env
+        env.each { |e| truncate_env(e, size_limit) }
+      elsif Hash === env
+        truncate_env(env, size_limit)
+      end
+    end
+
+    def apply_message_size_limit(limit, gems_dir: nil)
+      size = self.to_json(exclude_env: true).bytesize
+      if size > limit && @backtrace
+        backtrace_limit = limit - (size - @backtrace.bytesize)
+        @backtrace.gsub!(gems_dir, "") if gems_dir
+        @backtrace.strip!
+        orig = @backtrace.dup
+        stop = false
+        while @backtrace.bytesize > backtrace_limit && backtrace_limit > 0 && !stop
+          lines = @backtrace.lines
+          if lines.size > 1
+            lines.pop
+            @backtrace = lines.join
+          else
+            @backtrace.slice!(backtrace_limit..-1)
+          end
+          # protection to ensure we never get stuck
+          stop = orig == @backtrace
+        end
+      end
+    end
+
     protected
+
+    def truncate_env(env, limit)
+      if JSON.fast_generate(env).bytesize > limit
+        sizes = {}
+        braces = '{}'.bytesize
+        env.each do |k,v|
+          sizes[k] = JSON.fast_generate(k => v).bytesize - braces
+        end
+        sorted = env.keys.sort { |a,b| sizes[a] <=> sizes[b] }
+
+        kept_keys = []
+        if env.key?(:time)
+          kept_keys << :time
+        elsif env.key?("time")
+          kept_keys << "time"
+        end
+
+        sum = braces
+        if time_key = kept_keys.first
+          sum += sizes[time_key]
+          sorted.delete(time_key)
+        end
+        comma = ','.bytesize
+
+        sorted.each do |k|
+          extra = kept_keys.size == 0 ? 0 : comma
+          break if sum + sizes[k] + extra > limit
+          kept_keys << k
+          sum += sizes[k] + extra
+        end
+        env.select! { |k| kept_keys.include?(k) }
+      end
+    end
 
     def truncate_message(msg)
       return msg unless msg

@@ -23,7 +23,7 @@ class TestMessage < MiniTest::Test
     t = (Time.new.to_f * 1000).to_i
     msg = Logster::Message.new(0, '', 'test', t)
     msg.populate_from_env({})
-    assert_equal(t, msg.env[:time])
+    assert_equal(t, msg.env["time"])
 
     msg = Logster::Message.new(0, '', 'test', t)
     msg.populate_from_env(time: 5)
@@ -42,7 +42,7 @@ class TestMessage < MiniTest::Test
 
     msg = Logster::Message.new(0, '', 'test', t)
     msg.populate_from_env([{ dsd: 6 }, { dsd: 8 }])
-    assert_equal([t, t], msg.env.map { |e| e[:time] })
+    assert_equal([t, t], msg.env.map { |e| e["time"] })
   end
 
   def test_merge_messages_both_with_array_envs
@@ -152,22 +152,92 @@ class TestMessage < MiniTest::Test
     assert_equal(600 + 3, msg.message.size)
   end
 
-  def test_env_is_not_merged_into_similar_message_if_size_will_be_too_large
-    default = Logster.config.maximum_message_size_bytes
-    Logster.config.maximum_message_size_bytes = 1000
-    message = Logster::Message.new(Logger::INFO, "test", "message", count: 13)
-    env = [{ key1: "this is my first key", key2: "this is my second key" }] * 13
-    message.env = env
+  def test_drop_redundant_envs
+    message = Logster::Message.new(Logger::WARN, '', 'message')
+    message.env = [{ a: 4 }] * 10
+    assert_equal(10, message.env.size)
+    message.drop_redundant_envs(5)
+    assert_equal(5, message.env.size)
 
-    message2 = Logster::Message.new(Logger::INFO, "test", "message")
-    message2.env = env.first
-    message.merge_similar_message(message2)
+    env = { f: 5, g: 4 }
+    message.env = env.dup
+    message.drop_redundant_envs(1)
+    assert_equal(env, message.env)
+  end
 
-    # env isn't merged, but count is incremented
-    assert_equal(13, message.env.size)
-    assert_equal(14, message.count)
-    assert_equal([], message.env_buffer)
-  ensure
-    Logster.config.maximum_message_size_bytes = default
+  def test_apply_env_size_limit_keeps_as_many_keys_as_possible
+    message = Logster::Message.new(Logger::WARN, '', 'message', 1)
+    env = { a: 1, bb: 22, ccc: 333 }
+    message.env = env.dup
+    message.apply_env_size_limit(24)
+    assert_operator(message.env.to_json.bytesize, :<=, 24)
+    assert_equal({ a: 1, bb: 22 }.to_json.bytesize, message.env.to_json.bytesize)
+
+    message.env = [env.dup] * 5
+    message.apply_env_size_limit(24)
+    assert_equal(5, message.env.size)
+    message.env.each do |e|
+      assert_operator(e.to_json.bytesize, :<=, 24)
+      assert_equal({ a: 1, bb: 22 }.to_json.bytesize, e.to_json.bytesize)
+    end
+
+    message.env = env.dup
+    message.apply_env_size_limit(25)
+    assert_operator(message.env.to_json.bytesize, :<=, 25)
+    assert_equal({ a: 1, bb: 22, ccc: 333 }.to_json.bytesize, message.env.to_json.bytesize)
+  end
+
+  def test_apply_message_size_limit_removes_gems_dir_from_backtrace_to_keep_total_message_size_below_limit
+    backtrace = <<~TEXT
+      /var/www/discourse/vendor/bundle/ruby/2.6.0/gems/rails_multisite-2.0.7/lib/rails_multisite/connection_management.rb:220:in `with_connection'
+      /var/www/discourse/vendor/bundle/ruby/2.6.0/gems/rails_multisite-2.0.7/lib/rails_multisite/connection_management.rb:60:in `with_connection'
+      /var/www/discourse/lib/scheduler/defer.rb:89:in `do_work'
+      /var/www/discourse/lib/scheduler/defer.rb:79:in `block (2 levels) in start_thread'
+    TEXT
+    without_gems_dir = <<~TEXT
+      rails_multisite-2.0.7/lib/rails_multisite/connection_management.rb:220:in `with_connection'
+      rails_multisite-2.0.7/lib/rails_multisite/connection_management.rb:60:in `with_connection'
+      /var/www/discourse/lib/scheduler/defer.rb:89:in `do_work'
+      /var/www/discourse/lib/scheduler/defer.rb:79:in `block (2 levels) in start_thread'
+    TEXT
+    gems_dir = "/var/www/discourse/vendor/bundle/ruby/2.6.0/gems/"
+    message = Logster::Message.new(Logger::WARN, '', 'message', 1)
+
+    message.backtrace = backtrace.dup
+    assert_operator(message.to_json(exclude_env: true).bytesize, :>=, 500)
+    message.apply_message_size_limit(500, gems_dir: gems_dir)
+    assert_operator(message.to_json(exclude_env: true).bytesize, :<=, 500)
+    assert_equal(without_gems_dir.strip, message.backtrace.strip)
+  end
+
+  def test_apply_message_size_limit_removes_lines_from_backtrace_to_keep_total_size_below_limit
+    backtrace = <<~TEXT
+      rails_multisite-2.0.7/lib/rails_multisite/connection_management.rb:220:in `with_connection'
+      rails_multisite-2.0.7/lib/rails_multisite/connection_management.rb:60:in `with_connection'
+      /var/www/discourse/lib/scheduler/defer.rb:89:in `do_work'
+      /var/www/discourse/lib/scheduler/defer.rb:79:in `block (2 levels) in start_thread'
+    TEXT
+    message = Logster::Message.new(Logger::WARN, '', 'message', 1)
+    message.backtrace = backtrace.dup
+    assert_operator(message.to_json(exclude_env: true).bytesize, :>=, 350)
+    message.apply_message_size_limit(350)
+    assert_operator(message.to_json(exclude_env: true).bytesize, :<=, 350)
+    assert_equal(backtrace.lines.first(2).join.strip, message.backtrace.strip)
+  end
+
+  def test_apply_message_size_limit_doesnt_remove_backtrace_entirely
+    message = Logster::Message.new(Logger::WARN, '', 'message', 1)
+    message.backtrace = "a" * 1000
+    assert_operator(message.to_json(exclude_env: true).bytesize, :>=, 500)
+    message.apply_message_size_limit(500)
+    assert_operator(message.to_json(exclude_env: true).bytesize, :<=, 500)
+    assert_equal(("a" * 354).size, message.backtrace.size)
+  end
+
+  def test_apply_message_size_limit_doesnt_hang_forever_and_doesnt_remove_backtrace_entirely
+    message = Logster::Message.new(Logger::WARN, '', 'message', 1)
+    message.backtrace = "aa" * 100
+    message.apply_message_size_limit(10)
+    assert_equal(("aa" * 100).size, message.backtrace.size)
   end
 end

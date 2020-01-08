@@ -841,19 +841,46 @@ class TestRedisStore < Minitest::Test
     end
   end
 
-  def test_store_trims_too_big_envs
-    default = Logster.config.maximum_message_size_bytes
-    Logster.config.maximum_message_size_bytes = 1000
-    message = Logster::Message.new(Logger::INFO, "test", "message")
-    env = [{ key1: "this is my first key", key2: "this is my second key" }] * 40
-    message.env = env
-    @store.save(message)
-    trimmed_message = @store.latest.first
-    assert_equal(13, trimmed_message.env.size)
-    size = message.to_json(exclude_env: true).bytesize + message.env.to_json.bytesize
-    assert_operator(1000, :>, size)
-  ensure
-    Logster.config.maximum_message_size_bytes = default
+  def test_ensure_messages_meet_config_size_limits_when_messages_are_saved
+    config_reset(
+      maximum_message_size_bytes: 300,
+      maximum_size_of_single_env_bytes: 30,
+      maximum_number_of_env_per_message: 5
+    ) do
+      env = [{ aaa: 111, bbb: 222, ccc: 333, ddd: 444 }] * 7
+      message = @store.report(Logger::WARN, '', 'test', backtrace: "aa\n" * 100, env: env.dup, timestamp: 777)
+      message = @store.get(message.key)
+      assert_operator(message.to_json(exclude_env: true).bytesize, :<, 300)
+      assert_equal(5, message.env.size)
+      message.env.each do |e|
+        assert_operator(e.to_json.bytesize, :<=, 30)
+        assert_equal({ "aaa" => 111, "time" => 777 }, e)
+      end
+    end
+  end
+
+  def test_ensure_messages_meet_config_size_limits_when_merged_together
+
+    config_reset(
+      maximum_size_of_single_env_bytes: 30,
+      maximum_number_of_env_per_message: 5,
+      allow_grouping: true
+    ) do
+      env = [{ a: 1, aa: 22, aaa: 333, aaaa: 4444 }] * 3
+      env_2 = [{ b: 1, bb: 22, bbb: 333, bbbb: 4444 }] * 3
+      @store.report(Logger::WARN, '', 'test', backtrace: "aa\n" * 100, env: env.dup, timestamp: 777)
+      message = @store.report(Logger::WARN, '', 'test', backtrace: "aa\n" * 100, env: env_2.dup, timestamp: 777)
+      message = @store.get(message.key)
+      assert_equal(5, message.env.size)
+      message.env.first(3).each do |e|
+        assert_operator(e.to_json.bytesize, :<=, 30)
+        assert_equal({ "b" => 1, "bb" => 22, "time" => 777 }, e)
+      end
+      message.env.last(2).each do |e|
+        assert_operator(e.to_json.bytesize, :<=, 30)
+        assert_equal({ "a" => 1, "aa" => 22, "time" => 777 }, e)
+      end
+    end
   end
 
   def test_custom_grouping_patterns
@@ -1006,6 +1033,19 @@ class TestRedisStore < Minitest::Test
   end
 
   private
+
+  def config_reset(configs)
+    defaults = {}
+    configs.each do |k,v|
+      defaults[k] = Logster.config.public_send(k)
+      Logster.config.public_send("#{k}=", v)
+    end
+    yield
+  ensure
+    defaults.each do |k,v|
+      Logster.config.public_send("#{k}=", v)
+    end
+  end
 
   def reset_redis
     @store.clear_all
