@@ -199,8 +199,8 @@ module Logster
         similar = get(key, load_env: false) if key
       end
 
-      message.drop_redundant_envs(Logster.config.maximum_number_of_env_per_message)
-      message.apply_env_size_limit(Logster.config.maximum_size_of_single_env_bytes)
+      message.drop_redundant_envs(Logster.config.max_env_count_per_message)
+      message.apply_env_size_limit(Logster.config.max_env_bytes)
       if similar
         similar.merge_similar_message(message)
         replace_and_bump(similar)

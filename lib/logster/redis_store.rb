@@ -640,7 +640,7 @@ module Logster
       prefixed = env_prefix(message_key)
       env = [env] unless Array === env
       @redis.lpush(prefixed, env.map(&:to_json).reverse)
-      @redis.ltrim(prefixed, 0, Logster.config.maximum_number_of_env_per_message - 1)
+      @redis.ltrim(prefixed, 0, Logster.config.max_env_count_per_message - 1)
     end
 
     def delete_env(message_key)

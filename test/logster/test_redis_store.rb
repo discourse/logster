@@ -844,8 +844,8 @@ class TestRedisStore < Minitest::Test
   def test_ensure_messages_meet_config_size_limits_when_messages_are_saved
     config_reset(
       maximum_message_size_bytes: 300,
-      maximum_size_of_single_env_bytes: 30,
-      maximum_number_of_env_per_message: 5
+      max_env_bytes: 30,
+      max_env_count_per_message: 5
     ) do
       env = [{ aaa: 111, bbb: 222, ccc: 333, ddd: 444 }] * 7
       message = @store.report(Logger::WARN, '', 'test', backtrace: "aa\n" * 100, env: env.dup, timestamp: 777)
@@ -862,8 +862,8 @@ class TestRedisStore < Minitest::Test
   def test_ensure_messages_meet_config_size_limits_when_merged_together
 
     config_reset(
-      maximum_size_of_single_env_bytes: 30,
-      maximum_number_of_env_per_message: 5,
+      max_env_bytes: 30,
+      max_env_count_per_message: 5,
       allow_grouping: true
     ) do
       env = [{ a: 1, aa: 22, aaa: 333, aaaa: 4444 }] * 3
