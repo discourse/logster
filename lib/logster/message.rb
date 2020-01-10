@@ -264,9 +264,9 @@ module Logster
         backtrace_limit = limit - (size - @backtrace.bytesize)
         @backtrace.gsub!(gems_dir, "") if gems_dir
         @backtrace.strip!
-        orig = @backtrace.dup
         stop = false
         while @backtrace.bytesize > backtrace_limit && backtrace_limit > 0 && !stop
+          orig = @backtrace.dup
           lines = @backtrace.lines
           if lines.size > 1
             lines.pop
