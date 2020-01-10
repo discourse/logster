@@ -272,7 +272,7 @@ module Logster
             lines.pop
             @backtrace = lines.join
           else
-            @backtrace.slice!(backtrace_limit..-1)
+            @backtrace.slice!(-1)
           end
           # protection to ensure we never get stuck
           stop = orig == @backtrace
