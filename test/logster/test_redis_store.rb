@@ -223,10 +223,11 @@ class TestRedisStore < Minitest::Test
       msg = messages[n]
       assert_equal("test_#{n}", msg.message)
       if n == 0
-        assert_equal(Logster::Message.default_env, msg.env)
+        assert_equal(Logster::Message.default_env.merge("time" => msg.timestamp), msg.env)
       else
         assert({ "test_#{n}" => "envsss" } <= msg.env)
       end
+      assert_equal(msg.timestamp, msg.env["time"])
     end
   end
 
@@ -241,43 +242,50 @@ class TestRedisStore < Minitest::Test
     old_env = { "old_env" => "old value" }
     message = @store.report(Logger::WARN, "test", "A", env: old_env)
 
-    unsaved_env = { "unsaved_env" => "lost value" }
-    message.env = unsaved_env
-
-    @store.replace_and_bump(message, save_env: false)
-
-    message = @store.get(message.key)
-    assert(old_env <= message.env)
-    refute(unsaved_env <= message.env)
-
-    saved_env = { "saved_env" => "saved value!" }
-    message.env = saved_env
+    extra_env = { "saved_env" => "saved value!" }
+    similar = @store.report(Logger::WARN, 'test', 'A', env: extra_env)
+    message.merge_similar_message(similar)
 
     @store.replace_and_bump(message)
 
     message = @store.get(message.key)
-    assert(saved_env == message.env)
+    assert(extra_env <= message.env[0])
+    assert(old_env <= message.env[1])
+  end
+
+  def test_ensure_env_doesnt_exceed_50_item
+    Logster.config.allow_grouping = true
+    message = nil
+    52.times do |n|
+      message = @store.report(Logger::WARN, "", "mssage", env: { a: n })
+    end
+    message = @store.get(message.key)
+    assert_equal(52, message.count)
+    assert_equal(50, message.env.size)
+    assert_equal((2..51).to_a, message.env.map { |e| e[:a] || e["a"] }.sort)
+  ensure
+    Logster.config.allow_grouping = false
   end
 
   def test_merging_performance
     Logster.config.allow_grouping = true
     backtrace = "fake backtrace"
-    env = { "some_env" => "some env" }
-    another_env = { "another_env" => "more env" }
-    yet_another_env = { "moaar_env" => "more env" }
+    env = [{ "some_env" => "some env" }] * 50
+    new_env = { "some_key" => "1234442" }
 
-    @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: env, count: 49)
+    @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: env, count: 50)
 
-    message = @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: another_env)
-    assert_instance_of(Array, message.env)
-    assert_equal(2, message.env.size)
-    assert(env <= message.env[0])
-    assert(another_env <= message.env[1])
-
-    message = @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: yet_another_env)
-    # we don't need to load env from redis cause we don't
-    # need to merge new env samples if count is 50 or more
+    message = @store.report(Logger::WARN, "", "title", backtrace: backtrace, env: new_env)
+    # env is nil cause we don't need to fetch it from redis
+    # we just send the newly added envs to redis and it'll
+    # take care of prepending them to the existing envs
     assert_nil(message.env)
+
+    message = @store.get(message.key)
+    assert_instance_of(Array, message.env)
+    assert_equal(50, message.env.size)
+    assert_equal(51, message.count)
+    assert(new_env <= message.env[0])
   ensure
     Logster.config.allow_grouping = false
   end
@@ -548,7 +556,7 @@ class TestRedisStore < Minitest::Test
       # message2 shouldn't vanish even if
       # its env matches an ignore pattern
       # however it should be merged with message1
-      assert_equal("business17", message.env[1]["cluster"])
+      assert_equal("business17", message.env[0]["cluster"])
     ensure
       # reset so it doesn't affect other tests
       @store.ignore = nil
@@ -833,19 +841,46 @@ class TestRedisStore < Minitest::Test
     end
   end
 
-  def test_store_trims_too_big_envs
-    default = Logster.config.maximum_message_size_bytes
-    Logster.config.maximum_message_size_bytes = 1000
-    message = Logster::Message.new(Logger::INFO, "test", "message")
-    env = [{ key1: "this is my first key", key2: "this is my second key" }] * 40
-    message.env = env
-    @store.save(message)
-    trimmed_message = @store.latest.first
-    assert_equal(13, trimmed_message.env.size)
-    size = message.to_json(exclude_env: true).bytesize + message.env_json.bytesize
-    assert_operator(1000, :>, size)
-  ensure
-    Logster.config.maximum_message_size_bytes = default
+  def test_ensure_messages_meet_config_size_limits_when_messages_are_saved
+    config_reset(
+      maximum_message_size_bytes: 300,
+      max_env_bytes: 30,
+      max_env_count_per_message: 5
+    ) do
+      env = [{ aaa: 111, bbb: 222, ccc: 333, ddd: 444 }] * 7
+      message = @store.report(Logger::WARN, '', 'test', backtrace: "aa\n" * 100, env: env.dup, timestamp: 777)
+      message = @store.get(message.key)
+      assert_operator(message.to_json(exclude_env: true).bytesize, :<, 300)
+      assert_equal(5, message.env.size)
+      message.env.each do |e|
+        assert_operator(e.to_json.bytesize, :<=, 30)
+        assert_equal({ "aaa" => 111, "time" => 777 }, e)
+      end
+    end
+  end
+
+  def test_ensure_messages_meet_config_size_limits_when_merged_together
+
+    config_reset(
+      max_env_bytes: 30,
+      max_env_count_per_message: 5,
+      allow_grouping: true
+    ) do
+      env = [{ a: 1, aa: 22, aaa: 333, aaaa: 4444 }] * 3
+      env_2 = [{ b: 1, bb: 22, bbb: 333, bbbb: 4444 }] * 3
+      @store.report(Logger::WARN, '', 'test', backtrace: "aa\n" * 100, env: env.dup, timestamp: 777)
+      message = @store.report(Logger::WARN, '', 'test', backtrace: "aa\n" * 100, env: env_2.dup, timestamp: 777)
+      message = @store.get(message.key)
+      assert_equal(5, message.env.size)
+      message.env.first(3).each do |e|
+        assert_operator(e.to_json.bytesize, :<=, 30)
+        assert_equal({ "b" => 1, "bb" => 22, "time" => 777 }, e)
+      end
+      message.env.last(2).each do |e|
+        assert_operator(e.to_json.bytesize, :<=, 30)
+        assert_equal({ "a" => 1, "aa" => 22, "time" => 777 }, e)
+      end
+    end
   end
 
   def test_custom_grouping_patterns
@@ -998,6 +1033,19 @@ class TestRedisStore < Minitest::Test
   end
 
   private
+
+  def config_reset(configs)
+    defaults = {}
+    configs.each do |k,v|
+      defaults[k] = Logster.config.public_send(k)
+      Logster.config.public_send("#{k}=", v)
+    end
+    yield
+  ensure
+    defaults.each do |k,v|
+      Logster.config.public_send("#{k}=", v)
+    end
+  end
 
   def reset_redis
     @store.clear_all

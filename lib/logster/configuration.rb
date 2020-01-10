@@ -15,7 +15,9 @@ module Logster
       :maximum_message_size_bytes,
       :project_directories,
       :enable_backtrace_links,
-      :gems_dir
+      :gems_dir,
+      :max_env_bytes,
+      :max_env_count_per_message
     )
 
     attr_writer :subdirectory
@@ -29,7 +31,9 @@ module Logster
       @enable_custom_patterns_via_ui = false
       @rate_limit_error_reporting = true
       @enable_js_error_reporting = true
-      @maximum_message_size_bytes = 60_000
+      @maximum_message_size_bytes = 10_000
+      @max_env_bytes = 1000
+      @max_env_count_per_message = 50
       @project_directories = []
       @enable_backtrace_links = true
       @gems_dir = Gem.dir + "/gems/"

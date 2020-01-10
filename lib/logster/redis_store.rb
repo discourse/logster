@@ -6,6 +6,7 @@ require 'logster/redis_rate_limiter'
 
 module Logster
   class RedisStore < BaseStore
+    ENV_PREFIX = "logster-env-"
 
     attr_accessor :redis, :max_backlog, :redis_raw_connection
     attr_writer :redis_prefix
@@ -24,12 +25,11 @@ module Logster
           return true if @redis.hget(solved_key, solved)
         end
       end
-      apply_max_size_limit(message)
 
       @redis.multi do
         @redis.hset(grouping_key, message.grouping_key, message.key)
         @redis.rpush(list_key, message.key)
-        update_message(message)
+        update_message(message, save_env: true)
       end
 
       trim
@@ -46,7 +46,7 @@ module Logster
           save_pattern_group(group) if group.changed?
         end
         @redis.hdel(hash_key, msg.key)
-        @redis.hdel(env_key, msg.key)
+        delete_env(msg.key)
         @redis.hdel(grouping_key, msg.grouping_key)
         @redis.lrem(list_key, -1, msg.key)
       end
@@ -60,26 +60,26 @@ module Logster
           save_pattern_group(group) if group.changed?
         end
         @redis.hdel(hash_key, message_keys)
-        @redis.hdel(env_key, message_keys)
         @redis.hdel(grouping_key, grouping_keys)
         message_keys.each do |k|
           @redis.lrem(list_key, -1, k)
+          delete_env(k)
         end
       end
     end
 
-    def replace_and_bump(message, save_env: true)
+    def replace_and_bump(message)
       # TODO make it atomic
       exists = @redis.hexists(hash_key, message.key)
       return false unless exists
 
       @redis.multi do
         @redis.hset(hash_key, message.key, message.to_json(exclude_env: true))
-        @redis.hset(env_key, message.key, message.env_json) if save_env
+        push_env(message.key, message.env_buffer) if message.has_env_buffer?
         @redis.lrem(list_key, -1, message.key)
         @redis.rpush(list_key, message.key)
       end
-
+      message.env_buffer = [] if message.has_env_buffer?
       check_rate_limits(message.severity)
 
       true
@@ -164,22 +164,21 @@ module Logster
     def clear
       RedisRateLimiter.clear_all(@redis)
       @redis.del(solved_key)
+      all_keys = @redis.lrange(list_key, 0, -1)
       @redis.del(list_key)
-      keys = @redis.smembers(protected_key) || []
-      if keys.empty?
+      protected_keys = @redis.smembers(protected_key) || []
+      if protected_keys.empty?
         @redis.del(hash_key)
-        @redis.del(env_key)
+        all_keys.each { |k| delete_env(k) }
         @redis.del(pattern_groups_key)
         @redis.del(grouping_key)
       else
-        protected = @redis.mapped_hmget(hash_key, *keys)
-        protected_env = @redis.mapped_hmget(env_key, *keys)
+        protected_messages = @redis.mapped_hmget(hash_key, *protected_keys)
         @redis.del(hash_key)
-        @redis.del(env_key)
-        @redis.mapped_hmset(hash_key, protected)
-        @redis.mapped_hmset(env_key, protected_env)
+        @redis.mapped_hmset(hash_key, protected_messages)
+        (all_keys - protected_keys).each { |k| delete_env(k) }
 
-        sorted = protected
+        sorted = protected_messages
           .values
           .map { |string|
             Message.from_json(string) rescue nil
@@ -203,10 +202,10 @@ module Logster
     # Delete everything, included protected messages
     # (use in tests)
     def clear_all
+      @redis.lrange(list_key, 0, -1).each { |k| delete_env(k) }
       @redis.del(list_key)
       @redis.del(protected_key)
       @redis.del(hash_key)
-      @redis.del(env_key)
       @redis.del(grouping_key)
       @redis.del(solved_key)
       @redis.del(ignored_logs_count_key)
@@ -235,17 +234,35 @@ module Logster
       bulk_get(@redis.lrange(list_key, 0, -1), with_env: with_env)
     end
 
+    BULK_ENV_GET_LUA = <<~LUA
+      local results = {};
+      for i = 1, table.getn(KEYS), 1 do
+        results[i] = { KEYS[i], redis.call('LRANGE', KEYS[i], 0, -1) };
+      end
+      return results;
+    LUA
+
     def bulk_get(message_keys, with_env: true)
       return [] if !message_keys || message_keys.size == 0
-      envs = @redis.mapped_hmget(env_key, *message_keys) if with_env
+      envs = nil
+      if with_env
+        envs = {}
+        @redis.eval(
+          BULK_ENV_GET_LUA,
+          keys: message_keys.map { |k| env_prefix(k) }
+        ).to_h.each do |k, v|
+          next if v.size == 0
+          parsed = v.size == 1 ? JSON.parse(v[0]) : v.map { |e| JSON.parse(e) }
+          envs[env_unprefix(k)] = parsed
+        end
+      end
       messages = @redis.hmget(hash_key, message_keys).map! do |json|
         next if !json || json.size == 0
         message = Message.from_json(json)
-        if with_env
+        if with_env && envs
           env = envs[message.key]
           if !message.env || message.env.size == 0
-            env = env && env.size > 0 ? ::JSON.parse(env) : {}
-            message.env = env
+            message.env = env || {}
           end
         end
         message
@@ -255,20 +272,20 @@ module Logster
     end
 
     def get_env(message_key)
-      json = @redis.hget(env_key, message_key)
-      return if !json || json.size == 0
-      JSON.parse(json)
+      envs = @redis.lrange(env_prefix(message_key), 0, -1)
+      return if !envs || envs.size == 0
+      envs.size == 1 ? JSON.parse(envs[0]) : envs.map { |j| JSON.parse(j) }
     end
 
     def protect(message_key)
-      if message = get(message_key)
+      if message = get(message_key, load_env: false)
         message.protected = true
         update_message(message)
       end
     end
 
     def unprotect(message_key)
-      if message = get(message_key)
+      if message = get(message_key, load_env: false)
         message.protected = false
         update_message(message)
       else
@@ -376,13 +393,11 @@ module Logster
 
     protected
 
-    def clear_solved(count = nil)
-
+    def clear_solved
       ignores = Set.new(@redis.hkeys(solved_key) || [])
 
       if ignores.length > 0
-        start = count ? 0 - count : 0
-        message_keys = @redis.lrange(list_key, start, -1) || []
+        message_keys = @redis.lrange(list_key, 0, -1) || []
 
         bulk_get(message_keys).each do |message|
           unless (ignores & (message.solved_keys || [])).empty?
@@ -397,7 +412,7 @@ module Logster
         removed_keys = []
         while removed_key = @redis.lpop(list_key)
           unless @redis.sismember(protected_key, removed_key)
-            rmsg = get removed_key
+            rmsg = get(removed_key, load_env: false)
             delete(rmsg)
             break
           else
@@ -410,9 +425,9 @@ module Logster
       end
     end
 
-    def update_message(message)
+    def update_message(message, save_env: false)
       @redis.hset(hash_key, message.key, message.to_json(exclude_env: true))
-      @redis.hset(env_key, message.key, message.env_json)
+      push_env(message.key, message.env) if save_env
       if message.protected
         @redis.sadd(protected_key, message.key)
       else
@@ -571,7 +586,7 @@ module Logster
     end
 
     def protected_key
-      @saved_key ||= "__LOGSTER__SAVED"
+      @protected_key ||= "__LOGSTER__SAVED"
     end
 
     def grouping_key
@@ -608,22 +623,6 @@ module Logster
       )
     end
 
-    def apply_max_size_limit(message)
-      size = message.to_json(exclude_env: true).bytesize
-      env_size = message.env_json.bytesize
-      max_size = Logster.config.maximum_message_size_bytes
-      if size + env_size > max_size
-        # env is most likely the reason for the large size
-        # truncate it so the overall size is < the limit
-        if Array === message.env
-          # the - 1 at the end ensures the size goes a little bit below the limit
-          truncate_at = (message.env.size.to_f * max_size.to_f / (env_size + size)).to_i - 1
-          truncate_at = 1 if truncate_at < 1
-          message.env = message.env[0...truncate_at]
-        end
-      end
-    end
-
     def register_rate_limit(severities, limit, duration, callback)
       severities = [severities] unless severities.is_a?(Array)
       redis = (@redis_raw_connection && @redis_prefix) ? @redis_raw_connection : @redis
@@ -635,6 +634,25 @@ module Logster
       rate_limits[self.redis_prefix] ||= []
       rate_limits[self.redis_prefix] << rate_limiter
       rate_limiter
+    end
+
+    def push_env(message_key, env)
+      prefixed = env_prefix(message_key)
+      env = [env] unless Array === env
+      @redis.lpush(prefixed, env.map(&:to_json).reverse)
+      @redis.ltrim(prefixed, 0, Logster.config.max_env_count_per_message - 1)
+    end
+
+    def delete_env(message_key)
+      @redis.del(env_prefix(message_key))
+    end
+
+    def env_unprefix(key)
+      key.sub(ENV_PREFIX, "")
+    end
+
+    def env_prefix(key)
+      ENV_PREFIX + key
     end
   end
 end

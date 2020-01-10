@@ -18,7 +18,7 @@ module Logster
     end
 
     # Modify the saved message to the given one (identified by message.key) and bump it to the top of the latest list
-    def replace_and_bump(message, save_env: true)
+    def replace_and_bump(message)
       not_implemented
     end
 
@@ -199,15 +199,17 @@ module Logster
         similar = get(key, load_env: false) if key
       end
 
+      message.drop_redundant_envs(Logster.config.max_env_count_per_message)
+      message.apply_env_size_limit(Logster.config.max_env_bytes)
       if similar
-        if similar.count < Logster::MAX_GROUPING_LENGTH
-          similar.env = get_env(similar.key) || {}
-        end
-        save_env = similar.merge_similar_message(message)
-
-        replace_and_bump(similar, save_env: save_env)
+        similar.merge_similar_message(message)
+        replace_and_bump(similar)
         similar
       else
+        message.apply_message_size_limit(
+          Logster.config.maximum_message_size_bytes,
+          gems_dir: Logster.config.gems_dir
+        )
         save message
         message
       end
