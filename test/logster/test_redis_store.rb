@@ -1036,13 +1036,13 @@ class TestRedisStore < Minitest::Test
 
   def config_reset(configs)
     defaults = {}
-    configs.each do |k,v|
+    configs.each do |k, v|
       defaults[k] = Logster.config.public_send(k)
       Logster.config.public_send("#{k}=", v)
     end
     yield
   ensure
-    defaults.each do |k,v|
+    defaults.each do |k, v|
       Logster.config.public_send("#{k}=", v)
     end
   end

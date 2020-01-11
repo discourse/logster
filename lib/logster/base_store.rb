@@ -201,6 +201,7 @@ module Logster
 
       message.drop_redundant_envs(Logster.config.max_env_count_per_message)
       message.apply_env_size_limit(Logster.config.max_env_bytes)
+      saved = true
       if similar
         similar.merge_similar_message(message)
         replace_and_bump(similar)
@@ -210,13 +211,13 @@ module Logster
           Logster.config.maximum_message_size_bytes,
           gems_dir: Logster.config.gems_dir
         )
-        save message
+        saved = save(message)
         message
       end
 
       message = similar || message
 
-      if Logster.config.enable_custom_patterns_via_ui || allow_custom_patterns
+      if (Logster.config.enable_custom_patterns_via_ui || allow_custom_patterns) && saved
         grouping_patterns = @patterns_cache.fetch(Logster::GroupingPattern::CACHE_KEY) do
           Logster::GroupingPattern.find_all(store: self)
         end

@@ -90,9 +90,7 @@ export default EmberObject.extend({
     const message = this.currentMessage;
     if (message && !message.env && this.currentTab === "env") {
       this.set("loadingEnv", true);
-      return ajax(`/fetch-env/${message.key}.json`)
-        .then(env => message.set("env", env))
-        .always(() => this.set("loadingEnv", false));
+      return message.fetchEnv().always(() => this.set("loadingEnv", false));
     }
   },
 

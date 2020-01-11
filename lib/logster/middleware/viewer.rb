@@ -38,7 +38,7 @@ module Logster
 
           elsif resource =~ /\/message\/([0-9a-f]+)$/
             if env[REQUEST_METHOD] != "DELETE"
-              return method_not_allowed("DELETE is needed for /clear")
+              return method_not_allowed("DELETE")
             end
 
             key = $1
@@ -87,7 +87,7 @@ module Logster
 
           elsif resource =~ /\/clear$/
             if env[REQUEST_METHOD] != "POST"
-              return method_not_allowed("POST is needed for /clear")
+              return method_not_allowed("POST")
             end
             Logster.store.clear
             return [200, {}, ["Messages cleared"]]
@@ -139,12 +139,12 @@ module Logster
 
             set_name = $1
             req = Rack::Request.new(env)
-            return method_not_allowed if req.request_method == "GET"
+            return method_not_allowed(%w[POST PUT DELETE]) if req.request_method == "GET"
 
             update_patterns(set_name, req)
           elsif resource == "/reset-count.json"
             req = Rack::Request.new(env)
-            return method_not_allowed("PUT is needed for this endpoint") if req.request_method != "PUT"
+            return method_not_allowed("PUT") if req.request_method != "PUT"
             pattern = nil
             if [true, "true"].include?(req.params["hard"])
               pattern = Logster.store.ignore.find do |patt|
@@ -170,6 +170,16 @@ module Logster
             else
               not_found
             end
+          elsif resource == '/solve-group'
+            return not_allowed unless Logster.config.enable_custom_patterns_via_ui
+            req = Rack::Request.new(env)
+            return method_not_allowed("POST") if req.request_method != "POST"
+            group = Logster.store.find_pattern_groups do |patt|
+              patt.inspect == req.params["regex"]
+            end.first
+            return not_found("No such pattern group exists") if !group
+            group.messages_keys.each { |k| Logster.store.solve(k) }
+            return [200, {}, []]
           else
             not_found
           end
@@ -243,7 +253,7 @@ module Logster
         when "DELETE"
           record.destroy
         else
-          return method_not_allowed("Allowed methods: POST, PUT or DELETE")
+          return method_not_allowed(%w[POST PUT DELETE])
         end
 
         [200, { "Content-Type" => "application/json" }, [JSON.generate(pattern: record.to_s)]]
@@ -277,8 +287,11 @@ module Logster
         [403, {}, [message]]
       end
 
-      def method_not_allowed(message = "Method not allowed")
-        [405, {}, [message]]
+      def method_not_allowed(allowed_methods)
+        if Array === allowed_methods
+          allowed_methods = allowed_methods.join(", ")
+        end
+        [405, { "Allow" => allowed_methods }, []]
       end
 
       def parse_regex(string)
@@ -327,8 +340,7 @@ module Logster
         end
         {
           gems_data: gems_data,
-          directories: Logster.config.project_directories,
-          application_version: Logster.config.application_version
+          directories: Logster.config.project_directories
         }
       end
 
@@ -337,7 +349,8 @@ module Logster
         root_url += "/" if root_url[-1] != "/"
         preload.merge!(
           env_expandable_keys: Logster.config.env_expandable_keys,
-          patterns_enabled: Logster.config.enable_custom_patterns_via_ui
+          patterns_enabled: Logster.config.enable_custom_patterns_via_ui,
+          application_version: Logster.config.application_version
         )
         backtrace_links_enabled = Logster.config.enable_backtrace_links
         gems_dir = Logster.config.gems_dir

@@ -1,6 +1,7 @@
 import Message from "client-app/models/message";
 import { default as EmberObject, computed } from "@ember/object";
 import { reads } from "@ember/object/computed";
+import { ajax } from "client-app/lib/utilities";
 
 export default EmberObject.extend({
   selected: false,
@@ -16,5 +17,9 @@ export default EmberObject.extend({
 
   glyph: computed(function() {
     return "<i class='fa fa-clone group'></i>";
-  })
+  }),
+
+  solveAll() {
+    return ajax("/solve-group", { type: "POST", data: { regex: this.regex } });
+  }
 });

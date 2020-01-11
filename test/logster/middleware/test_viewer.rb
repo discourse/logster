@@ -370,4 +370,104 @@ class TestViewer < Minitest::Test
     response = request.get("/logsie/fetch-env/123456abc.json")
     assert_equal(404, response.status)
   end
+
+  def test_solve_group_api_requires_post_request
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::GroupingPattern.new(/gotta be post/).save
+    msg = Logster.store.report(
+      Logger::WARN,
+      '',
+      'gotta be post 22',
+      env: { "application_version" => "abc" },
+      backtrace: "aa"
+    )
+    latest = Logster.store.latest
+    assert_equal(1, latest.size)
+    assert_equal(msg.key, latest.first["messages"].first.key)
+    %i[get head options].each do |m|
+      response = request.public_send(m, "/logsie/solve-group", params: { regex: "/gotta be post/" })
+      assert_equal(405, response.status)
+      assert_equal("POST", response.headers["Allow"])
+    end
+    latest = Logster.store.latest
+    assert_equal(1, latest.size)
+    assert_equal(msg.key, latest.first["messages"].first.key)
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_solve_group_returns_404_when_pattern_doesnt_exist
+    Logster.config.enable_custom_patterns_via_ui = true
+    Logster::GroupingPattern.new(/some pattern/).save
+    msg = Logster.store.report(
+      Logger::WARN,
+      '',
+      'some pattern 22',
+      env: { "application_version" => "abc" },
+      backtrace: "aa"
+    )
+    latest = Logster.store.latest
+    assert_equal(1, latest.size)
+    assert_equal(msg.key, latest.first["messages"].first.key)
+    response = request.post("/logsie/solve-group", params: { regex: "/i dont exist/" })
+    assert_equal(404, response.status)
+    latest = Logster.store.latest
+    assert_equal(1, latest.size)
+    assert_equal(msg.key, latest.first["messages"].first.key)
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_solving_grouped_messages
+    Logster.config.enable_custom_patterns_via_ui = true
+    backtrace = "a b c d"
+    Logster::GroupingPattern.new(/test pattern/).save
+    msg1 = Logster.store.report(Logger::WARN, '', 'test pattern 1', backtrace: backtrace)
+    msg2 = Logster.store.report(
+      Logger::WARN,
+      '',
+      'test pattern 2',
+      env: { "application_version" => "abc" },
+      backtrace: backtrace
+    )
+    msg3 = Logster.store.report(
+      Logger::WARN,
+      '',
+      'test pattern 3',
+      env: [{ "application_version" => "def" }, { "application_version" => "ghi" }],
+      backtrace: backtrace
+    )
+    group = Logster.store.find_pattern_groups { |p| p == /test pattern/ }.first
+    assert_equal([msg3, msg2, msg1].map(&:key), group.messages_keys)
+
+    latest = Logster.store.latest
+    assert_equal(1, latest.size)
+    assert_equal([msg1, msg2, msg3].map(&:key).sort, latest.first["messages"].map(&:key).sort)
+
+    response = request.post("/logsie/solve-group", params: { regex: "/test pattern/" })
+    group = Logster.store.find_pattern_groups { |p| p == /test pattern/ }.first
+    assert_equal([msg1.key], group.messages_keys)
+    assert_equal(200, response.status)
+
+    latest = Logster.store.latest
+    # msg1 remains cause it doesn't have application_version
+    assert_equal([msg1.key], latest.first["messages"].map(&:key))
+    assert_equal(1, latest.size)
+
+    msg4 = Logster.store.report(Logger::WARN, '', 'test pattern 4', backtrace: backtrace)
+    %w[abc def ghi].each do |version|
+      Logster.store.report(
+        Logger::WARN,
+        '',
+        'test pattern 5',
+        env: { "application_version" => version },
+        backtrace: backtrace
+      )
+    end
+    latest = Logster.store.latest
+    assert_equal([msg1.key, msg4.key].sort, latest.first["messages"].map(&:key).sort)
+    assert_equal(1, latest.size)
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
 end

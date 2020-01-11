@@ -5,48 +5,51 @@ import { computed } from "@ember/object";
 export default Em.Object.extend({
   MAX_LEN: 200,
 
+  fetchEnv() {
+    return ajax(`/fetch-env/${this.key}.json`).then(env =>
+      this.set("env", env)
+    );
+  },
+
   expand() {
     this.set("expanded", true);
   },
 
   solve() {
-    return ajax("/solve/" + this.get("key"), { type: "PUT" });
+    return ajax(`/solve/${this.key}`, { type: "PUT" });
   },
 
   destroy() {
-    return ajax("/message/" + this.get("key"), { type: "DELETE" });
+    return ajax(`/message/${this.key}`, { type: "DELETE" });
   },
 
   protect() {
     this.set("protected", true);
-    return ajax("/protect/" + this.get("key"), { type: "PUT" });
+    return ajax(`/protect/${this.key}`, { type: "PUT" });
   },
+
   unprotect() {
     this.set("protected", false);
-    return ajax("/unprotect/" + this.get("key"), { type: "DELETE" });
+    return ajax(`/unprotect/${this.key}`, { type: "DELETE" });
   },
 
   showCount: computed("count", function() {
-    return this.get("count") > 1;
+    return this.count > 1;
   }),
 
   hasMore: computed("message", "expanded", function() {
-    const message = this.get("message");
-    const expanded = this.get("expanded");
-
-    return !expanded && message.length > this.MAX_LEN;
+    return !this.expanded && this.message.length > this.MAX_LEN;
   }),
 
   shareUrl: computed("key", function() {
-    return Preload.get("rootPath") + "/show/" + this.get("key");
+    return `${Preload.get("rootPath")}/show/${this.key}`;
   }),
 
   displayMessage: computed("message", "expanded", function() {
-    let message = this.get("message");
-    const expanded = this.get("expanded");
+    let message = this.message;
 
-    if (!expanded && message.length > this.MAX_LEN) {
-      message = message.substr(0, this.MAX_LEN);
+    if (!this.expanded && this.message.length > this.MAX_LEN) {
+      message = this.message.substr(0, this.MAX_LEN);
     }
     return message;
   }),
@@ -57,15 +60,13 @@ export default Em.Object.extend({
   },
 
   canSolve: computed("env.{application_version,length}", function() {
-    const backtrace = this.get("backtrace");
-    const env = this.get("env");
-    const appVersion = Array.isArray(env)
-      ? env
+    const appVersion = Array.isArray(this.env)
+      ? this.env
           .map(e => e.application_version)
           .compact()
           .join("")
-      : env && env.application_version;
-    return appVersion && backtrace && backtrace.length > 0;
+      : this.env && this.env.application_version;
+    return appVersion && this.backtrace && this.backtrace.length > 0;
   }),
 
   rowClass: computed("severity", function() {
