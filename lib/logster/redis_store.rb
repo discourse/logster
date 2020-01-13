@@ -22,7 +22,7 @@ module Logster
     def save(message)
       if keys = message.solved_keys
         keys.each do |solved|
-          return true if @redis.hget(solved_key, solved)
+          return false if @redis.hget(solved_key, solved)
         end
       end
 

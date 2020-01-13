@@ -132,12 +132,11 @@ module Logster
       if Array === env
         versions = env.map { |single_env| single_env["application_version"] }
       else
-        versions = env["application_version"]
+        versions = [env["application_version"]]
       end
+      versions.compact!
 
-      if versions && backtrace && backtrace.length > 0
-        versions = [versions] if String === versions
-
+      if backtrace && backtrace.length > 0
         versions.map do |version|
           Digest::SHA1.hexdigest "#{version} #{backtrace}"
         end
@@ -286,10 +285,10 @@ module Logster
       if JSON.fast_generate(env).bytesize > limit
         sizes = {}
         braces = '{}'.bytesize
-        env.each do |k,v|
+        env.each do |k, v|
           sizes[k] = JSON.fast_generate(k => v).bytesize - braces
         end
-        sorted = env.keys.sort { |a,b| sizes[a] <=> sizes[b] }
+        sorted = env.keys.sort { |a, b| sizes[a] <=> sizes[b] }
 
         kept_keys = []
         if env.key?(:time)
