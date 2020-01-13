@@ -146,4 +146,20 @@ class TestBaseStore < Minitest::Test
     message = @store.report(Logger::WARN, "test", "H", backtrace: ["Foo", "Bar"])
     assert_equal("Foo\nBar", message.backtrace)
   end
+
+  def test_chained_loggers_dont_have_superfluous_frames_in_backtrace
+    logger = Logster::Logger.new(@store)
+    other_store = Logster::TestStore.new
+    other_logger = Logster::Logger.new(other_store)
+    logger.chain(other_logger)
+    logger.warn("this is warning")
+    [@store, other_store].each do |store|
+      message = store.reported.first
+      assert_equal("this is warning", message.message)
+      # the first line in the backtrace should be the method that
+      # called the warn/info/error etc. method.
+      # in this case the first line should be this test method
+      assert_includes(message.backtrace.lines.first, __method__.to_s)
+    end
+  end
 end

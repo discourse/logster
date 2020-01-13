@@ -70,6 +70,18 @@ module Logster
         message = message.scrub
       end
 
+      # we want to get the backtrace as early as possible so that logster's
+      # own methods don't show up as the first few frames in the backtrace
+      if !opts || !opts.key?(:backtrace)
+        opts ||= {}
+        backtrace = caller_locations
+        while backtrace.first.path.end_with?("/logger.rb")
+          backtrace.shift
+        end
+        backtrace = backtrace.join("\n")
+        opts[:backtrace] = backtrace
+      end
+
       if @chained
         i = 0
         # micro optimise for logging

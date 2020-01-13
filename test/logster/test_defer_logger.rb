@@ -29,7 +29,7 @@ class TestDeferLogger < Minitest::Test
     # Otherwise we'd only get a partial backtrace from
     # the point the new thread was spawned
     backtrace = @store.calls.first[3][:backtrace]
-    assert_instance_of(Array, backtrace)
+    assert_includes(backtrace.lines.first, __method__.to_s)
 
     assert_equal(0, queue.size)
   end
