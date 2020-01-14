@@ -32,6 +32,7 @@ module("Integration | Component | message-info", function(hooks) {
             showTitle=showTitle
             currentEnvPosition=envPosition
             envChangedAction=callback
+            showShare=true
             actionsInMenu=actionsInMenu}}`
     );
     let activeTab = find(".message-info .content.active pre");
@@ -60,7 +61,7 @@ module("Integration | Component | message-info", function(hooks) {
     await click(find(".message-actions button.expand.no-text"));
     assert.equal(
       findAll(".actions-menu button").length,
-      2,
+      3,
       "extra buttons shown inside a menu"
     );
     assert
@@ -85,7 +86,7 @@ module("Integration | Component | message-info", function(hooks) {
       .doesNotExist("menu expand button is not shown");
     assert.equal(
       findAll(".message-actions button").length,
-      3,
+      4,
       "all actions buttons are shown inline when `actionsInMenu` is false"
     );
 

@@ -175,9 +175,20 @@ i.warning {
   margin-top: 8px;
 }
 
+@media (max-width: 382px) {
+  #bottom-panel.full .message-actions {
+    height: 73px;
+  }
+}
+
+@media (min-width: 383px) {
+  #bottom-panel.full .message-actions {
+    height: 40px;
+  }
+}
+
 #bottom-panel.full .message-actions {
   position: fixed;
-  height: 40px;
   width: 100%;
   left: 0;
   bottom: 0;
@@ -439,7 +450,7 @@ label span {
   flex-shrink: 0;
 }
 
-@media (min-width: 770px) {
+@media (min-width: 771px) {
   .severity-filters,
   .search-clear-all {
     height: 100%;
