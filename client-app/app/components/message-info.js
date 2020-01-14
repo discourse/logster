@@ -94,7 +94,7 @@ export default Component.extend({
     const httpHosts = Array.isArray(this.currentMessage.env)
       ? this.currentMessage.env
           .map(e => e["HTTP_HOST"])
-          .filter(e => e)
+          .filter((e, i, a) => e && a.indexOf(e) === i)
           .join(", ")
       : this.currentMessage.env["HTTP_HOST"];
 
