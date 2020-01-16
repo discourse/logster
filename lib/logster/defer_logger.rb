@@ -7,7 +7,7 @@ module Logster
     private
 
     def report_to_store(severity, progname, message, opts = {})
-      opts[:backtrace] ||= caller
+      opts[:backtrace] ||= caller.join("\n")
       Logster::Scheduler.schedule do
         super(severity, progname, message, opts)
       end

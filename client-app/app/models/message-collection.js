@@ -86,9 +86,12 @@ export default EmberObject.extend({
     this.fetchEnv();
   },
 
-  fetchEnv() {
+  fetchEnv(opts = {}) {
     const message = this.currentMessage;
-    if (message && !message.env && this.currentTab === "env") {
+    if (
+      opts["force"] ||
+      (message && !message.env && this.currentTab === "env")
+    ) {
       this.set("loadingEnv", true);
       return message.fetchEnv().always(() => this.set("loadingEnv", false));
     }

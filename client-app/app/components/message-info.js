@@ -55,6 +55,12 @@ export default Component.extend({
       });
     }
 
+    buttons.push({
+      klass: "copy",
+      action: "copyAction",
+      icon: "clipboard",
+      label: "Copy"
+    });
     return buttons;
   }),
 
@@ -72,6 +78,34 @@ export default Component.extend({
     }
   ),
 
+  copy() {
+    const temp = document.createElement("TEXTAREA");
+    document.body.appendChild(temp);
+    const header = this.currentMessage.showCount
+      ? `Message (${this.currentMessage.count} copies reported)`
+      : "Message";
+    const message = `${header}\n\n${this.currentMessage.message}`;
+
+    const backtrace = `Backtrace\n\n${this.currentMessage.backtrace
+      .split("\n")
+      .slice(0, 10)
+      .join("\n")}`;
+
+    const httpHosts = Array.isArray(this.currentMessage.env)
+      ? this.currentMessage.env
+          .map(e => e["HTTP_HOST"])
+          .filter((e, i, a) => e && a.indexOf(e) === i)
+          .join(", ")
+      : this.currentMessage.env["HTTP_HOST"];
+
+    const env = httpHosts ? `Env\n\nHTTP HOSTS: ${httpHosts}` : "";
+    const lines = [message, backtrace, env].filter(l => l).join("\n\n");
+    temp.value = lines;
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+  },
+
   actions: {
     tabChanged(newTab) {
       if (this.onTabChange) {
@@ -80,19 +114,19 @@ export default Component.extend({
     },
 
     protect() {
-      this.get("currentMessage").protect();
+      this.currentMessage.protect();
     },
 
     unprotect() {
-      this.get("currentMessage").unprotect();
+      this.currentMessage.unprotect();
     },
 
     remove() {
-      this.removeMessage(this.get("currentMessage"));
+      this.removeMessage(this.currentMessage);
     },
 
     solve() {
-      this.solveMessage(this.get("currentMessage"));
+      this.solveMessage(this.currentMessage);
     },
 
     solveAll() {
@@ -101,6 +135,14 @@ export default Component.extend({
 
     share() {
       window.location.pathname = this.get("currentMessage.shareUrl");
+    },
+
+    copyAction() {
+      if (this.fetchEnv && !this.currentMessage.env) {
+        this.fetchEnv({ force: true }).then(() => this.copy());
+      } else {
+        this.copy();
+      }
     }
   }
 });
