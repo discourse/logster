@@ -1032,6 +1032,18 @@ class TestRedisStore < Minitest::Test
     Logster::Group.remove_instance_variable(:@max_size)
   end
 
+  def test_truncated_messages_when_they_are_similar_can_still_be_merged
+    config_reset(allow_grouping: true) do
+      backtrace = "a" * Logster.config.maximum_message_size_bytes
+      title = "sasasas"
+      msg = @store.report(Logger::WARN, '', title, backtrace: backtrace.dup)
+      msg2 = @store.report(Logger::WARN, '', title, backtrace: backtrace.dup)
+      assert_equal(msg.key, msg2.key)
+      assert_operator(msg.to_json(exclude_env: true).bytesize, :<=, Logster.config.maximum_message_size_bytes)
+      assert_operator(msg.backtrace.size, :<, backtrace.size)
+    end
+  end
+
   private
 
   def config_reset(configs)

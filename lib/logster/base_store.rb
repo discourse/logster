@@ -195,6 +195,10 @@ module Logster
       similar = nil
 
       if Logster.config.allow_grouping
+        message.apply_message_size_limit(
+          Logster.config.maximum_message_size_bytes,
+          gems_dir: Logster.config.gems_dir
+        )
         key = self.similar_key(message)
         similar = get(key, load_env: false) if key
       end
