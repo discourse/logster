@@ -5,6 +5,18 @@ const MOVE_EVENTS = ["touchmove", "mousemove"];
 const UP_EVENTS = ["touchend", "mouseup"];
 const DOWN_EVENTS = ["touchstart", "mousedown"];
 
+function bind(target, key, desc) {
+  const orig = desc.value;
+  const boundKey = `_${key}Bound`;
+  return {
+    get() {
+      if (this[boundKey]) return this[boundKey];
+      this.set(boundKey, orig.bind(this));
+      return this[boundKey];
+    }
+  };
+}
+
 export default Component.extend({
   resizing: false,
   classNames: ["divider"],
@@ -68,31 +80,24 @@ export default Component.extend({
     return this._endDrag;
   },
 
-  dividerClickHandler() {
-    if (this._dividerClickHandler) return this._dividerClickHandler;
-
-    const handler = e => {
-      e.preventDefault(); // for disabling pull-down-to-refresh on mobile
-      const overlay = document.createElement("DIV");
-      overlay.id = "overlay";
-      document.body.appendChild(overlay);
-      this.set("resizing", true);
-      MOVE_EVENTS.forEach(name =>
-        document.addEventListener(name, this.performDrag())
-      );
-      UP_EVENTS.forEach(name =>
-        document.addEventListener(name, this.endDrag())
-      );
-    };
-    this.set("_dividerClickHandler", handler);
-    return this._dividerClickHandler;
+  @bind
+  dividerClickHandler(e) {
+    e.preventDefault(); // for disabling pull-down-to-refresh on mobile
+    const overlay = document.createElement("DIV");
+    overlay.id = "overlay";
+    document.body.appendChild(overlay);
+    this.set("resizing", true);
+    MOVE_EVENTS.forEach(name =>
+      document.addEventListener(name, this.performDrag())
+    );
+    UP_EVENTS.forEach(name => document.addEventListener(name, this.endDrag()));
   },
 
   didInsertElement() {
     // inspired by http://plugins.jquery.com/misc/textarea.js
     this.set("divider", document.querySelector(".divider"));
     DOWN_EVENTS.forEach(name => {
-      this.divider.addEventListener(name, this.dividerClickHandler());
+      this.divider.addEventListener(name, this.dividerClickHandler);
     });
     scheduleOnce("afterRender", this, "initialDivideView");
   },
@@ -105,7 +110,7 @@ export default Component.extend({
 
   willDestroyElement() {
     DOWN_EVENTS.forEach(name =>
-      this.divider.removeEventListener(name, this.dividerClickHandler())
+      this.divider.removeEventListener(name, this.dividerClickHandler)
     );
   }
 });
