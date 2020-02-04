@@ -18,8 +18,10 @@ export default Controller.extend({
   }),
 
   resizePanels(amount) {
-    Em.$("#bottom-panel").css("height", amount - 13);
-    Em.$("#top-panel").css("bottom", amount + 12);
+    const bottomPanel = document.getElementById("bottom-panel");
+    const topPanel = document.getElementById("top-panel");
+    bottomPanel.style.height = `${amount - 13}px`;
+    topPanel.style.bottom = `${amount + 12}px`;
   },
 
   actionsInMenu: computed(function() {

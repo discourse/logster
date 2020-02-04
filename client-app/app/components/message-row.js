@@ -21,25 +21,23 @@ export default Component.extend({
       return;
     }
 
-    const $topPanel = Em.$("#top-panel");
+    const topPanel = document.getElementById("top-panel");
+    if (!topPanel) return;
 
-    const scrollTop = $topPanel.scrollTop();
-    const height = $topPanel.height();
-    const scrollHeight = $topPanel[0].scrollHeight;
-
-    STICK_TO_BOTTOM = scrollHeight - 20 < height + scrollTop;
+    const height = parseFloat(getComputedStyle(topPanel).height);
+    STICK_TO_BOTTOM = topPanel.scrollHeight - 20 < height + topPanel.scrollTop;
     CHECKED_BOTTOM = true;
   },
 
   didInsertElement() {
-    const $topPanel = Em.$("#top-panel");
-    Em.run.next(() => {
-      CHECKED_BOTTOM = false;
+    const topPanel = document.getElementById("top-panel");
+    if (!topPanel) return;
 
-      if (STICK_TO_BOTTOM) {
-        STICK_TO_BOTTOM = false;
-        $topPanel.scrollTop($topPanel[0].scrollHeight - $topPanel.height());
-      }
-    });
+    CHECKED_BOTTOM = false;
+    if (STICK_TO_BOTTOM) {
+      STICK_TO_BOTTOM = false;
+      topPanel.scrollTop =
+        topPanel.scrollHeight - parseFloat(getComputedStyle(topPanel).height);
+    }
   }
 });

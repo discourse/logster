@@ -81,6 +81,8 @@ export default Em.Object.extend({
         return "error";
       case 4:
         return "fatal";
+      default:
+        return "unknown";
     }
   }),
 
@@ -96,6 +98,8 @@ export default Em.Object.extend({
         return "<i class='fa fa-times-circle error'></i>";
       case 4:
         return "<i class='fa fa-times-circle fatal'></i>";
+      default:
+        return "<i class='fa fa-question-circle unknown'></i>";
     }
   })
 });

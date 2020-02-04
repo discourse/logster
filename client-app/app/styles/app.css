@@ -598,7 +598,6 @@ label span {
 }
 
 .settings-section {
-  border-top: 1px solid #ddd;
   padding-top: 15px;
 }
 
@@ -647,7 +646,6 @@ label span {
 
 .retro-checkbox {
   margin-top: 7px;
-  margin-bottom: 15px;
 }
 
 .btn.new-pattern {

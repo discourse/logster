@@ -28,7 +28,7 @@ export default Component.extend({
     return ajax(`/patterns/${this.get("key")}.json`, { method, data });
   },
 
-  alwaysBlock(pattern) {
+  finallyBlock(pattern) {
     pattern.set("saving", false);
   },
 
@@ -70,7 +70,7 @@ export default Component.extend({
             pattern.destroy();
           })
           .catch(response => this.catchBlock(pattern, response))
-          .always(() => this.alwaysBlock(pattern));
+          .finally(() => this.finallyBlock(pattern));
       }
     },
 
@@ -80,8 +80,8 @@ export default Component.extend({
       if (pattern.get("isNew")) {
         promise = this.makeAPICall({
           method: "POST",
-          pattern: pattern.get("valueBuffer"),
-          retroactive: pattern.retroactive
+          pattern: pattern.valueBuffer,
+          retroactive: !!pattern.retroactive
         }).then(response => {
           pattern.updateValue(response.pattern);
           pattern.set("isNew", false);
@@ -102,7 +102,7 @@ export default Component.extend({
         .catch(response => {
           this.catchBlock(pattern, response);
         })
-        .always(() => this.alwaysBlock(pattern));
+        .finally(() => this.finallyBlock(pattern));
     },
 
     resetCount(pattern) {
@@ -115,7 +115,7 @@ export default Component.extend({
           pattern.set("count", 0);
         })
         .catch(response => this.catchBlock(pattern, response))
-        .always(() => this.alwaysBlock(pattern));
+        .finally(() => this.finallyBlock(pattern));
     },
 
     checkboxChanged(pattern) {

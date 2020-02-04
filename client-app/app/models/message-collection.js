@@ -93,7 +93,7 @@ export default EmberObject.extend({
       (message && !message.env && this.currentTab === "env")
     ) {
       this.set("loadingEnv", true);
-      return message.fetchEnv().always(() => this.set("loadingEnv", false));
+      return message.fetchEnv().finally(() => this.set("loadingEnv", false));
     }
   },
 
@@ -136,7 +136,7 @@ export default EmberObject.extend({
       filter: this.filter.join("_")
     };
 
-    if (!_.isEmpty(this.search)) {
+    if (this.search && this.search.length > 0) {
       data.search = this.search;
       const regexSearch = this.regexSearch;
       if (regexSearch) {
@@ -196,7 +196,7 @@ export default EmberObject.extend({
         this.set("total", data.total);
         return data;
       })
-      .always(() => this.set("loading", false));
+      .finally(() => this.set("loading", false));
   },
 
   reload() {
@@ -270,6 +270,7 @@ export default EmberObject.extend({
         }
       }
     }
+    return null;
   }),
 
   toObjects(rows) {
