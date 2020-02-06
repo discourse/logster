@@ -260,22 +260,19 @@ module Logster
     def apply_message_size_limit(limit, gems_dir: nil)
       size = self.to_json(exclude_env: true).bytesize
       if size > limit && @backtrace
-        backtrace_limit = limit - (size - @backtrace.bytesize)
         @backtrace.gsub!(gems_dir, "") if gems_dir
         @backtrace.strip!
-        stop = false
-        while @backtrace.bytesize > backtrace_limit && backtrace_limit > 0 && !stop
-          orig = @backtrace.dup
-          lines = @backtrace.lines
-          if lines.size > 1
-            lines.pop
-            @backtrace = lines.join
-          else
-            @backtrace.slice!(-1)
-          end
-          # protection to ensure we never get stuck
-          stop = orig == @backtrace
-        end
+        size = self.to_json(exclude_env: true).bytesize
+        backtrace_limit = limit - (size - @backtrace.bytesize)
+        return if backtrace_limit <= 0 || size <= limit
+        truncate_backtrace(backtrace_limit)
+      end
+    end
+
+    def truncate_backtrace(bytes_limit)
+      @backtrace = @backtrace.byteslice(0...bytes_limit)
+      while !@backtrace[-1].valid_encoding? && @backtrace.size > 1
+        @backtrace.slice!(-1)
       end
     end
 

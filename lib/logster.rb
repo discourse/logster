@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'logster/version'
 require 'logster/logger'
 require 'logster/message'
 require 'logster/configuration'

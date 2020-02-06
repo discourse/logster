@@ -217,12 +217,34 @@ class TestMessage < MiniTest::Test
       /var/www/discourse/lib/scheduler/defer.rb:89:in `do_work'
       /var/www/discourse/lib/scheduler/defer.rb:79:in `block (2 levels) in start_thread'
     TEXT
+
+    expected = <<~TEXT
+      rails_multisite-2.0.7/lib/rails_multisite/connection_management.rb:220:in `with_connection'
+      rails_multisite-2.0.7/lib/rails_multisite/connection_management.rb:60:in `with_connection'
+      /var/www/discourse
+    TEXT
     message = Logster::Message.new(Logger::WARN, '', 'message', 1)
     message.backtrace = backtrace.dup
     assert_operator(message.to_json(exclude_env: true).bytesize, :>=, 350)
     message.apply_message_size_limit(350)
     assert_operator(message.to_json(exclude_env: true).bytesize, :<=, 350)
-    assert_equal(backtrace.lines.first(2).join.strip, message.backtrace.strip)
+    assert_equal(expected.strip, message.backtrace.strip)
+  end
+
+  def test_truncate_backtrace_shouldnt_corrupt_backtrace_when_it_contains_multibytes_characters
+    backtrace = "aहa"
+    message = Logster::Message.new(Logger::WARN, '', 'message', 1)
+    message.backtrace = backtrace.dup
+    message.truncate_backtrace(3)
+    assert_equal("a", message.backtrace)
+
+    message.backtrace = backtrace.dup
+    message.truncate_backtrace(4)
+    assert_equal("aह", message.backtrace)
+
+    message.backtrace = backtrace.dup
+    message.truncate_backtrace(5)
+    assert_equal(backtrace, message.backtrace)
   end
 
   def test_apply_message_size_limit_doesnt_remove_backtrace_entirely
