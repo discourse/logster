@@ -1,15 +1,12 @@
 import Component from "@ember/component";
+import { bound } from "client-app/lib/decorators";
 
 export default Component.extend({
   showMenu: false,
   tagName: "span",
 
-  init() {
-    this._super(...arguments);
-    this.outsideClickHandler = this._outsideClickHandler.bind(this);
-  },
-
-  _outsideClickHandler(event) {
+  @bound
+  outsideClickHandler(event) {
     if (
       this.element &&
       !this.element.contains(event.target) &&

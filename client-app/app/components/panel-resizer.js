@@ -1,21 +1,10 @@
 import Component from "@ember/component";
 import { scheduleOnce, throttle } from "@ember/runloop";
+import { bound } from "client-app/lib/decorators";
 
 const MOVE_EVENTS = ["touchmove", "mousemove"];
 const UP_EVENTS = ["touchend", "mouseup"];
 const DOWN_EVENTS = ["touchstart", "mousedown"];
-
-function bind(target, key, desc) {
-  const orig = desc.value;
-  const boundKey = `_${key}Bound`;
-  return {
-    get() {
-      if (this[boundKey]) return this[boundKey];
-      this.set(boundKey, orig.bind(this));
-      return this[boundKey];
-    }
-  };
-}
 
 export default Component.extend({
   resizing: false,
@@ -33,54 +22,41 @@ export default Component.extend({
     this.events.trigger("panelResized", fromBottom);
   },
 
-  performDrag() {
-    if (this._performDrag) return this._performDrag;
-
-    const handler = e => {
-      if (this.resizing) {
-        this.divideView(
-          e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY)
-        );
-      }
-    };
-
-    const throttled = e => {
-      throttle(this, handler, e, 25);
-    };
-
-    this.set("_performDrag", throttled);
-    return this._performDrag;
+  @bound
+  performDrag(e) {
+    throttle(this, this.throttledPerformDrag, e, 25);
   },
 
-  endDrag() {
-    if (this._endDrag) return this._endDrag;
-
-    const handler = () => {
-      const overlay = document.getElementById("overlay");
-      if (overlay) {
-        overlay.parentElement.removeChild(overlay);
-      }
-      this.set("resizing", false);
-
-      if (localStorage) {
-        localStorage.logster_divider_bottom = parseInt(
-          this.divider.style.bottom,
-          10
-        );
-      }
-
-      MOVE_EVENTS.forEach(name =>
-        document.removeEventListener(name, this.performDrag())
+  throttledPerformDrag(e) {
+    if (this.resizing) {
+      this.divideView(
+        e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY)
       );
-      UP_EVENTS.forEach(name =>
-        document.removeEventListener(name, this.endDrag())
-      );
-    };
-    this.set("_endDrag", handler);
-    return this._endDrag;
+    }
   },
 
-  @bind
+  @bound
+  endDrag(/* e */) {
+    const overlay = document.getElementById("overlay");
+    if (overlay) {
+      overlay.parentElement.removeChild(overlay);
+    }
+    this.set("resizing", false);
+
+    if (localStorage) {
+      localStorage.logster_divider_bottom = parseInt(
+        this.divider.style.bottom,
+        10
+      );
+    }
+
+    MOVE_EVENTS.forEach(name =>
+      document.removeEventListener(name, this.performDrag)
+    );
+    UP_EVENTS.forEach(name => document.removeEventListener(name, this.endDrag));
+  },
+
+  @bound
   dividerClickHandler(e) {
     e.preventDefault(); // for disabling pull-down-to-refresh on mobile
     const overlay = document.createElement("DIV");
@@ -88,9 +64,9 @@ export default Component.extend({
     document.body.appendChild(overlay);
     this.set("resizing", true);
     MOVE_EVENTS.forEach(name =>
-      document.addEventListener(name, this.performDrag())
+      document.addEventListener(name, this.performDrag)
     );
-    UP_EVENTS.forEach(name => document.addEventListener(name, this.endDrag()));
+    UP_EVENTS.forEach(name => document.addEventListener(name, this.endDrag));
   },
 
   didInsertElement() {
