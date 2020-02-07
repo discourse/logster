@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2020-02-07: 2.6.1
+
+  - FIX: Fetch env when row is selected to allow copy to work on Firefox
+
 - 2020-02-07: 2.6.0
 
   - DEV: Bump handlebars from 4.1.2 to 4.5.3 in /client-app (#102)
