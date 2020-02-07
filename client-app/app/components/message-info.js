@@ -138,11 +138,7 @@ export default Component.extend({
     },
 
     copyAction() {
-      if (this.fetchEnv && !this.currentMessage.env) {
-        this.fetchEnv({ force: true }).then(() => this.copy());
-      } else {
-        this.copy();
-      }
+      this.copy();
     }
   }
 });

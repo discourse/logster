@@ -62,7 +62,8 @@ export default EmberObject.extend({
     });
     if (shouldRefresh)
       this.notifyPropertyChange("currentGroupedMessagesPosition");
-    this.fetchEnv();
+    const forceFetchEnv = this.currentMessage && !this.currentMessage.env;
+    this.fetchEnv({ force: forceFetchEnv });
   },
 
   tabChanged(newTab) {
