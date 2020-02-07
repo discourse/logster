@@ -56,7 +56,7 @@ export function initialize(app) {
   const isMobile =
     /mobile/i.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent);
   if (isMobile) {
-    Em.$("body").addClass("mobile");
+    document.body.classList.add("mobile");
   }
   app.register("site:main", { isMobile }, { instantiate: false });
   app.inject("controller", "site", "site:main");

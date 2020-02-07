@@ -1,40 +1,47 @@
 import Component from "@ember/component";
-import { observer } from "@ember/object";
+import { bound } from "client-app/lib/decorators";
 
 export default Component.extend({
   showMenu: false,
   tagName: "span",
 
-  init() {
-    this._super(...arguments);
-    this.bindingFunction = this.bindingFunction.bind(this);
-  },
-
-  bindingFunction(event) {
-    const context = this.$()[0];
-    if (!Em.$.contains(context, event.target) && context !== event.target) {
+  @bound
+  outsideClickHandler(event) {
+    if (
+      this.element &&
+      !this.element.contains(event.target) &&
+      this.element !== event.target
+    ) {
       this.set("showMenu", false);
+      this.updateMenu();
     }
   },
 
-  bindDocument: observer("showMenu", function() {
-    const $document = Em.$(document);
-    if (this.get("showMenu")) {
-      $document.on("click", this.get("bindingFunction"));
+  updateMenu() {
+    if (this.showMenu) {
+      this.addOutsideClickHandler();
     } else {
-      $document.off("click", this.get("bindingFunction"));
+      this.removeOutsideClickHandler();
     }
-  }),
+  },
+
+  addOutsideClickHandler() {
+    document.addEventListener("click", this.outsideClickHandler);
+  },
+
+  removeOutsideClickHandler() {
+    document.removeEventListener("click", this.outsideClickHandler);
+  },
 
   willDestroyElement() {
     this._super(...arguments);
-    const $document = Em.$(document);
-    $document.off("click", this.get("bindingFunction"));
+    this.removeOutsideClickHandler();
   },
 
   actions: {
     expandMenu() {
       this.toggleProperty("showMenu");
+      this.updateMenu();
     },
     share() {
       this.share();

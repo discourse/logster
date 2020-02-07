@@ -1,4 +1,5 @@
 import Preload from "client-app/lib/preload";
+import { Promise, resolve } from "rsvp";
 
 const entityMap = {
   "&": "&amp;",
@@ -14,16 +15,47 @@ export function escapeHtml(string) {
 }
 
 export function ajax(url, settings) {
-  settings = settings || {};
-  settings.headers = settings.headers || {};
-  settings.headers["X-SILENCE-LOGGER"] = true;
-  return Em.$.ajax(Preload.get("rootPath") + url, settings);
+  return new Promise((resolve, reject) => {
+    settings = settings || {};
+    const xhr = new XMLHttpRequest();
+    url = Preload.get("rootPath") + url;
+    if (settings.data) {
+      for (let param in settings.data) {
+        const prefix = url.indexOf("?") === -1 ? "?" : "&";
+        url += prefix;
+        url += `${param}=${encodeURIComponent(settings.data[param])}`;
+      }
+    }
+    xhr.open(settings.method || settings.type || "GET", url);
+    xhr.setRequestHeader("X-SILENCE-LOGGER", true);
+    if (settings.headers) {
+      for (let header in settings.headers) {
+        xhr.setRequestHeader(header, settings.headers[header]);
+      }
+    }
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        let status = xhr.status;
+        if ((status >= 200 && status < 300) || status === 304) {
+          const type = xhr.getResponseHeader("Content-Type");
+          let data = xhr.responseText;
+          if (/\bjson\b/.test(type)) {
+            data = JSON.parse(data);
+          }
+          resolve(data);
+        } else {
+          reject(xhr);
+        }
+      }
+    };
+    xhr.send();
+  });
 }
 
 export function preloadOrAjax(url, settings) {
   const preloaded = Preload.get(url.replace(".json", ""));
   if (preloaded) {
-    return Em.RSVP.resolve(preloaded);
+    return resolve(preloaded);
   } else {
     return ajax(url, settings);
   }
@@ -96,32 +128,33 @@ export function buildArrayString(array) {
   return "[" + buffer.join(", ") + "]";
 }
 
-export function buildHashString(hash, recurse, expanded = []) {
+export function buildHashString(hash, recurse, expanded = [], lists = {}) {
   if (!hash) return "";
 
   const buffer = [];
   const hashes = [];
   const expandableKeys = Preload.get("env_expandable_keys") || [];
-  _.each(hash, (v, k) => {
+  Object.keys(hash).forEach(k => {
+    const v = hash[k];
     if (v === null) {
       buffer.push("null");
-    } else if (Object.prototype.toString.call(v) === "[object Array]") {
+    } else if (expandableKeys.indexOf(k) !== -1 && !recurse) {
       let valueHtml = "";
-      if (
-        expandableKeys.indexOf(k) !== -1 &&
-        !recurse &&
-        expanded.indexOf(k) === -1 &&
-        v.length > 3
-      ) {
-        valueHtml = `${escapeHtml(
-          v[0]
-        )}, <a class="expand-list" data-key=${k}>${v.length - 1} more</a>`;
+      if (expanded.indexOf(k) !== -1 || (lists[k] && lists[k].length < 3)) {
+        valueHtml =
+          lists[k] && lists[k].length === 1
+            ? escapeHtml(lists[k][0])
+            : buildArrayString(lists[k]);
       } else {
-        valueHtml = buildArrayString(v);
+        valueHtml = `${escapeHtml(
+          lists[k][0]
+        )}, <a class="expand-list" data-key=${k}>${lists[k].length -
+          1} more</a>`;
       }
-      buffer.push(
-        "<tr><td>" + escapeHtml(k) + "</td><td>" + valueHtml + "</td></tr>"
-      );
+      buffer.push(`<tr><td>${escapeHtml(k)}</td><td>${valueHtml}</td></tr>`);
+    } else if (Object.prototype.toString.call(v) === "[object Array]") {
+      const valueHtml = buildArrayString(v);
+      buffer.push(`<tr><td>${escapeHtml(k)}</td><td>${valueHtml}</td></tr>`);
     } else if (typeof v === "object") {
       hashes.push(k);
     } else {
@@ -137,20 +170,14 @@ export function buildHashString(hash, recurse, expanded = []) {
     }
   });
 
-  if (_.size(hashes) > 0) {
-    _.each(hashes, function(k1) {
-      const v = hash[k1];
-      buffer.push("<tr><td></td><td><table>");
-      buffer.push(
-        "<td>" +
-          escapeHtml(k1) +
-          "</td><td>" +
-          buildHashString(v, true) +
-          "</td>"
-      );
-      buffer.push("</table></td></tr>");
-    });
-  }
+  hashes.forEach(k1 => {
+    const v = hash[k1];
+    buffer.push("<tr><td></td><td><table>");
+    buffer.push(
+      `<td>${escapeHtml(k1)}</td><td>${buildHashString(v, true)}</td>`
+    );
+    buffer.push("</table></td></tr>");
+  });
   const className = recurse ? "" : "env-table";
-  return "<table class='" + className + "'>" + buffer.join("\n") + "</table>";
+  return `<table class='${className}'>${buffer.join("\n")}</table>`;
 }

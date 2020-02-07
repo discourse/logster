@@ -1,21 +1,21 @@
 import Component from "@ember/component";
 import { formatTime } from "client-app/lib/utilities";
+import { later } from "@ember/runloop";
 
 export default Component.extend({
   didInsertElement() {
-    const updateTimes = () => {
-      Em.$(".auto-update-time").each(function() {
-        const timestamp = parseInt(this.getAttribute("data-timestamp"), 10);
-        const elem = this;
-        const text = formatTime(timestamp);
+    later(this, this.updateTimes, 60000);
+  },
 
-        if (text !== elem.innerText) {
-          elem.innerText = text;
-        }
-      });
-      Em.run.later(updateTimes, 60000);
-    };
-
-    Em.run.later(updateTimes, 60000);
+  updateTimes() {
+    Array.from(document.querySelectorAll(".auto-update-time")).forEach(node => {
+      const timestamp = parseInt(node.dataset.timestamp);
+      if (!timestamp) return;
+      const formatted = formatTime(timestamp);
+      if (formatted !== node.innerText) {
+        node.innerText = formatted;
+      }
+    });
+    later(this, this.updateTimes, 60000);
   }
 });
