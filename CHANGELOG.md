@@ -1,5 +1,14 @@
 # CHANGELOG
 
+- 2020-02-07: 2.6.0
+
+  - DEV: Bump handlebars from 4.1.2 to 4.5.3 in /client-app (#102)
+  - FEATURE: Linkify backtrace lines to github (#104)
+  - UX: Keep the 50 most recent envs rather than the first 50 (#103). Also introduces new config options `max_env_bytes` and `max_env_count_per_message`.
+  - FEATURE: Solve All button for messages grouped by pattern (#105)
+  - FEATURE: Copy button for messages (#106)
+  - DEV: Upgrade Ember to 3.15 and remove jQuery and lodash as dependencies (#107)
+
 - 2019-12-13: 2.5.1
 
   - DEV: Bump puma from 4.2.1 to 4.3.1 in /website (#100)
