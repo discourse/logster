@@ -18,11 +18,12 @@ module("Integration | Component | back-trace", function(hooks) {
   test("backtrace lines display and work correctly", async function(assert) {
     const backtrace = `/var/www/discourse/vendor/bundle/ruby/2.6.0/gems/activerecord-6.0.1/lib/active_record/relation/finder_methods.rb:317:in \`exists?'
 /var/www/discourse/lib/permalink_constraint.rb:6:in \`matches?'
-/var/www/discourse/plugins/discourse-prometheus/lib/middleware/metrics.rb:17:in \`call'`;
+/var/www/discourse/plugins/discourse-prometheus/lib/middleware/metrics.rb:17:in \`call'
+activerecord-6.0.1/lib/active_record/relation/finder_methods.rb:317:in \`exists?'`;
     this.set("backtrace", backtrace);
     await render(hbs`{{back-trace backtrace=backtrace}}`);
 
-    const [gem, app, plugin] = findAll("a");
+    const [gem, app, plugin, gem2] = findAll("a");
     assert.equal(
       gem.href,
       "https://github.com/rails/rails/tree/v6.0.1/activerecord/lib/active_record/relation/finder_methods.rb#L317"
@@ -36,6 +37,11 @@ module("Integration | Component | back-trace", function(hooks) {
     assert.equal(
       plugin.href,
       "https://github.com/discourse/discourse-prometheus/blob/master/lib/middleware/metrics.rb#L17"
+    );
+
+    assert.equal(
+      gem2.href,
+      "https://github.com/rails/rails/tree/v6.0.1/activerecord/lib/active_record/relation/finder_methods.rb#L317"
     );
 
     let gemLine = find("div.backtrace-line");

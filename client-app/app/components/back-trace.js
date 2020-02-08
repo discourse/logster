@@ -6,7 +6,7 @@ function startsWith(str, search) {
   if (!str || !search || search.length > str.length) {
     return false;
   }
-  return str.substring(0, search.length) == search;
+  return str.substring(0, search.length) === search;
 }
 
 function backtraceLinksEnabled() {
@@ -115,8 +115,10 @@ export default Component.extend({
   },
 
   findGithubURL(line, shortenedLine) {
+    const projectDirs = Preloaded.get("directories") || [];
     const isGem = startsWith(line, Preloaded.get("gems_dir"));
-    if (isGem) {
+    const isApp = projectDirs.some(p => startsWith(line, p.path));
+    if (isGem || !isApp) {
       return this.GithubURLForGem(shortenedLine);
     } else {
       return this.GithubURLForApp(line);
