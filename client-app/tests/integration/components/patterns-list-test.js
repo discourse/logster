@@ -13,7 +13,7 @@ module("Integration | Component | patterns-list", function(hooks) {
       patterns: []
     });
     await render(
-      hbs`{{patterns-list patterns=patterns mutable=mutable showCounter=true}}`
+      hbs`{{patterns-list patterns=patterns mutable=mutable key="suppression"}}`
     );
     assert
       .dom(".pattern-input")
