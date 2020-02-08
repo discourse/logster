@@ -128,7 +128,7 @@ export function buildArrayString(array) {
   return "[" + buffer.join(", ") + "]";
 }
 
-export function buildHashString(hash, recurse, expanded = [], lists = {}) {
+export function buildHashString(hash, recurse, expanded = []) {
   if (!hash) return "";
 
   const buffer = [];
@@ -138,22 +138,20 @@ export function buildHashString(hash, recurse, expanded = [], lists = {}) {
     const v = hash[k];
     if (v === null) {
       buffer.push("null");
-    } else if (expandableKeys.indexOf(k) !== -1 && !recurse) {
-      let valueHtml = "";
-      if (expanded.indexOf(k) !== -1 || (lists[k] && lists[k].length < 3)) {
-        valueHtml =
-          lists[k] && lists[k].length === 1
-            ? escapeHtml(lists[k][0])
-            : buildArrayString(lists[k]);
-      } else {
-        valueHtml = `${escapeHtml(
-          lists[k][0]
-        )}, <a class="expand-list" data-key=${k}>${lists[k].length -
-          1} more</a>`;
-      }
-      buffer.push(`<tr><td>${escapeHtml(k)}</td><td>${valueHtml}</td></tr>`);
     } else if (Object.prototype.toString.call(v) === "[object Array]") {
-      const valueHtml = buildArrayString(v);
+      let valueHtml = "";
+      if (
+        expandableKeys.indexOf(k) !== -1 &&
+        !recurse &&
+        expanded.indexOf(k) === -1 &&
+        v.length > 3
+      ) {
+        valueHtml = `${escapeHtml(
+          v[0]
+        )}, <a class="expand-list" data-key=${k}>${v.length - 1} more</a>`;
+      } else {
+        valueHtml = buildArrayString(v);
+      }
       buffer.push(`<tr><td>${escapeHtml(k)}</td><td>${valueHtml}</td></tr>`);
     } else if (typeof v === "object") {
       hashes.push(k);
@@ -170,14 +168,26 @@ export function buildHashString(hash, recurse, expanded = [], lists = {}) {
     }
   });
 
-  hashes.forEach(k1 => {
-    const v = hash[k1];
-    buffer.push("<tr><td></td><td><table>");
-    buffer.push(
-      `<td>${escapeHtml(k1)}</td><td>${buildHashString(v, true)}</td>`
-    );
-    buffer.push("</table></td></tr>");
-  });
+  if (hashes.length > 0) {
+    hashes.forEach(k1 => {
+      const v = hash[k1];
+      buffer.push("<tr><td></td><td><table>");
+      buffer.push(
+        `<td>${escapeHtml(k1)}</td><td>${buildHashString(v, true)}</td>`
+      );
+      buffer.push("</table></td></tr>");
+    });
+  }
   const className = recurse ? "" : "env-table";
   return `<table class='${className}'>${buffer.join("\n")}</table>`;
+}
+
+export function clone(object) {
+  // simple function to clone an object
+  // we don't need it fancier than this
+  const copy = {};
+  Object.keys(object).forEach(k => {
+    copy[k] = object[k];
+  });
+  return copy;
 }

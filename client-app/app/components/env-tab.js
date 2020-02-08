@@ -1,6 +1,6 @@
 import Component from "@ember/component";
 import { computed } from "@ember/object";
-import { buildHashString } from "client-app/lib/utilities";
+import { buildHashString, clone } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
 
 export default Component.extend({
@@ -20,28 +20,20 @@ export default Component.extend({
     if (!this.isEnvArray) {
       return buildHashString(this.get("message.env"));
     } else {
+      const currentEnv = clone(this.currentEnv);
       const expandableKeys = Preload.get("env_expandable_keys") || [];
-      const expandedLists = {};
       expandableKeys.forEach(key => {
-        if (
-          Object.prototype.hasOwnProperty.call(this.currentEnv, key) &&
-          !Array.isArray(this.currentEnv[key])
-        ) {
-          const list = [this.currentEnv[key]];
+        if (currentEnv.hasOwnProperty(key) && !Array.isArray(currentEnv[key])) {
+          const list = [currentEnv[key]];
           this.message.env.forEach(env => {
             if (env[key] && list.indexOf(env[key]) === -1) {
               list.push(env[key]);
             }
           });
-          expandedLists[key] = list;
+          currentEnv[key] = list.length > 1 ? list : list[0];
         }
       });
-      return buildHashString(
-        this.currentEnv,
-        false,
-        this.expanded,
-        expandedLists
-      );
+      return buildHashString(currentEnv, false, this.expanded || []);
     }
   }),
 

@@ -25,9 +25,9 @@ return e.substring(t.length)}return e}(t)
 return{line:r,url:e.findGithubURL(t,r)}})):[]}))})
 e.default=o})),define("client-app/components/env-tab",["exports","client-app/lib/utilities","client-app/lib/preload"],(function(e,t,n){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
 var a=Ember.Component.extend({currentEnv:Ember.computed("isEnvArray","currentEnvPosition",(function(){return this.isEnvArray?this.message.env[this.currentEnvPosition]:this.message.env})),isEnvArray:Ember.computed("message.env",(function(){return Array.isArray(this.get("message.env"))})),html:Ember.computed("isEnvArray","currentEnv","expanded.[]",(function(){var e=this
-if(this.isEnvArray){var a=n.default.get("env_expandable_keys")||[],r={}
-return a.forEach((function(t){if(Object.prototype.hasOwnProperty.call(e.currentEnv,t)&&!Array.isArray(e.currentEnv[t])){var n=[e.currentEnv[t]]
-e.message.env.forEach((function(e){e[t]&&-1===n.indexOf(e[t])&&n.push(e[t])})),r[t]=n}})),(0,t.buildHashString)(this.currentEnv,!1,this.expanded,r)}return(0,t.buildHashString)(this.get("message.env"))})),click:function(e){var t=e.target,a=t.dataset.key;-1!==(n.default.get("env_expandable_keys")||[]).indexOf(a)&&t.classList.contains("expand-list")&&(e.preventDefault(),this.expanded?this.expanded.pushObject(a):this.set("expanded",[a]))}})
+if(this.isEnvArray){var a=(0,t.clone)(this.currentEnv)
+return(n.default.get("env_expandable_keys")||[]).forEach((function(t){if(a.hasOwnProperty(t)&&!Array.isArray(a[t])){var n=[a[t]]
+e.message.env.forEach((function(e){e[t]&&-1===n.indexOf(e[t])&&n.push(e[t])})),a[t]=n.length>1?n:n[0]}})),(0,t.buildHashString)(a,!1,this.expanded||[])}return(0,t.buildHashString)(this.get("message.env"))})),click:function(e){var t=e.target,a=t.dataset.key;-1!==(n.default.get("env_expandable_keys")||[]).indexOf(a)&&t.classList.contains("expand-list")&&(e.preventDefault(),this.expanded?this.expanded.pushObject(a):this.set("expanded",[a]))}})
 e.default=a})),define("client-app/components/message-info",["exports","client-app/lib/preload"],(function(e,t){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
 var n=Ember.Component.extend({showSolveAllButton:Ember.computed.bool("currentRow.group"),buttons:Ember.computed("currentMessage.protected","showSolveButton",(function(){var e=this.get("currentMessage.protected"),t=[]
 return!e&&this.showSolveButton&&t.push({klass:"solve",action:"solve",icon:"check-square-o",label:"Solve",danger:!0}),this.showSolveAllButton&&t.push({klass:"solve-all",action:"solveAll",icon:"check-square-o",label:"Solve All",danger:!0}),e?t.push({klass:"unprotect",action:"unprotect",icon:"unlock",label:"Unprotect"}):t.push({klass:"remove",action:"remove",icon:"trash-o",label:"Remove",danger:!0},{klass:"protect",action:"protect",icon:"lock",label:"Protect"}),t.push({klass:"copy",action:"copyAction",icon:"clipboard",label:"Copy"}),t})),showSolveButton:Ember.computed("showSolveAllButton","currentMessage.{canSolve,env}",(function(){return!this.showSolveAllButton&&(this.currentMessage.env?this.currentMessage.canSolve:!!t.default.get("application_version"))})),copy:function(){var e=document.createElement("TEXTAREA")
@@ -41,8 +41,9 @@ if(e){var a=parseFloat(getComputedStyle(e).height)
 n=e.scrollHeight-20<a+e.scrollTop,t=!0}}},didInsertElement:function(){var e=document.getElementById("top-panel")
 e&&(t=!1,n&&(n=!1,e.scrollTop=e.scrollHeight-parseFloat(getComputedStyle(e).height)))}})
 e.default=a})),define("client-app/components/page-nav",["exports"],(function(e){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
-var t=Ember.Component.extend({classNames:["nav-controls"],classNameBindings:["extraClasses"],disableBackButtons:Ember.computed.equal("position",0),disableForwardButtons:Ember.computed("position","list.length",(function(){return this.position===this.get("list.length")-1})),displayNumber:Ember.computed("position",(function(){return this.position+1})),actions:{takeStep:function(e){var t="back"===e?-1:1,n=this.position+t
-this.navigate(n)},bigJump:function(e){var t="back"===e?0:this.get("list.length")-1
+var t=Ember.Component.extend({classNames:["nav-controls"],classNameBindings:["extraClasses"],disableBackButtons:Ember.computed.equal("position",0),disableForwardButtons:Ember.computed("position","list.length",(function(){return this.position===this.get("list.length")-1})),displayNumber:Ember.computed("position",(function(){return this.position+1})),actions:{takeStep:function(e){var t="back"===e?-1:1
+if(!(1===t&&this.disableForwardButtons||-1===t&&this.disableBackButtons)){var n=this.position+t
+this.navigate(n)}},bigJump:function(e){var t="back"===e?0:this.get("list.length")-1
 this.navigate(t)}}})
 e.default=t})),define("client-app/components/panel-resizer",["exports","@babel/runtime/helpers/esm/applyDecoratedDescriptor","client-app/lib/decorators"],(function(e,t,n){var a
 Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
@@ -134,20 +135,19 @@ var n=!1
 function a(){var e=document.getElementById("preloaded-data").dataset;(t=JSON.parse(e.preloaded)).rootPath=e.rootPath,n=!0}var r={get:function(e){return n||a(),Em.get(t,e)}}
 e.default=r})),define("client-app/lib/utilities",["exports","@babel/runtime/helpers/esm/typeof","client-app/lib/preload"],(function(e,t,n){Object.defineProperty(e,"__esModule",{value:!0}),e.escapeHtml=o,e.ajax=l,e.preloadOrAjax=function(e,t){var a=n.default.get(e.replace(".json",""))
 return a?Ember.RSVP.resolve(a):l(e,t)},e.updateHiddenProperty=function(e){a=e},e.isHidden=u,e.increaseTitleCount=function(e){if(!u())return
-r=r||document.title,s=s||0,s+=e,document.title="".concat(r," (").concat(s,")")},e.resetTitleCount=function(){s=0,document.title=r||document.title},e.formatTime=c,e.buildArrayString=d,e.buildHashString=function e(a,r){var s=arguments.length>2&&void 0!==arguments[2]?arguments[2]:[],i=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{}
+r=r||document.title,s=s||0,s+=e,document.title="".concat(r," (").concat(s,")")},e.resetTitleCount=function(){s=0,document.title=r||document.title},e.formatTime=c,e.buildArrayString=d,e.buildHashString=function e(a,r){var s=arguments.length>2&&void 0!==arguments[2]?arguments[2]:[]
 if(!a)return""
-var l=[],u=[],p=n.default.get("env_expandable_keys")||[]
+var i=[],l=[],u=n.default.get("env_expandable_keys")||[]
 Object.keys(a).forEach((function(e){var n=a[e]
-if(null===n)l.push("null")
-else if(-1===p.indexOf(e)||r)if("[object Array]"===Object.prototype.toString.call(n)){var f=d(n)
-l.push("<tr><td>".concat(o(e),"</td><td>").concat(f,"</td></tr>"))}else if("object"===(0,t.default)(n))u.push(e)
-else if("time"===e&&"number"==typeof n){var m=moment(n).format(),h=c(n)
-l.push('<tr title="'.concat(m,'"><td>').concat(e,"</td><td>").concat(h,"</td></tr>"))}else l.push("<tr><td>".concat(o(e),"</td><td>").concat(o(n),"</td></tr>"))
-else{var v=""
-v=-1!==s.indexOf(e)||i[e]&&i[e].length<3?i[e]&&1===i[e].length?o(i[e][0]):d(i[e]):"".concat(o(i[e][0]),', <a class="expand-list" data-key=').concat(e,">").concat(i[e].length-1," more</a>"),l.push("<tr><td>".concat(o(e),"</td><td>").concat(v,"</td></tr>"))}})),u.forEach((function(t){var n=a[t]
-l.push("<tr><td></td><td><table>"),l.push("<td>".concat(o(t),"</td><td>").concat(e(n,!0),"</td>")),l.push("</table></td></tr>")}))
-var f=r?"":"env-table"
-return"<table class='".concat(f,"'>").concat(l.join("\n"),"</table>")}
+if(null===n)i.push("null")
+else if("[object Array]"===Object.prototype.toString.call(n)){var p=""
+p=-1!==u.indexOf(e)&&!r&&-1===s.indexOf(e)&&n.length>3?"".concat(o(n[0]),', <a class="expand-list" data-key=').concat(e,">").concat(n.length-1," more</a>"):d(n),i.push("<tr><td>".concat(o(e),"</td><td>").concat(p,"</td></tr>"))}else if("object"===(0,t.default)(n))l.push(e)
+else if("time"===e&&"number"==typeof n){var f=moment(n).format(),m=c(n)
+i.push('<tr title="'.concat(f,'"><td>').concat(e,"</td><td>").concat(m,"</td></tr>"))}else i.push("<tr><td>".concat(o(e),"</td><td>").concat(o(n),"</td></tr>"))})),l.length>0&&l.forEach((function(t){var n=a[t]
+i.push("<tr><td></td><td><table>"),i.push("<td>".concat(o(t),"</td><td>").concat(e(n,!0),"</td>")),i.push("</table></td></tr>")}))
+var p=r?"":"env-table"
+return"<table class='".concat(p,"'>").concat(i.join("\n"),"</table>")},e.clone=function(e){var t={}
+return Object.keys(e).forEach((function(n){t[n]=e[n]})),t}
 var a,r,s,i={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","/":"&#x2F;"}
 function o(e){return String(e).replace(/[&<>"'/]/g,(function(e){return i[e]}))}function l(e,t){return new Ember.RSVP.Promise((function(a,r){t=t||{}
 var s=new XMLHttpRequest
@@ -250,4 +250,4 @@ e.default=t})),define("client-app/templates/show",["exports"],(function(e){Objec
 var t=Ember.HTMLBars.template({id:"Xt+M1cRV",block:'{"symbols":[],"statements":[[4,"link-to",null,[["route"],["index"]],{"statements":[[0,"Recent"]],"parameters":[]},null],[0,"\\n"],[7,"div",true],[10,"id","bottom-panel"],[10,"class","full"],[8],[0,"\\n  "],[1,[28,"message-info",null,[["currentMessage","showTitle","envChangedAction","currentEnvPosition","actionsInMenu"],[[24,["model"]],"true",[28,"action",[[23,0,[]],"envChanged"],null],[24,["envPosition"]],false]]],false],[0,"\\n"],[9],[0,"\\n"]],"hasEval":false}',meta:{moduleName:"client-app/templates/show.hbs"}})
 e.default=t}))
 define("client-app/transforms/boolean",["exports","@ember-data/serializer/-private"],(function(e,t){Object.defineProperty(e,"__esModule",{value:!0}),Object.defineProperty(e,"default",{enumerable:!0,get:function(){return t.BooleanTransform}})})),define("client-app/transforms/date",["exports","@ember-data/serializer/-private"],(function(e,t){Object.defineProperty(e,"__esModule",{value:!0}),Object.defineProperty(e,"default",{enumerable:!0,get:function(){return t.DateTransform}})})),define("client-app/transforms/number",["exports","@ember-data/serializer/-private"],(function(e,t){Object.defineProperty(e,"__esModule",{value:!0}),Object.defineProperty(e,"default",{enumerable:!0,get:function(){return t.NumberTransform}})})),define("client-app/transforms/string",["exports","@ember-data/serializer/-private"],(function(e,t){Object.defineProperty(e,"__esModule",{value:!0}),Object.defineProperty(e,"default",{enumerable:!0,get:function(){return t.StringTransform}})})),define("client-app/config/environment",[],(function(){try{var e="client-app/config/environment",t=document.querySelector('meta[name="'+e+'"]').getAttribute("content"),n={default:JSON.parse(decodeURIComponent(t))}
-return Object.defineProperty(n,"__esModule",{value:!0}),n}catch(a){throw new Error('Could not read config from meta tag with name "'+e+'".')}})),runningTests||require("client-app/app").default.create({name:"client-app",version:"v2.6.0+229f0a27"})
+return Object.defineProperty(n,"__esModule",{value:!0}),n}catch(a){throw new Error('Could not read config from meta tag with name "'+e+'".')}})),runningTests||require("client-app/app").default.create({name:"client-app",version:"v2.6.1+58bb5c53"})

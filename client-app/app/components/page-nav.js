@@ -18,6 +18,9 @@ export default Component.extend({
   actions: {
     takeStep(dir) {
       const amount = dir === "back" ? -1 : 1;
+      if (amount === 1 && this.disableForwardButtons) return;
+      if (amount === -1 && this.disableBackButtons) return;
+
       const newPos = this.position + amount;
       this.navigate(newPos);
     },
