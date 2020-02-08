@@ -25,6 +25,10 @@ const message3 = Message.create({
   ]
 });
 
+const message4 = Message.create({
+  env: { env_key_2: "value", default_expanded: "vvv", notExpanded: "wwww" }
+});
+
 function reduceToContent(node) {
   return Array.from(node.childNodes).reduce(
     (ac, cr) => `${ac.textContent}: ${cr.textContent}`
@@ -164,5 +168,27 @@ module("Integration | Component | env-tab", function(hooks) {
       "[value1, value2, value3, value4]",
       "expanded env keys shown correctly"
     );
+
+    this.setProperties({
+      message: message4,
+      callback,
+      envPosition: 0
+    });
+    await render(
+      hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
+    );
+    const recreatedEnv = {};
+    findAll(".env-table tr").forEach(node => {
+      recreatedEnv[
+        node.children[0].innerText.trim()
+      ] = node.children[1].innerText.trim();
+    });
+    Object.keys(recreatedEnv).forEach(k => {
+      assert.equal(
+        recreatedEnv[k],
+        this.message.env[k],
+        `${k}: ${recreatedEnv[k]} === ${this.message.env[k]}`
+      );
+    });
   });
 });
