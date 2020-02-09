@@ -79,7 +79,8 @@ export default EmberObject.extend({
       currentGroupedMessagesPosition: newPosition,
       currentEnvPosition: 0
     });
-    this.fetchEnv();
+    const forceFetchEnv = this.currentMessage && !this.currentMessage.env;
+    this.fetchEnv({ force: forceFetchEnv });
   },
 
   envChanged(newPosition) {
