@@ -104,7 +104,7 @@ module Logster
             if json
               [200, { "Content-Type" => "application/json; charset=utf-8" }, [message.to_json]]
             else
-              preload = preload_json("/show/#{key}" => message)
+              preload = { "/show/#{key}" => message }
               [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload)]]
             end
 
@@ -130,7 +130,7 @@ module Logster
               end
               [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(suppression: suppression, grouping: grouping)]]
             else
-              [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload_json)]]
+              [200, { "Content-Type" => "text/html; charset=utf-8" }, [body]]
             end
           elsif resource =~ /\/patterns\/([a-zA-Z0-9_]+)\.json$/
             unless Logster.config.enable_custom_patterns_via_ui
@@ -161,7 +161,7 @@ module Logster
             Logster.store.remove_ignore_count(pattern)
             [200, {}, ["OK"]]
           elsif resource == "/"
-            [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload_json)]]
+            [200, { "Content-Type" => "text/html; charset=utf-8" }, [body]]
           elsif resource =~ /\/fetch-env\/([0-9a-f]+)\.json$/
             key = $1
             env = Logster.store.get_env(key)
@@ -180,6 +180,8 @@ module Logster
             return not_found("No such pattern group exists") if !group
             group.messages_keys.each { |k| Logster.store.solve(k) }
             return [200, {}, []]
+          elsif resource == '/development-preload.json' && ENV["LOGSTER_ENV"] == "development"
+            [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(preloaded_data)]]
           else
             not_found
           end
@@ -308,11 +310,6 @@ module Logster
         end
       end
 
-      def preload_json(extra = {})
-        values = {}
-        values.merge!(extra)
-      end
-
       def css(name, attrs = {})
         attrs = attrs.map do |k, v|
           "#{k}='#{v}'"
@@ -344,14 +341,12 @@ module Logster
         }
       end
 
-      def body(preload)
-        root_url = @logs_path
-        root_url += "/" if root_url[-1] != "/"
-        preload.merge!(
+      def preloaded_data
+        preload = {
           env_expandable_keys: Logster.config.env_expandable_keys,
           patterns_enabled: Logster.config.enable_custom_patterns_via_ui,
           application_version: Logster.config.application_version
-        )
+        }
         backtrace_links_enabled = Logster.config.enable_backtrace_links
         gems_dir = Logster.config.gems_dir
         gems_dir += "/" if gems_dir[-1] != "/"
@@ -360,6 +355,13 @@ module Logster
         if backtrace_links_enabled
           preload.merge!(preload_backtrace_data)
         end
+        preload
+      end
+
+      def body(preload = {})
+        preload = preloaded_data.merge(preload)
+        root_url = @logs_path
+        root_url += "/" if root_url[-1] != "/"
         <<~HTML
           <!doctype html>
           <html>
@@ -374,7 +376,7 @@ module Logster
               #{css("client-app.css")}
               #{script("vendor.js")}
               <meta id="preloaded-data" data-root-path="#{@logs_path}" data-preloaded="#{to_json_and_escape(preload)}">
-              <meta name="client-app/config/environment" content="%7B%22modulePrefix%22%3A%22client-app%22%2C%22environment%22%3A%22production%22%2C%22rootURL%22%3A%22#{root_url}%22%2C%22locationType%22%3A%22history%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%2C%22EXTEND_PROTOTYPES%22%3A%7B%22Date%22%3Afalse%7D%7D%2C%22APP%22%3A%7B%22name%22%3A%22client-app%22%2C%22version%22%3A%220.0.0+8c60a18b%22%7D%2C%22exportApplicationGlobal%22%3Afalse%7D" />
+              <meta name="client-app/config/environment" content="%7B%22modulePrefix%22%3A%22client-app%22%2C%22environment%22%3A%22production%22%2C%22rootURL%22%3A%22#{root_url}%22%2C%22locationType%22%3A%22history%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%2C%22EXTEND_PROTOTYPES%22%3A%7B%22Date%22%3Afalse%7D%2C%22_APPLICATION_TEMPLATE_WRAPPER%22%3Afalse%2C%22_DEFAULT_ASYNC_OBSERVERS%22%3Atrue%2C%22_JQUERY_INTEGRATION%22%3Afalse%2C%22_TEMPLATE_ONLY_GLIMMER_COMPONENTS%22%3Atrue%7D%2C%22APP%22%3A%7B%22name%22%3A%22client-app%22%2C%22version%22%3A%220.0.0%2B7a424002%22%7D%2C%22exportApplicationGlobal%22%3Afalse%7D" />
             </head>
             <body>
               #{script("client-app.js")}

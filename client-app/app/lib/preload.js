@@ -1,11 +1,20 @@
-let CONTAINER;
+let CONTAINER = {};
 let isInitialized = false;
+let rootPath;
+
+export function setRootPath(path) {
+  rootPath = path;
+}
+
+export function getRootPath() {
+  return rootPath;
+}
 
 // exported so that it can be used in tests
 export function init() {
   const dataset = document.getElementById("preloaded-data").dataset;
   CONTAINER = JSON.parse(dataset.preloaded);
-  CONTAINER.rootPath = dataset.rootPath;
+  CONTAINER.rootPath = rootPath;
   isInitialized = true;
 }
 

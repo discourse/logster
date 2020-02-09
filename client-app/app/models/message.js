@@ -1,5 +1,5 @@
 import { ajax } from "client-app/lib/utilities";
-import Preload from "client-app/lib/preload";
+import { getRootPath } from "client-app/lib/preload";
 import { computed } from "@ember/object";
 
 export default Em.Object.extend({
@@ -42,7 +42,7 @@ export default Em.Object.extend({
   }),
 
   shareUrl: computed("key", function() {
-    return `${Preload.get("rootPath")}/show/${this.key}`;
+    return `${getRootPath()}/show/${this.key}`;
   }),
 
   displayMessage: computed("message", "expanded", function() {

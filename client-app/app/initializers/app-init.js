@@ -1,13 +1,28 @@
 import {
   updateHiddenProperty,
-  resetTitleCount
+  resetTitleCount,
+  ajax
 } from "client-app/lib/utilities";
 import Evented from "@ember/object/evented";
 import EmberObject from "@ember/object";
+import { setRootPath } from "client-app/lib/preload";
 
 const TARGETS = ["component", "route"];
 
 export function initialize(app) {
+  const config = app.resolveRegistration("config:environment");
+  setRootPath(config.rootURL.replace(/\/$/, ""));
+
+  if (config.environment === "development") {
+    app.deferReadiness();
+    ajax("/development-preload.json")
+      .then(data => {
+        const elem = document.getElementById("preloaded-data");
+        elem.setAttribute("data-preloaded", JSON.stringify(data));
+      })
+      .catch(xhr => console.error("Fetching preload data failed.", xhr)) // eslint-disable-line no-console
+      .finally(() => app.advanceReadiness());
+  }
   // config for moment.js
   moment.updateLocale("en", {
     relativeTime: {

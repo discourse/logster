@@ -1,4 +1,4 @@
-import Preload from "client-app/lib/preload";
+import { default as Preload, getRootPath } from "client-app/lib/preload";
 import { Promise, resolve } from "rsvp";
 
 const entityMap = {
@@ -18,7 +18,7 @@ export function ajax(url, settings) {
   return new Promise((resolve, reject) => {
     settings = settings || {};
     const xhr = new XMLHttpRequest();
-    url = Preload.get("rootPath") + url;
+    url = getRootPath() + url;
     if (settings.data) {
       for (let param in settings.data) {
         const prefix = url.indexOf("?") === -1 ? "?" : "&";
