@@ -1,5 +1,14 @@
 # CHANGELOG
 
+- 2020-02-09: 2.6.2
+
+  - FIX: Regression with rendering single env when `env_expandable_keys` config is present
+  - DEV: Fix Ember deprecations in tests
+  - DEV: Add more tests to env rendering
+  - FIX: Backtrace frames from gems should be linkified even when they don't start with `gems_dir`
+  - DEV: Allow Ember server to inherit preload data from Sinatra server
+  - FIX: Fetch env when navigating through grouped messages
+
 - 2020-02-07: 2.6.1
 
   - FIX: Fetch env when row is selected to allow copy to work on Firefox
