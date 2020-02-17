@@ -249,11 +249,11 @@ module Logster
         envs = {}
         @redis.eval(
           BULK_ENV_GET_LUA,
-          keys: message_keys.map { |k| env_prefix(k) }
+          keys: message_keys.map { |k| env_prefix(k, with_namespace: true) }
         ).to_h.each do |k, v|
           next if v.size == 0
           parsed = v.size == 1 ? JSON.parse(v[0]) : v.map { |e| JSON.parse(e) }
-          envs[env_unprefix(k)] = parsed
+          envs[env_unprefix(k, with_namespace: true)] = parsed
         end
       end
       messages = @redis.hmget(hash_key, message_keys).map! do |json|
@@ -647,12 +647,28 @@ module Logster
       @redis.del(env_prefix(message_key))
     end
 
-    def env_unprefix(key)
-      key.sub(ENV_PREFIX, "")
+    def env_unprefix(key, with_namespace: false)
+      prefix = ENV_PREFIX
+      if with_namespace && namespace
+        prefix = "#{namespace}:#{prefix}"
+      end
+      key.sub(prefix, "")
     end
 
-    def env_prefix(key)
-      ENV_PREFIX + key
+    def env_prefix(key, with_namespace: false)
+      prefix = ENV_PREFIX
+      if with_namespace && namespace
+        prefix = "#{namespace}:#{prefix}"
+      end
+      prefix + key
+    end
+
+    def namespace
+      if @redis_prefix.respond_to?(:call)
+        @namespace ||= @redis_prefix.call
+      else
+        @namespace ||= @redis_prefix
+      end
     end
   end
 end
