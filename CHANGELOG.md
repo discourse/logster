@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2020-02-17: 2.6.3
+
+  - FIX: Respect redis namespace when fetching env using LUA
+
 - 2020-02-09: 2.6.2
 
   - FIX: Regression with rendering single env when `env_expandable_keys` config is present
