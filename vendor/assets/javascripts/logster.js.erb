@@ -7,11 +7,12 @@
     };
   }
 
-  window.onerror = function(message, url, line, column, errorObj) {
+  window.Logster.reportError = function(options) {
     // never bother reporting more than once a minute
     if (lastReport && new Date() - lastReport < 1000 * 60) {
       return;
     }
+
     if (!Logster.enabled) {
       return;
     }
@@ -19,21 +20,30 @@
     lastReport = new Date();
 
     var err = {
-      message: message,
-      url: url,
-      line: line,
-      column: column,
-      window_location: window.location && (window.location + "")
+      message: options.message,
+      url: options.url,
+      line: options.line,
+      column: options.column,
+      window_location: options.windowLocation,
+      stacktrace: options.stacktrace
     };
-
-    if (errorObj && errorObj.stack) {
-      err.stacktrace = errorObj.stack;
-    }
 
     $.ajax("<%= Logster.config.subdirectory %>" + "/report_js_error", {
       data: err,
       type: "POST",
       cache: false
+    });
+
+  }
+
+  window.onerror = function(message, url, line, column, errorObj) {
+    window.Logster.reportError({
+      message: message,
+      url: url,
+      line: line,
+      column: column,
+      windowLocation: window.location && (window.location + ""),
+      stacktrace: errorObj && errorObj.stack
     });
   };
 })();
