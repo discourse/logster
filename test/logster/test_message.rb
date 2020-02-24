@@ -146,12 +146,6 @@ class TestMessage < MiniTest::Test
     refute_includes(msg.to_json(exclude_env: true), test_hash.to_json)
   end
 
-  def test_title_is_truncated_when_too_large
-    msg = Logster::Message.new(0, "", "a" * 1000)
-    # 3 is the ... at the end to indicate truncated message
-    assert_equal(600 + 3, msg.message.size)
-  end
-
   def test_drop_redundant_envs
     message = Logster::Message.new(Logger::WARN, '', 'message')
     message.env = [{ a: 4 }] * 10

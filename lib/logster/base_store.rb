@@ -152,6 +152,8 @@ module Logster
       return if (!msg || (String === msg && msg.empty?)) && skip_empty
       return if level && severity < level
 
+      msg = msg.inspect unless String === msg
+      msg = truncate_message(msg)
       message = Logster::Message.new(severity, progname, msg, opts[:timestamp], count: opts[:count])
 
       env = opts[:env] || {}
@@ -244,6 +246,11 @@ module Logster
     end
 
     private
+
+    def truncate_message(msg)
+      cap = Logster.config.maximum_message_length
+      msg.size <= cap ? msg : msg[0...cap] + "..."
+    end
 
     def not_implemented
       raise "Not Implemented"
