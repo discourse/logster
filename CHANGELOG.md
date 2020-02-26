@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2020-02-26: 2.7.0
+
+  - FEATURE: Make log message max length configurable and bump the default to 2000 (#109)
+
 - 2020-02-17: 2.6.3
 
   - FIX: Respect redis namespace when fetching env using LUA
