@@ -4,8 +4,6 @@ require 'digest/sha1'
 require 'securerandom'
 
 module Logster
-  MAX_MESSAGE_LENGTH = 600
-
   class Message
     LOGSTER_ENV = "_logster_env".freeze
     ALLOWED_ENV = %w{
@@ -30,7 +28,7 @@ module Logster
       @timestamp = timestamp || get_timestamp
       @severity = severity
       @progname = progname
-      @message = truncate_message(message)
+      @message = message
       @key = key || SecureRandom.hex
       @backtrace = nil
       @count = count || 1
@@ -55,10 +53,6 @@ module Logster
       h[:env] = @env unless exclude_env
 
       h
-    end
-
-    def message=(m)
-      @message = truncate_message(m)
     end
 
     def to_json(opts = nil)
@@ -309,12 +303,6 @@ module Logster
         end
         env.select! { |k| kept_keys.include?(k) }
       end
-    end
-
-    def truncate_message(msg)
-      return msg unless msg
-      msg = msg.inspect unless String === msg
-      msg.size <= MAX_MESSAGE_LENGTH ? msg : msg[0...MAX_MESSAGE_LENGTH] + "..."
     end
 
     def get_timestamp

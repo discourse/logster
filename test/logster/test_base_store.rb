@@ -162,4 +162,18 @@ class TestBaseStore < Minitest::Test
       assert_includes(message.backtrace.lines.first, __method__.to_s)
     end
   end
+
+  def test_log_message_is_truncated_when_above_maximum_message_length
+    orig = Logster.config.maximum_message_length
+    Logster.config.maximum_message_length = 300
+    msg = @store.report(Logger::WARN, '', 'a' * 400)
+    # 3 is the ... at the end to indicate truncated message
+    assert_equal(300 + 3, msg.message.size)
+
+    Logster.config.maximum_message_length = 100
+    msg = @store.report(Logger::WARN, '', 'a' * 200)
+    assert_equal(100 + 3, msg.message.size)
+  ensure
+    Logster.config.maximum_message_length = orig
+  end
 end
