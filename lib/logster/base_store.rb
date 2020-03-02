@@ -156,7 +156,7 @@ module Logster
       msg = truncate_message(msg)
       message = Logster::Message.new(severity, progname, msg, opts[:timestamp], count: opts[:count])
 
-      env = opts[:env] || {}
+      env = opts[:env]&.dup || {}
       backtrace = opts[:backtrace]
       if Hash === env && env[:backtrace]
         # Special - passing backtrace through env

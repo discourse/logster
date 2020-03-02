@@ -176,4 +176,16 @@ class TestBaseStore < Minitest::Test
   ensure
     Logster.config.maximum_message_length = orig
   end
+
+  def test_chained_loggers_shouldnt_mutate_env_passed_to_them
+    logger = Logster::Logger.new(@store)
+    other_store = Logster::TestStore.new
+    other_logger = Logster::Logger.new(other_store)
+    logger.chain(other_logger)
+    logger.add(Logger::WARN, "this is warning", '', { env: { backtrace: '11' } })
+    [@store, other_store].each do |store|
+      assert_equal('11', store.reported.first.backtrace)
+      refute_includes(store.reported.first.env.keys.map(&:to_sym), :backtrace)
+    end
+  end
 end
