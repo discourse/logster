@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2020-03-03: 2.7.1
+
+  - FIX: Stop env mutation to allow all chained loggers to have the same env (#110)
+
 - 2020-02-26: 2.7.0
 
   - FEATURE: Make log message max length configurable and bump the default to 2000 (#109)
