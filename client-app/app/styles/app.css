@@ -300,9 +300,8 @@ label span {
   width: 99%;
 }
 
-.btn .svg-inline--fa,
 .btn span {
-  vertical-align: middle;
+  display: inline;
 }
 
 .hidden {
@@ -421,18 +420,26 @@ label span {
 }
 
 .search-clear-all .search,
-.search-clear-all .clear {
+.search-clear-all .btn.clear {
   height: 100%;
+}
+
+.search-clear-all .btn.clear span {
+  vertical-align: middle;
 }
 
 .severity-filters label,
 .search-clear-all .search,
-.search-clear-all .clear {
+.search-clear-all .btn.clear {
   align-self: center;
 }
 
 .search-clear-all .footer-btns .settings {
+  height: 100%;
+  box-sizing: border-box;
   margin: 0 7px 0 7px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .search-clear-all {
@@ -465,10 +472,10 @@ label span {
   .action-panel {
     padding: 10px;
     box-sizing: border-box;
-    height: 42px;
+    height: 45px;
   }
   .message-info {
-    bottom: 42px;
+    bottom: 45px;
   }
 }
 
