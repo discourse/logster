@@ -101,7 +101,7 @@ The reason this doesn't happen in rails apps is because ActiveSupport has a monk
 ```
 
 ### Mount using devise (method 2)
-Chage :admin_user symbol with your devise user, example :user.
+Change :admin_user symbol with your devise user, example :user.
 In -> lambda block change admin? method with your authorization method
 Or simply define a admin? method in you user model.
 ```
