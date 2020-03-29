@@ -59,7 +59,7 @@
           checked={{showWarn}}
           onchange={{action (action 'updateFilter' 'showWarn')}}
         />
-        <i class='fa fa-exclamation-circle warning'></i>
+        {{fa-icon "exclamation-circle" class="warning"}}
         <span>Warning</span>
       </label>
       <label class="error">
@@ -68,7 +68,7 @@
           checked={{showErr}}
           onchange={{action (action 'updateFilter' 'showErr')}}
         />
-        <i class='fa fa-times-circle error'></i>
+        {{fa-icon "times-circle" class="error"}}
         <span>Error</span>
       </label>
       <label class="fatal">
@@ -77,7 +77,7 @@
           checked={{showFatal}}
           onchange={{action (action 'updateFilter' 'showFatal')}}
         />
-        <i class='fa fa-times-circle fatal'></i>
+        {{fa-icon "times-circle" class="fatal"}}
         <span>Fatal</span>
       </label>
     </div>
@@ -92,10 +92,10 @@
       <div class="footer-btns">
         {{#if showSettings}}
           {{#link-to "settings" class="settings btn no-text"}}
-            <i class='fa fa-cog'></i>
+            {{fa-icon "cog"}}
           {{/link-to}}
         {{/if}}
-        <button class="clear btn danger" {{action "clear"}}><i class='fa fa-trash-o'></i><span>Clear logs</span></button>
+        <button class="clear btn danger" {{action "clear"}}>{{fa-icon "trash-alt" prefix="far"}}<span>Clear logs</span></button>
       </div>
     </div>
   </div>

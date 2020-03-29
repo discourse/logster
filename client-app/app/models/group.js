@@ -16,7 +16,11 @@ export default EmberObject.extend({
   },
 
   glyph: computed(function() {
-    return "<i class='fa fa-clone group'></i>";
+    return "clone";
+  }),
+
+  prefix: computed(function() {
+    return "far";
   }),
 
   solveAll() {

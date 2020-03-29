@@ -46,7 +46,7 @@ activerecord-6.0.1/lib/active_record/relation/finder_methods.rb:317:in \`exists?
 
     let gemLine = find("div.backtrace-line");
     assert.equal(
-      gemLine.textContent,
+      gemLine.textContent.trim(),
       "activerecord-6.0.1/lib/active_record/relation/finder_methods.rb:317:in `exists?'",
       "gem lines are truncated"
     );

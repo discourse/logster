@@ -9,13 +9,15 @@ export default Component.extend({
   buttons: computed("currentMessage.protected", "showSolveButton", function() {
     const protect = this.get("currentMessage.protected");
     const buttons = [];
+    const prefix = "fas";
 
     if (!protect && this.showSolveButton) {
       buttons.push({
         klass: "solve",
         action: "solve",
-        icon: "check-square-o",
+        icon: "check-square",
         label: "Solve",
+        prefix: "far",
         danger: true
       });
     }
@@ -24,8 +26,9 @@ export default Component.extend({
       buttons.push({
         klass: "solve-all",
         action: "solveAll",
-        icon: "check-square-o",
+        icon: "check-square",
         label: "Solve All",
+        prefix: "far",
         danger: true
       });
     }
@@ -35,14 +38,16 @@ export default Component.extend({
         {
           klass: "remove",
           action: "remove",
-          icon: "trash-o",
+          icon: "trash-alt",
           label: "Remove",
+          prefix: "far",
           danger: true
         },
         {
           klass: "protect",
           action: "protect",
           icon: "lock",
+          prefix,
           label: "Protect"
         }
       );
@@ -51,6 +56,7 @@ export default Component.extend({
         klass: "unprotect",
         action: "unprotect",
         icon: "unlock",
+        prefix,
         label: "Unprotect"
       });
     }
@@ -58,7 +64,8 @@ export default Component.extend({
     buttons.push({
       klass: "copy",
       action: "copyAction",
-      icon: "clipboard",
+      icon: "copy",
+      prefix: "far",
       label: "Copy"
     });
     return buttons;

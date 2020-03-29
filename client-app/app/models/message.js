@@ -87,19 +87,40 @@ export default Em.Object.extend({
   }),
 
   glyph: computed("severity", function() {
-    switch (this.get("severity")) {
+    switch (this.severity) {
       case 0:
         return "";
       case 1:
         return "";
       case 2:
-        return "<i class='fa fa-exclamation-circle warning'></i>";
+        return "exclamation-circle";
       case 3:
-        return "<i class='fa fa-times-circle error'></i>";
+        return "times-circle";
       case 4:
-        return "<i class='fa fa-times-circle fatal'></i>";
+        return "times-circle";
       default:
-        return "<i class='fa fa-question-circle unknown'></i>";
+        return "question-circle";
+    }
+  }),
+
+  prefix: computed(function() {
+    return "fas";
+  }),
+
+  klass: computed("severity", function() {
+    switch (this.severity) {
+      case 0:
+        return "";
+      case 1:
+        return "";
+      case 2:
+        return "warning";
+      case 3:
+        return "error";
+      case 4:
+        return "fatal";
+      default:
+        return "unknown";
     }
   })
 });
