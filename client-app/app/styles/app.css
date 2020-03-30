@@ -95,15 +95,15 @@ tbody tr {
   background-color: #dfdfdf;
 }
 
-i.fatal {
+.svg-inline--fa.fatal {
   color: #e00;
 }
 
-i.error {
+.svg-inline--fa.error {
   color: #900;
 }
 
-i.warning {
+.svg-inline--fa.warning {
   color: #feb800;
 }
 
@@ -280,7 +280,7 @@ i.warning {
   margin: 0;
 }
 
-.action-panel i.fa,
+.action-panel .svg-inline--fa,
 input,
 label span {
   vertical-align: middle;
@@ -300,9 +300,8 @@ label span {
   width: 99%;
 }
 
-.btn .fa,
 .btn span {
-  vertical-align: middle;
+  display: inline;
 }
 
 .hidden {
@@ -397,7 +396,7 @@ label span {
   background-color: #ccc;
 }
 
-.btn .fa {
+.btn .svg-inline--fa {
   margin-right: 7px;
 }
 
@@ -421,18 +420,26 @@ label span {
 }
 
 .search-clear-all .search,
-.search-clear-all .clear {
+.search-clear-all .btn.clear {
   height: 100%;
+}
+
+.search-clear-all .btn.clear span {
+  vertical-align: middle;
 }
 
 .severity-filters label,
 .search-clear-all .search,
-.search-clear-all .clear {
+.search-clear-all .btn.clear {
   align-self: center;
 }
 
 .search-clear-all .footer-btns .settings {
+  height: 100%;
+  box-sizing: border-box;
   margin: 0 7px 0 7px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .search-clear-all {
@@ -465,10 +472,10 @@ label span {
   .action-panel {
     padding: 10px;
     box-sizing: border-box;
-    height: 42px;
+    height: 45px;
   }
   .message-info {
-    bottom: 42px;
+    bottom: 45px;
   }
 }
 
@@ -520,7 +527,7 @@ label span {
   }
 }
 
-.btn.no-text .fa {
+.btn.no-text .svg-inline--fa {
   margin: 0;
 }
 
@@ -664,7 +671,7 @@ label span {
   margin-left: 10px;
 }
 
-.fa {
+.svg-inline--fa {
   opacity: 0.7;
 }
 

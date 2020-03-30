@@ -3,13 +3,13 @@
     {{model.count}}
   {{/if}}
 </div>
-<div class="severity">{{{model.glyph}}}</div>
+<div class="severity">{{#if model.glyph}}{{fa-icon model.glyph class=model.klass prefix=model.prefix}}{{/if}}</div>
 <div class="message-body">
   {{model.displayMessage}}
 </div>
 <div class='protected'>
   {{#if model.protected}}
-    <i title="message is protected, clearing will not remove it" class='fa fa-lock'></i>
+    {{fa-icon "lock" title="message is protected, clearing will not remove it"}}
   {{/if}}
 </div>
 <div class="time">{{time-formatter timestamp=model.timestamp}}</div>
