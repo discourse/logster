@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2020-03-30: 2.8.0
+
+  - FEATURE: Upgrade icons to Font Awesome 5
+
 - 2020-03-03: 2.7.1
 
   - FIX: Stop env mutation to allow all chained loggers to have the same env (#110)
