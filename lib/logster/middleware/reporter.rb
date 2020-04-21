@@ -57,7 +57,14 @@ module Logster
         message << "\nWindow Location: " << params["window_location"] if params["window_location"]
 
         backtrace = params["stacktrace"] || ""
-        Logster.store.report(::Logger::Severity::WARN,
+
+        severity = ::Logger::Severity::WARN
+        if params["severity"] &&
+           ::Logger::Severity.const_defined?(params["severity"].upcase)
+          severity = ::Logger::Severity.const_get(params["severity"].upcase)
+        end
+
+        Logster.store.report(severity,
                             "javascript",
                             message,
                             backtrace: backtrace,
