@@ -20,7 +20,7 @@ class TestMessage < MiniTest::Test
   end
 
   def test_populate_from_env_will_add_time_to_env_unless_it_already_exists
-    t = (Time.new.to_f * 1000).to_i
+    t = (Time.now.to_f * 1000).to_i
     msg = Logster::Message.new(0, '', 'test', t)
     msg.populate_from_env({})
     assert_equal(t, msg.env["time"])

@@ -306,7 +306,7 @@ module Logster
     end
 
     def get_timestamp
-      (Time.new.to_f * 1000).to_i
+      (Time.now.to_f * 1000).to_i
     end
   end
 end

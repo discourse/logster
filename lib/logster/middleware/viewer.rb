@@ -48,7 +48,7 @@ module Logster
             end
 
             Logster.store.delete(message)
-            return [301, { "Location" => "#{@logs_path}/" }, []]
+            [301, { "Location" => "#{@logs_path}/" }, []]
 
           elsif resource =~ /\/(un)?protect\/([0-9a-f]+)$/
             off = $1 == "un"
@@ -61,15 +61,15 @@ module Logster
 
             if off
               if Logster.store.unprotect(key)
-                return [301, { "Location" => "#{@logs_path}/show/#{key}?protected=false" }, []]
+                [301, { "Location" => "#{@logs_path}/show/#{key}?protected=false" }, []]
               else
-                return [500, {}, ["Failed"]]
+                [500, {}, ["Failed"]]
               end
             else
               if Logster.store.protect(key)
-                return [301, { "Location" => "#{@logs_path}/show/#{key}?protected=true" }, []]
+                [301, { "Location" => "#{@logs_path}/show/#{key}?protected=true" }, []]
               else
-                return [500, {}, ["Failed"]]
+                [500, {}, ["Failed"]]
               end
             end
 
@@ -83,14 +83,14 @@ module Logster
 
             Logster.store.solve(key)
 
-            return [301, { "Location" => "#{@logs_path}" }, []]
+            [301, { "Location" => "#{@logs_path}" }, []]
 
           elsif resource =~ /\/clear$/
             if env[REQUEST_METHOD] != "POST"
               return method_not_allowed("POST")
             end
             Logster.store.clear
-            return [200, {}, ["Messages cleared"]]
+            [200, {}, ["Messages cleared"]]
 
           elsif resource =~ /\/show\/([0-9a-f]+)(\.json)?$/
             key = $1
@@ -179,7 +179,7 @@ module Logster
             end.first
             return not_found("No such pattern group exists") if !group
             group.messages_keys.each { |k| Logster.store.solve(k) }
-            return [200, {}, []]
+            [200, {}, []]
           elsif resource == '/development-preload.json' && ENV["LOGSTER_ENV"] == "development"
             [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(preloaded_data)]]
           else

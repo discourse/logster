@@ -10,7 +10,7 @@ class TestGroup < MiniTest::Test
   end
 
   def test_from_json_works_correctly
-    time = (Time.new.to_f * 1000).to_i - 5000
+    time = (Time.now.to_f * 1000).to_i - 5000
     json = JSON.generate(
       key: '/somekey/',
       messages_keys: [111, 222, 333].map(&:to_s),
