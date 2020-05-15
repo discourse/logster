@@ -1,6 +1,6 @@
 #!/bin/bash
 
-(cd client-app && ember build --environment=${1:-production})
+(cd client-app && npm i && npx ember build --environment=${1:-production})
 
 rm assets/javascript/*
 rm assets/stylesheets/client-app.css
