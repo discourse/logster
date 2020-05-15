@@ -8,7 +8,7 @@ require 'logster/version'
 Gem::Specification.new do |spec|
   spec.name          = "logster"
   spec.version       = Logster::VERSION
-  spec.authors       = ["UI for viewing logs in Rack"]
+  spec.authors       = ["Sam Saffron"]
   spec.email         = ["sam.saffron@gmail.com"]
   spec.summary       = %q{UI for viewing logs in Rack}
   spec.description   = %q{UI for viewing logs in Rack}
