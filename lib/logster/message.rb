@@ -137,10 +137,6 @@ module Logster
       end
     end
 
-    def is_similar?(other)
-      self.grouping_key == other.grouping_key
-    end
-
     def merge_similar_message(other)
       self.first_timestamp ||= self.timestamp
       self.timestamp = [self.timestamp, other.timestamp].max
