@@ -120,9 +120,14 @@ export default Controller.extend({
     },
 
     updateSearch(term) {
+      if (term === this.search) {
+        return;
+      }
+
       if (term && term.length === 1) {
         return;
       }
+
       debounce(this, this.doSearch, term, 250);
     }
   },
