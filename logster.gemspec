@@ -33,6 +33,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "guard-minitest"
   spec.add_development_dependency "timecop"
   spec.add_development_dependency "byebug", "~> 11.1.0"
-  spec.add_development_dependency "rubocop", "~> 0.69.0"
-  spec.add_development_dependency "rubocop-discourse"
+  spec.add_development_dependency "rubocop-discourse", "~> 2.1.2"
 end
