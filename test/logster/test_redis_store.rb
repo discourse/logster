@@ -1044,6 +1044,24 @@ class TestRedisStore < Minitest::Test
     end
   end
 
+  def test_messages_that_differ_only_by_numbers_or_hashes_are_merged
+    config_reset(allow_grouping: true) do
+      first_message = <<~TEXT
+        DistributedMutex("download_20450e291e8f1e5ba03ca7f20fb7d9da570c94a6"):
+        held for too long, expected max: 60 secs, took an extra 73 secs
+      TEXT
+      msg = @store.report(Logger::WARN, '', first_message, backtrace: caller)
+
+      second_message = <<~TEXT
+        DistributedMutex("download_e09ae082c60a351dedec67ed869652862b232a0b"):
+        held for too long, expected max: 60 secs, took an extra 287 secs
+      TEXT
+      msg2 = @store.report(Logger::WARN, '', second_message, backtrace: caller)
+
+      assert_equal(msg.key, msg2.key)
+    end
+  end
+
   private
 
   def config_reset(configs)
