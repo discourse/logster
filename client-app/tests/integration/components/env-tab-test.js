@@ -148,7 +148,7 @@ module("Integration | Component | env-tab", function(hooks) {
 
     assert.equal(
       defaultExpanded.children[1].textContent.trim(),
-      "[vvv1, vvv2]",
+      "vvv1, [vvv2]",
       "list is expanded by default when its length is 3 or less"
     );
 
@@ -165,7 +165,7 @@ module("Integration | Component | env-tab", function(hooks) {
     const expanded = find(".env-table tr");
     assert.equal(
       expanded.children[1].textContent.trim(),
-      "[value1, value2, value3, value4]",
+      "value1, [value2, value3, value4]",
       "expanded env keys shown correctly"
     );
 
