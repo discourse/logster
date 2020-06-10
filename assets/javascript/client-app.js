@@ -160,7 +160,7 @@ var s=[],l=[],u=t.default.get("env_expandable_keys")||[]
 Object.keys(r).forEach((function(e){var t=r[e]
 if(null===t)s.push("null")
 else if("[object Array]"===Object.prototype.toString.call(t)){var p=""
-p=-1!==u.indexOf(e)&&!a&&-1===o.indexOf(e)&&t.length>3?"".concat(i(t[0]),', <a class="expand-list" data-key=').concat(e,">").concat(t.length-1," more</a>"):d(t),s.push("<tr><td>".concat(i(e),"</td><td>").concat(p,"</td></tr>"))}else if("object"===n(t))l.push(e)
+p=-1!==u.indexOf(e)&&!a&&-1===o.indexOf(e)&&t.length>3?"".concat(i(t[0]),', <a class="expand-list" data-key=').concat(e,">").concat(t.length-1," more</a>"):"".concat(i(t[0]),", ").concat(d(t.slice(1,t.length))),s.push("<tr><td>".concat(i(e),"</td><td>").concat(p,"</td></tr>"))}else if("object"===n(t))l.push(e)
 else if("time"===e&&"number"==typeof t){var f=moment(t).format(),m=c(t)
 s.push('<tr title="'.concat(f,'"><td>').concat(e,"</td><td>").concat(m,"</td></tr>"))}else s.push("<tr><td>".concat(i(e),"</td><td>").concat(i(t),"</td></tr>"))})),l.length>0&&l.forEach((function(t){var n=r[t]
 s.push("<tr><td></td><td><table>"),s.push("<td>".concat(i(t),"</td><td>").concat(e(n,!0),"</td>")),s.push("</table></td></tr>")}))
@@ -286,4 +286,4 @@ var t=Ember.HTMLBars.template({id:"QRu+EVou",block:'{"symbols":[],"statements":[
 e.default=t})),define("client-app/templates/show",["exports"],(function(e){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
 var t=Ember.HTMLBars.template({id:"Xt+M1cRV",block:'{"symbols":[],"statements":[[4,"link-to",null,[["route"],["index"]],{"statements":[[0,"Recent"]],"parameters":[]},null],[0,"\\n"],[7,"div",true],[10,"id","bottom-panel"],[10,"class","full"],[8],[0,"\\n  "],[1,[28,"message-info",null,[["currentMessage","showTitle","envChangedAction","currentEnvPosition","actionsInMenu"],[[24,["model"]],"true",[28,"action",[[23,0,[]],"envChanged"],null],[24,["envPosition"]],false]]],false],[0,"\\n"],[9],[0,"\\n"]],"hasEval":false}',meta:{moduleName:"client-app/templates/show.hbs"}})
 e.default=t})),define("client-app/config/environment",[],(function(){try{var e="client-app/config/environment",t=document.querySelector('meta[name="'+e+'"]').getAttribute("content"),n={default:JSON.parse(decodeURIComponent(t))}
-return Object.defineProperty(n,"__esModule",{value:!0}),n}catch(r){throw new Error('Could not read config from meta tag with name "'+e+'".')}})),runningTests||require("client-app/app").default.create({name:"client-app",version:"0.0.0+71fa880d"})
+return Object.defineProperty(n,"__esModule",{value:!0}),n}catch(r){throw new Error('Could not read config from meta tag with name "'+e+'".')}})),runningTests||require("client-app/app").default.create({name:"client-app",version:"0.0.0+63634ced"})

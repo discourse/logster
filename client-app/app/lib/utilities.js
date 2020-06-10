@@ -150,7 +150,9 @@ export function buildHashString(hash, recurse, expanded = []) {
           v[0]
         )}, <a class="expand-list" data-key=${k}>${v.length - 1} more</a>`;
       } else {
-        valueHtml = buildArrayString(v);
+        valueHtml = `${escapeHtml(v[0])}, ${buildArrayString(
+          v.slice(1, v.length)
+        )}`;
       }
       buffer.push(`<tr><td>${escapeHtml(k)}</td><td>${valueHtml}</td></tr>`);
     } else if (typeof v === "object") {
