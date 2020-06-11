@@ -1,5 +1,12 @@
 # CHANGELOG
 
+- 2020-06-11: 2.9.0
+
+  - FEATURE: Allows JS errors to specify a log severity
+  - DEV: Several dependencies upgrades
+  - FIX: Don't search if the phrase hasn't changed
+  - UX: Distinguish the value of the current env from the values of other envs in a merged message
+
 - 2020-03-30: 2.8.0
 
   - FEATURE: Upgrade icons to Font Awesome 5
