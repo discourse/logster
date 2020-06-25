@@ -10,7 +10,7 @@ GEM
     nio4r (2.5.2)
     puma (4.3.5)
       nio4r (~> 2.0)
-    rack (2.0.8)
+    rack (2.2.3)
     rack-protection (2.0.7)
       rack
     redis (4.1.3)
