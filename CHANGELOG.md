@@ -1,6 +1,6 @@
 # CHANGELOG
 
-- Unreleased
+- 2020-07-20: 2.9.1
 
   - FIX: Missing application backtrace in chained loggers.
 
