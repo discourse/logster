@@ -14,13 +14,11 @@ class Logster::Middleware::DebugExceptions < ActionDispatch::DebugExceptions
     exception = wrapper.exception
 
     Logster.config.current_context.call(env) do
-      location = exception.backtrace[0]
-
       Logster.logger.add_with_opts(
         ::Logger::Severity::FATAL,
-        "#{exception.class} (#{exception})\n#{location}",
+        "#{exception.class} (#{exception})\n#{wrapper.application_trace.join("\n")}",
         "web-exception",
-        backtrace: exception.backtrace.join("\n"),
+        backtrace: wrapper.full_trace.join("\n"),
         env: env
       )
     end

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- Unreleased
+
+  - FIX: Missing application backtrace in chained loggers.
+
 - 2020-06-11: 2.9.0
 
   - FEATURE: Allows JS errors to specify a log severity
