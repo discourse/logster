@@ -343,6 +343,9 @@ module Logster
       key = ip_rate_limit_key(ip_address)
 
       limited = @redis.exists(key)
+      if Integer === limited
+        limited = limited != 0
+      end
 
       if perform && !limited
         @redis.setex key, limit, ""
