@@ -342,7 +342,7 @@ module Logster
     def rate_limited?(ip_address, perform: false, limit: 60)
       key = ip_rate_limit_key(ip_address)
 
-      limited = @redis.exists(key)
+      limited = @redis.call([:exists, key])
       if Integer === limited
         limited = limited != 0
       end
