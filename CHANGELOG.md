@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2020-08-20: 2.9.3
+
+  - FIX: fix code that causes warning from recent redis gem
+
 - 2020-08-11: 2.9.2
 
   - FIX: `report_js_error` incorrectly denying logs when Redis#exists returns integer
