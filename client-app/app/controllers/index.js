@@ -5,9 +5,9 @@ import Preload from "client-app/lib/preload";
 import { debounce } from "@ember/runloop";
 
 export default Controller.extend({
-  showDebug: true,
-  showInfo: true,
-  showWarn: true,
+  showDebug: false,
+  showInfo: false,
+  showWarn: false,
   showErr: true,
   showFatal: true,
   search: "",
@@ -108,14 +108,7 @@ export default Controller.extend({
 
     updateFilter(name) {
       this.toggleProperty(name);
-      const filter = [];
-      ["Debug", "Info", "Warn", "Err", "Fatal"].forEach((severity, index) => {
-        if (this.get(`show${severity}`)) {
-          filter.push(index);
-        }
-      });
-      filter.push(5); // always show unknown, rare
-      this.model.set("filter", filter);
+      this.model.set(name, this[name]);
       this.model.reload().then(() => this.model.updateSelectedRow());
     },
 

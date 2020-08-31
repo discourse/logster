@@ -6,7 +6,8 @@ import { default as EmberObject, computed } from "@ember/object";
 import { A } from "@ember/array";
 
 const BATCH_SIZE = 50;
-const DEFAULT_FILTER = [0, 1, 2, 3, 4, 5];
+
+export const SEVERITIES = ["Debug", "Info", "Warn", "Err", "Fatal"];
 
 export default EmberObject.extend({
   total: 0,
@@ -16,10 +17,20 @@ export default EmberObject.extend({
   currentEnvPosition: 0,
   currentGroupedMessagesPosition: 0,
 
+  filter: computed(...SEVERITIES.map(s => `show${s}`), function() {
+    const filter = [];
+    SEVERITIES.forEach((severity, index) => {
+      if (this[`show${severity}`]) {
+        filter.push(index);
+      }
+    });
+    filter.push(5); // always show unknown, rare
+    return filter;
+  }),
+
   init() {
     this._super(...arguments);
     this.setProperties({
-      filter: DEFAULT_FILTER,
       search: "",
       rows: A()
     });
