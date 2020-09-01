@@ -200,7 +200,7 @@ export function setLocalStorage(key, value) {
       key = "logster-" + key;
       window.localStorage.setItem(key, value);
     }
-  } catch {}
+  } catch { /* do nothing */ }
 }
 
 export function getLocalStorage(key, fallback) {

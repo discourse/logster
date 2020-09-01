@@ -1,5 +1,11 @@
 # CHANGELOG
 
+- 2020-09-01: 2.9.4
+
+  - FEATURE: Merge messages differing only by numbers (#118)
+  - DEV: Bump dependencies
+  - UX: Turn severities below `Error` off by default and remember changes using localStorage (#125)
+
 - 2020-08-20: 2.9.3
 
   - FIX: fix code that causes warning from recent redis gem
