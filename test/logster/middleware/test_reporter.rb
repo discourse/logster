@@ -28,19 +28,19 @@ class TestReporter < Minitest::Test
 
     reporter = Logster::Middleware::Reporter.new(nil)
     env = Rack::MockRequest.env_for("/logs/report_js_error?message=hello")
-    status, = reporter.call(env)
+    reporter.call(env)
 
     assert_equal(Logger::Severity::WARN, Logster.store.latest[-1].severity)
 
     reporter = Logster::Middleware::Reporter.new(nil)
     env = Rack::MockRequest.env_for("/logs/report_js_error?message=hello&severity=invalid")
-    status, = reporter.call(env)
+    reporter.call(env)
 
     assert_equal(Logger::Severity::WARN, Logster.store.latest[-1].severity)
 
     reporter = Logster::Middleware::Reporter.new(nil)
     env = Rack::MockRequest.env_for("/logs/report_js_error?message=hello&severity=error")
-    status, = reporter.call(env)
+    reporter.call(env)
 
     assert_equal(Logger::Severity::ERROR, Logster.store.latest[-1].severity)
   end

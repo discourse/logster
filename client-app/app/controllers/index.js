@@ -1,15 +1,19 @@
 import Controller from "@ember/controller";
-import { ajax } from "client-app/lib/utilities";
+import {
+  ajax,
+  getLocalStorage,
+  setLocalStorage
+} from "client-app/lib/utilities";
 import { computed } from "@ember/object";
 import Preload from "client-app/lib/preload";
 import { debounce } from "@ember/runloop";
 
 export default Controller.extend({
-  showDebug: true,
-  showInfo: true,
-  showWarn: true,
-  showErr: true,
-  showFatal: true,
+  showDebug: getLocalStorage("showDebug", false),
+  showInfo: getLocalStorage("showInfo", false),
+  showWarn: getLocalStorage("showWarn", false),
+  showErr: getLocalStorage("showErr", true),
+  showFatal: getLocalStorage("showFatal", true),
   search: "",
   queryParams: ["search"],
 
@@ -108,14 +112,8 @@ export default Controller.extend({
 
     updateFilter(name) {
       this.toggleProperty(name);
-      const filter = [];
-      ["Debug", "Info", "Warn", "Err", "Fatal"].forEach((severity, index) => {
-        if (this.get(`show${severity}`)) {
-          filter.push(index);
-        }
-      });
-      filter.push(5); // always show unknown, rare
-      this.model.set("filter", filter);
+      this.model.set(name, this[name]);
+      setLocalStorage(name, this[name]);
       this.model.reload().then(() => this.model.updateSelectedRow());
     },
 
