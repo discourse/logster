@@ -193,3 +193,37 @@ export function clone(object) {
   });
   return copy;
 }
+
+export function setLocalStorage(key, value) {
+  try {
+    if (window.localStorage) {
+      key = "logster-" + key;
+      window.localStorage.setItem(key, value);
+    }
+  } catch {}
+}
+
+export function getLocalStorage(key, fallback) {
+  try {
+    if (window.localStorage) {
+      key = "logster-" + key;
+      const value = window.localStorage.getItem(key);
+      if (value === null) {
+        // key doesn't exist
+        return fallback;
+      }
+      if (value === "true") {
+        return true;
+      }
+      if (value === "false") {
+        return false;
+      }
+      // Add more cases here for numbers, null, undefined etc. as/when needed
+      return value;
+    } else {
+      return fallback;
+    }
+  } catch {
+    return fallback;
+  }
+}

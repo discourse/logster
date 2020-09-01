@@ -107,14 +107,14 @@ var n=Ember.Component.extend({didInsertElement:function(){Ember.run.later(this,t
 if(n){var r=(0,t.formatTime)(n)
 r!==e.innerText&&(e.innerText=r)}})),Ember.run.later(this,this.updateTimes,6e4)}})
 e.default=n})),define("client-app/controllers/index",["exports","client-app/lib/utilities","client-app/lib/preload"],(function(e,t,n){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
-var r=Ember.Controller.extend({showDebug:!1,showInfo:!1,showWarn:!1,showErr:!0,showFatal:!0,search:"",queryParams:["search"],showSettings:Ember.computed((function(){return n.default.get("patterns_enabled")})),resizePanels:function(e){var t=document.getElementById("bottom-panel"),n=document.getElementById("top-panel")
+var r=Ember.Controller.extend({showDebug:(0,t.getLocalStorage)("showDebug",!1),showInfo:(0,t.getLocalStorage)("showInfo",!1),showWarn:(0,t.getLocalStorage)("showWarn",!1),showErr:(0,t.getLocalStorage)("showErr",!0),showFatal:(0,t.getLocalStorage)("showFatal",!0),search:"",queryParams:["search"],showSettings:Ember.computed((function(){return n.default.get("patterns_enabled")})),resizePanels:function(e){var t=document.getElementById("bottom-panel"),n=document.getElementById("top-panel")
 t.style.height="".concat(e-13,"px"),n.style.bottom="".concat(e+12,"px")},actionsInMenu:Ember.computed((function(){return this.site.isMobile})),actions:{expandMessage:function(e){e.expand()},selectRowAction:function(e){var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{}
 this.model.selectRow(e,t)},tabChangedAction:function(e){this.model.tabChanged(e)},showMoreBefore:function(){this.model.showMoreBefore()},loadMore:function(){return this.model.loadMore()},clear:function(){var e=this
 confirm("Clear the logs?\n\nCancel = No, OK = Clear")&&(0,t.ajax)("/clear",{type:"POST"}).then((function(){e.model.reload()}))},removeMessage:function(e){var t=this.model.currentRow.group?this.model.currentRow:null,n=this.model.rows,r=t?n.indexOf(t):n.indexOf(e)
 e.destroy(),e.set("selected",!1),this.model.set("total",this.model.total-1)
 var a=!1,o=0
-t?(o=t.messages.indexOf(e),t.messages.removeObject(e),o=Math.min(o,t.messages.length-1),0===t.messages.length&&(n.removeObject(t),a=!0)):(n.removeObject(e),a=!0),a?r>0?this.model.selectRow(n[r-1]):this.model.total>0?this.model.selectRow(n[0]):this.model.reload():t&&this.model.selectRow(n[r],{messageIndex:o})},solveMessage:function(e){this.model.solve(e)},groupedMessageChangedAction:function(e){this.model.groupedMessageChanged(e)},envChangedAction:function(e){this.model.envChanged(e)},updateFilter:function(e){var t=this
-this.toggleProperty(e),this.model.set(e,this[e]),this.model.reload().then((function(){return t.model.updateSelectedRow()}))},updateSearch:function(e){e!==this.search&&(e&&1===e.length||Ember.run.debounce(this,this.doSearch,e,250))}},doSearch:function(e){var t=this
+t?(o=t.messages.indexOf(e),t.messages.removeObject(e),o=Math.min(o,t.messages.length-1),0===t.messages.length&&(n.removeObject(t),a=!0)):(n.removeObject(e),a=!0),a?r>0?this.model.selectRow(n[r-1]):this.model.total>0?this.model.selectRow(n[0]):this.model.reload():t&&this.model.selectRow(n[r],{messageIndex:o})},solveMessage:function(e){this.model.solve(e)},groupedMessageChangedAction:function(e){this.model.groupedMessageChanged(e)},envChangedAction:function(e){this.model.envChanged(e)},updateFilter:function(e){var n=this
+this.toggleProperty(e),this.model.set(e,this[e]),(0,t.setLocalStorage)(e,this[e]),this.model.reload().then((function(){return n.model.updateSelectedRow()}))},updateSearch:function(e){e!==this.search&&(e&&1===e.length||Ember.run.debounce(this,this.doSearch,e,250))}},doSearch:function(e){var t=this
 this.model.set("search",e),this.model.reload().then((function(){return t.model.updateSelectedRow()}))}})
 e.default=r})),define("client-app/controllers/show",["exports"],(function(e){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
 var t=Ember.Controller.extend({envPosition:0,actions:{protect:function(){this.get("model").protect()},unprotect:function(){this.get("model").unprotect()},envChanged:function(e){this.set("envPosition",e)}}})
@@ -165,7 +165,9 @@ i.push('<tr title="'.concat(f,'"><td>').concat(e,"</td><td>").concat(m,"</td></t
 i.push("<tr><td></td><td><table>"),i.push("<td>".concat(s(t),"</td><td>").concat(e(n,!0),"</td>")),i.push("</table></td></tr>")}))
 var p=a?"":"env-table"
 return"<table class='".concat(p,"'>").concat(i.join("\n"),"</table>")},e.clone=function(e){var t={}
-return Object.keys(e).forEach((function(n){t[n]=e[n]})),t}
+return Object.keys(e).forEach((function(n){t[n]=e[n]})),t},e.setLocalStorage=function(e,t){try{window.localStorage&&(e="logster-"+e,window.localStorage.setItem(e,t))}catch(n){}},e.getLocalStorage=function(e,t){try{if(window.localStorage){e="logster-"+e
+var n=window.localStorage.getItem(e)
+return null===n?t:"true"===n||"false"!==n&&n}return t}catch(r){return t}}
 var r,a,o,i={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","/":"&#x2F;"}
 function s(e){return String(e).replace(/[&<>"'/]/g,(function(e){return i[e]}))}function l(e,n){return new Ember.RSVP.Promise((function(r,a){n=n||{}
 var o=new XMLHttpRequest
@@ -292,4 +294,4 @@ var t=Ember.HTMLBars.template({id:"QRu+EVou",block:'{"symbols":[],"statements":[
 e.default=t})),define("client-app/templates/show",["exports"],(function(e){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
 var t=Ember.HTMLBars.template({id:"Xt+M1cRV",block:'{"symbols":[],"statements":[[4,"link-to",null,[["route"],["index"]],{"statements":[[0,"Recent"]],"parameters":[]},null],[0,"\\n"],[7,"div",true],[10,"id","bottom-panel"],[10,"class","full"],[8],[0,"\\n  "],[1,[28,"message-info",null,[["currentMessage","showTitle","envChangedAction","currentEnvPosition","actionsInMenu"],[[24,["model"]],"true",[28,"action",[[23,0,[]],"envChanged"],null],[24,["envPosition"]],false]]],false],[0,"\\n"],[9],[0,"\\n"]],"hasEval":false}',meta:{moduleName:"client-app/templates/show.hbs"}})
 e.default=t})),define("client-app/config/environment",[],(function(){try{var e="client-app/config/environment",t=document.querySelector('meta[name="'+e+'"]').getAttribute("content"),n={default:JSON.parse(decodeURIComponent(t))}
-return Object.defineProperty(n,"__esModule",{value:!0}),n}catch(r){throw new Error('Could not read config from meta tag with name "'+e+'".')}})),runningTests||require("client-app/app").default.create({name:"client-app",version:"0.0.0+d01416df"})
+return Object.defineProperty(n,"__esModule",{value:!0}),n}catch(r){throw new Error('Could not read config from meta tag with name "'+e+'".')}})),runningTests||require("client-app/app").default.create({name:"client-app",version:"0.0.0+9146d033"})
