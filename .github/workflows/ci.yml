@@ -1,0 +1,58 @@
+name: Logster Tests
+
+on: [push, pull_request]
+
+jobs:
+  ruby:
+    runs-on: ubuntu-latest
+    name: Ruby ${{ matrix.ruby }}
+    strategy:
+      matrix:
+        ruby: ["2.7", "2.6", "2.5"]
+        redis: ["4.x"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+      - uses: shogo82148/actions-setup-redis@v1
+        with:
+          redis-version: ${{ matrix.redis }}
+      - name: Bundler cache
+        uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-${{ matrix.ruby }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.ruby }}-gems-
+      - name: Setup gems
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4
+      - name: Rubocop
+        run: bundle exec rubocop
+      - name: Tests
+        run: bundle exec rake test
+  js:
+    runs-on: ubuntu-latest
+    name: JavaScript Lint
+    defaults:
+      run:
+        working-directory: client-app
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get yarn cache directory
+        id: yarn-cache-dir
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - name: Yarn cache
+        uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - name: Yarn install
+        run: yarn install
+      - name: ESLint
+        run: yarn eslint .
