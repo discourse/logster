@@ -188,4 +188,16 @@ class TestBaseStore < Minitest::Test
       refute_includes(store.reported.first.env.keys.map(&:to_sym), :backtrace)
     end
   end
+
+  def test_envs_with_invalid_encoding_dont_raise_errors
+    msg = @store.report(
+      Logger::WARN,
+      '',
+      'me have invalid encoding',
+      env: {
+        axe: "a\xF1xasa"
+      }
+    )
+    assert_equal("a�xasa", msg.env[:axe])
+  end
 end
