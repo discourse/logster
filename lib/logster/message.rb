@@ -99,7 +99,7 @@ module Logster
           env["time"] = @timestamp || get_timestamp
         end
       end
-      @env = Message.populate_from_env(env)
+      self.env = Message.populate_from_env(env)
     end
 
     def self.default_env
