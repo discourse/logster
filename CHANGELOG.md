@@ -1,5 +1,10 @@
 # CHANGELOG
 
+- 2021-01-21: 2.9.5
+
+  - FIX: Stop encoding errors when converting Message objects to JSON (#128)
+  - DEV: Bump dependencies
+
 - 2020-09-01: 2.9.4
 
   - FEATURE: Merge messages differing only by numbers (#118)
