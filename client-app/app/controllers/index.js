@@ -11,7 +11,7 @@ import { debounce } from "@ember/runloop";
 export default Controller.extend({
   showDebug: getLocalStorage("showDebug", false),
   showInfo: getLocalStorage("showInfo", false),
-  showWarn: getLocalStorage("showWarn", false),
+  showWarn: getLocalStorage("showWarn", true),
   showErr: getLocalStorage("showErr", true),
   showFatal: getLocalStorage("showFatal", true),
   search: "",

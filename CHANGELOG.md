@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2021-02-19: 2.9.6
+
+  - UX: Make `Warn` level visible by default
+
 - 2021-01-21: 2.9.5
 
   - FIX: Stop encoding errors when converting Message objects to JSON (#128)
