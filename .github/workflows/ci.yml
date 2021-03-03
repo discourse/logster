@@ -1,54 +1,49 @@
-name: Logster Tests
+name: CI
 
 on:
+  pull_request:
   push:
     branches:
       - master
-  pull_request:
+      - main
 
 jobs:
-  ruby:
+  build:
     runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby }}
+
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+
     strategy:
       matrix:
-        ruby: ["2.7", "2.6", "2.5"]
-        redis: ["4.x"]
+        ruby:
+          - 2.5
+          - 2.6
+          - 2.7
+          - 3.0
+
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-ruby@v1
+
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-      - uses: shogo82148/actions-setup-redis@v1
-        with:
-          redis-version: ${{ matrix.redis }}
-      - name: Bundler cache
-        uses: actions/cache@v2
-        with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-${{ matrix.ruby }}-gems-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.ruby }}-gems-
-      - name: Setup gems
-        run: |
-          gem install bundler
-          bundle config path vendor/bundle
-          bundle install --jobs 4
-      - name: Rubocop
+          bundler-cache: true
+
+      - name: Lint
         run: bundle exec rubocop
+
       - name: Tests
         run: bundle exec rake test
-  js:
-    runs-on: ubuntu-latest
-    name: JavaScript Lint
-    defaults:
-      run:
-        working-directory: client-app
-    steps:
-      - uses: actions/checkout@v2
+
       - name: Get yarn cache directory
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
+
       - name: Yarn cache
         uses: actions/cache@v2
         id: yarn-cache
@@ -57,7 +52,24 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
+
       - name: Yarn install
-        run: yarn install
+        run: cd client-app && yarn install
+
       - name: ESLint
-        run: yarn eslint .
+        run: cd client-app && yarn eslint .
+
+  publish:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Release Gem
+        uses: discourse/publish-rubygems-action@v2-beta
+        env:
+          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+          GIT_EMAIL: team@discourse.org
+          GIT_NAME: discoursebot

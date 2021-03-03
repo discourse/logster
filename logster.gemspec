@@ -15,7 +15,9 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/discourse/logster"
   spec.license       = "MIT"
 
-  spec.files         = `git ls-files -z`.split("\x0").reject do |f|
+  spec.required_ruby_version = ">= 2.5.0"
+
+  spec.files = `git ls-files -z`.split("\x0").reject do |f|
     f.start_with?("website") || f.start_with?("bin")
   end
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
@@ -33,5 +35,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "guard-minitest"
   spec.add_development_dependency "timecop"
   spec.add_development_dependency "byebug", "~> 11.1.0"
-  spec.add_development_dependency "rubocop-discourse"
+  spec.add_development_dependency "rubocop-discourse", "~> 2.4.1"
 end
