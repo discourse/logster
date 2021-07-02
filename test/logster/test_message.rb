@@ -87,6 +87,7 @@ class TestMessage < MiniTest::Test
     assert_equal(`hostname -f`.strip!, msg.env["hostname"])
   ensure
     Logster.config.use_full_hostname = nil
+    Logster::Message.instance_variable_set(:@hostname, nil)
   end
 
   def test_merging_sums_count_for_both_messages
