@@ -79,6 +79,7 @@ class TestMessage < MiniTest::Test
   end
 
   def test_use_full_hostname
+    Logster::Message.instance_variable_set(:@hostname, nil)
     Logster.config.use_full_hostname = true
     msg = Logster::Message.new(0, '', 'test', 10)
     msg.populate_from_env({})
