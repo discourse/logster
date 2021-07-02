@@ -78,6 +78,18 @@ class TestMessage < MiniTest::Test
     Logster.config.application_version = nil
   end
 
+  def test_use_full_hostname
+    Logster::Message.instance_variable_set(:@hostname, nil)
+    Logster.config.use_full_hostname = true
+    msg = Logster::Message.new(0, '', 'test', 10)
+    msg.populate_from_env({})
+
+    assert_equal(`hostname -f`.strip!, msg.env["hostname"])
+  ensure
+    Logster.config.use_full_hostname = nil
+    Logster::Message.instance_variable_set(:@hostname, nil)
+  end
+
   def test_merging_sums_count_for_both_messages
     msg1 = Logster::Message.new(0, '', 'test', 10, count: 15)
     msg2 = Logster::Message.new(0, '', 'test', 20, count: 13)

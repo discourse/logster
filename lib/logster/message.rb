@@ -80,7 +80,8 @@ module Logster
     end
 
     def self.hostname
-      @hostname ||= `hostname`.strip! rescue "<unknown>"
+      command = Logster.config.use_full_hostname ? `hostname -f` : `hostname`
+      @hostname ||= command.strip! rescue "<unknown>"
     end
 
     def populate_from_env(env)
