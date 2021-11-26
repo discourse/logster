@@ -378,7 +378,6 @@ label span {
   display: inline-block;
   margin: 0;
   padding: 5px 12px;
-  font-weight: 500;
   font-size: 1em;
   line-height: 0;
   text-align: center;
@@ -689,4 +688,81 @@ label span {
 .backtrace-line .line-link {
   color: #9e9e9e;
   margin-left: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #181818;
+    color: #cecece;
+  }
+
+  #bottom-panel {
+    background: #181818;
+  }
+
+  .message-row div {
+    border-top-color: #404040;
+  }
+
+  .message-row:hover {
+    background: #262626;
+  }
+
+  .message-row.selected {
+    background: #303030;
+  }
+
+  #log-table .show-more {
+    background: #262626;
+  }
+
+  .divider {
+    background: #262626;
+  }
+
+  .divider div {
+    background: #707070;
+  }
+
+  .divider,
+  .tabs {
+    border-top-color: #555;
+  }
+
+  #bottom-panel:not(.full) .nav-controls.env-nav,
+  .divider,
+  .message-info,
+  .nav-controls.group-nav {
+    border-bottom-color: #555;
+  }
+
+  .action-panel .search {
+    background: #262626;
+    border-color: #404040;
+  }
+
+  .btn,
+  .tabs a {
+    color: #cecece;
+  }
+
+  .tabs a {
+    background: #323232;
+    border-color: #404040;
+  }
+
+  .tabs a.active {
+    background: #555;
+    border-color: #707070;
+    color: #f4f4f4;
+  }
+
+  .btn {
+    background: #323232;
+  }
+
+  #bottom-panel.full .message-actions {
+    background: #181818;
+    border-color: #555;
+  }
 }
