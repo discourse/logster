@@ -43,13 +43,16 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '16'
-          cache: yarn
+          cache: npm
+          cache-dependency-path: 'client-app/package-lock.json'
 
       - name: Yarn install
-        run: cd client-app && yarn install
+        working-directory: client-app
+        run: yarn install
 
       - name: ESLint
-        run: cd client-app && yarn eslint .
+        working-directory: client-app
+        run: yarn eslint .
 
   publish:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
