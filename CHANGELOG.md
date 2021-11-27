@@ -1,5 +1,13 @@
 # CHANGELOG
 
+- 2021-11-26: 2.10.0
+
+  - FEATURE: Introduce dark mode
+
+- 2021-10-27: 2.9.8
+
+  - FIX: We weren't properly memoizing the hostname
+
 - 2021-07-01: 2.9.7
 
   - FEATURE: Optionally use full hostname
@@ -348,4 +356,5 @@
   - Feature: Store backtraces, allow people to view them in the GUI
 
 - 2014-05-07: Started changelog :)
+
   - Report params in env tab
