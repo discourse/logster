@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2021-11-26: 2.10.1
+
+  - UX: More dark-mode related changes
+
 - 2021-11-26: 2.10.0
 
   - FEATURE: Introduce dark mode

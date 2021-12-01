@@ -573,6 +573,7 @@ label span {
   margin: 0 7px;
 }
 
+.recent-link,
 .expand-list {
   text-decoration: underline;
   color: blue;
@@ -764,5 +765,14 @@ label span {
   #bottom-panel.full .message-actions {
     background: #181818;
     border-color: #555;
+  }
+
+  #bottom-panel:not(.full) .nav-controls.env-nav {
+    background: #181818;
+  }
+
+  .recent-link,
+  .expand-list {
+    color: #44f;
   }
 }
