@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2022-02-04: 2.11.0
+
+  - DEV: Fix deprecations introduced by `redis` gem in version 4.6.0
+
 - 2021-11-26: 2.10.1
 
   - UX: More dark-mode related changes
