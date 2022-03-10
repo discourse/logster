@@ -74,9 +74,13 @@ module Logster
       # own methods don't show up as the first few frames in the backtrace
       if !opts || !opts.key?(:backtrace)
         opts ||= {}
-        backtrace = caller_locations
-        while backtrace.first.path.end_with?("/logger.rb")
-          backtrace.shift
+        backtrace = message.backtrace if message.kind_of?(::Exception)
+        backtrace ||= progname.backtrace if progname.kind_of?(::Exception)
+        if !backtrace
+          backtrace = caller_locations
+          while backtrace.first.path.end_with?("/logger.rb")
+            backtrace.shift
+          end
         end
         backtrace = backtrace.join("\n")
         opts[:backtrace] = backtrace

@@ -106,4 +106,26 @@ class TestLogger < Minitest::Test
     @logger.skip_store = true
     @logger.warn("testing")
   end
+
+  def test_logging_an_error_gets_backtrace_from_the_error
+    exception = error_instance(Exception)
+    std_err = error_instance(StandardError)
+    custom_err = error_instance(Class.new(StandardError))
+
+    @logger.error(exception)
+    @logger.fatal(std_err)
+    @logger.fatal(custom_err)
+
+    assert_equal exception.backtrace.join("\n"), @store.calls[0][3][:backtrace]
+    assert_equal std_err.backtrace.join("\n"), @store.calls[1][3][:backtrace]
+    assert_equal custom_err.backtrace.join("\n"), @store.calls[2][3][:backtrace]
+  end
+
+  private
+
+  def error_instance(error_class)
+    raise error_class.new
+  rescue error_class => e
+    e
+  end
 end
