@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2022-03-12: 2.11.0
+
+  - FEATURE: Improve support for logging error objects (#153)
+
 - 2021-11-26: 2.10.1
 
   - UX: More dark-mode related changes
