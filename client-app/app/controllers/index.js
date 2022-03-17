@@ -1,12 +1,8 @@
-import Controller from "@ember/controller";
-import {
-  ajax,
-  getLocalStorage,
-  setLocalStorage
-} from "client-app/lib/utilities";
-import { computed } from "@ember/object";
-import Preload from "client-app/lib/preload";
 import { debounce } from "@ember/runloop";
+import { computed } from "@ember/object";
+import Controller from "@ember/controller";
+import { ajax, getLocalStorage, setLocalStorage } from "client-app/lib/utilities";
+import Preload from "client-app/lib/preload";
 
 export default Controller.extend({
   showDebug: getLocalStorage("showDebug", false),
@@ -14,7 +10,7 @@ export default Controller.extend({
   showWarn: getLocalStorage("showWarn", true),
   showErr: getLocalStorage("showErr", true),
   showFatal: getLocalStorage("showFatal", true),
-  search: "",
+  search: null,
   queryParams: ["search"],
 
   showSettings: computed(function() {
@@ -129,6 +125,14 @@ export default Controller.extend({
       debounce(this, this.doSearch, term, 250);
     }
   },
+
+  searchTerm: computed("search", function () {
+    if (this.search) {
+      this.doSearch(this.search)
+      return this.search;
+    }
+    return null;
+  }),
 
   doSearch(term) {
     this.model.set("search", term);
