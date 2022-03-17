@@ -7,12 +7,6 @@ import * as utilities from "client-app/lib/utilities";
 module('Unit | Controller | index', function (hooks) {
   setupTest(hooks);
 
-  // Replace this with your real tests.
-  test('it exists', function (assert) {
-    let controller = this.owner.lookup('controller:index');
-    assert.ok(controller);
-  });
-
   test('uses search param to filter results', function (assert) {
     const controller = this.owner.lookup('controller:index');
     const ajaxStub = sinon.stub(utilities, 'ajax')
