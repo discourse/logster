@@ -27,9 +27,9 @@ module Logster
         end
       end
 
-      @redis.multi do
-        @redis.hset(grouping_key, message.grouping_key, message.key)
-        @redis.rpush(list_key, message.key)
+      @redis.multi do |pipeline|
+        pipeline.hset(grouping_key, message.grouping_key, message.key)
+        pipeline.rpush(list_key, message.key)
         update_message(message, save_env: true)
       end
 
@@ -41,29 +41,29 @@ module Logster
 
     def delete(msg)
       groups = find_pattern_groups() { |pat| msg.message =~ pat }
-      @redis.multi do
+      @redis.multi do |pipeline|
         groups.each do |group|
           group.remove_message(msg)
           save_pattern_group(group) if group.changed?
         end
-        @redis.hdel(hash_key, msg.key)
+        pipeline.hdel(hash_key, msg.key)
         delete_env(msg.key)
-        @redis.hdel(grouping_key, msg.grouping_key)
-        @redis.lrem(list_key, -1, msg.key)
+        pipeline.hdel(grouping_key, msg.grouping_key)
+        pipeline.lrem(list_key, -1, msg.key)
       end
     end
 
     def bulk_delete(message_keys, grouping_keys)
       groups = find_pattern_groups(load_messages: true)
-      @redis.multi do
+      @redis.multi do |pipeline|
         groups.each do |group|
           group.messages = group.messages.reject { |m| message_keys.include?(m.key) }
           save_pattern_group(group) if group.changed?
         end
-        @redis.hdel(hash_key, message_keys)
-        @redis.hdel(grouping_key, grouping_keys)
+        pipeline.hdel(hash_key, message_keys)
+        pipeline.hdel(grouping_key, grouping_keys)
         message_keys.each do |k|
-          @redis.lrem(list_key, -1, k)
+          pipeline.lrem(list_key, -1, k)
           delete_env(k)
         end
       end
@@ -74,11 +74,11 @@ module Logster
       exists = @redis.hexists(hash_key, message.key)
       return false unless exists
 
-      @redis.multi do
-        @redis.hset(hash_key, message.key, message.to_json(exclude_env: true))
+      @redis.multi do |pipeline|
+        pipeline.hset(hash_key, message.key, message.to_json(exclude_env: true))
         push_env(message.key, message.env_buffer) if message.has_env_buffer?
-        @redis.lrem(list_key, -1, message.key)
-        @redis.rpush(list_key, message.key)
+        pipeline.lrem(list_key, -1, message.key)
+        pipeline.rpush(list_key, message.key)
       end
       message.env_buffer = [] if message.has_env_buffer?
       check_rate_limits(message.severity)
