@@ -1,6 +1,6 @@
 # CHANGELOG
 
-- Unreleased
+- 2022-04-21: 2.11.1
 
   - FIX: Redis pipelining deprecation (#159)
 
