@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- Unreleased
+
+  - FIX: Redis pipelining deprecation (#159)
+
 - 2022-03-12: 2.11.0
 
   - FEATURE: Improve support for logging error objects (#153)

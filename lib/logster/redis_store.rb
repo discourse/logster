@@ -27,10 +27,10 @@ module Logster
         end
       end
 
-      @redis.multi do
-        @redis.hset(grouping_key, message.grouping_key, message.key)
-        @redis.rpush(list_key, message.key)
-        update_message(message, save_env: true)
+      @redis.multi do |pipeline|
+        pipeline.hset(grouping_key, message.grouping_key, message.key)
+        pipeline.rpush(list_key, message.key)
+        update_message(message, save_env: true, redis: pipeline)
       end
 
       trim
@@ -41,30 +41,30 @@ module Logster
 
     def delete(msg)
       groups = find_pattern_groups() { |pat| msg.message =~ pat }
-      @redis.multi do
+      @redis.multi do |pipeline|
         groups.each do |group|
           group.remove_message(msg)
-          save_pattern_group(group) if group.changed?
+          save_pattern_group(group, redis: pipeline) if group.changed?
         end
-        @redis.hdel(hash_key, msg.key)
-        delete_env(msg.key)
-        @redis.hdel(grouping_key, msg.grouping_key)
-        @redis.lrem(list_key, -1, msg.key)
+        pipeline.hdel(hash_key, msg.key)
+        delete_env(msg.key, redis: pipeline)
+        pipeline.hdel(grouping_key, msg.grouping_key)
+        pipeline.lrem(list_key, -1, msg.key)
       end
     end
 
     def bulk_delete(message_keys, grouping_keys)
       groups = find_pattern_groups(load_messages: true)
-      @redis.multi do
+      @redis.multi do |pipeline|
         groups.each do |group|
           group.messages = group.messages.reject { |m| message_keys.include?(m.key) }
-          save_pattern_group(group) if group.changed?
+          save_pattern_group(group, redis: pipeline) if group.changed?
         end
-        @redis.hdel(hash_key, message_keys)
-        @redis.hdel(grouping_key, grouping_keys)
+        pipeline.hdel(hash_key, message_keys)
+        pipeline.hdel(grouping_key, grouping_keys)
         message_keys.each do |k|
-          @redis.lrem(list_key, -1, k)
-          delete_env(k)
+          pipeline.lrem(list_key, -1, k)
+          delete_env(k, redis: pipeline)
         end
       end
     end
@@ -74,11 +74,11 @@ module Logster
       exists = @redis.hexists(hash_key, message.key)
       return false unless exists
 
-      @redis.multi do
-        @redis.hset(hash_key, message.key, message.to_json(exclude_env: true))
-        push_env(message.key, message.env_buffer) if message.has_env_buffer?
-        @redis.lrem(list_key, -1, message.key)
-        @redis.rpush(list_key, message.key)
+      @redis.multi do |pipeline|
+        pipeline.hset(hash_key, message.key, message.to_json(exclude_env: true))
+        push_env(message.key, message.env_buffer, redis: pipeline) if message.has_env_buffer?
+        pipeline.lrem(list_key, -1, message.key)
+        pipeline.rpush(list_key, message.key)
       end
       message.env_buffer = [] if message.has_env_buffer?
       check_rate_limits(message.severity)
@@ -188,11 +188,12 @@ module Logster
           .sort
           .map(&:key)
 
-        @redis.pipelined do
+        @redis.pipelined do |pipeline|
           sorted.each do |message_key|
-            @redis.rpush(list_key, message_key)
+            pipeline.rpush(list_key, message_key)
           end
         end
+
         find_pattern_groups(load_messages: true).each do |group|
           group.messages = group.messages.select { |m| sorted.include?(m.key) }
           save_pattern_group(group) if group.changed?
@@ -383,11 +384,11 @@ module Logster
       jsons
     end
 
-    def save_pattern_group(group)
+    def save_pattern_group(group, redis: @redis)
       if group.messages_keys.size == 0
-        @redis.hdel(pattern_groups_key, group.key)
+        redis.hdel(pattern_groups_key, group.key)
       else
-        @redis.hset(pattern_groups_key, group.key, group.to_json)
+        redis.hset(pattern_groups_key, group.key, group.to_json)
       end
     end
 
@@ -429,13 +430,13 @@ module Logster
       end
     end
 
-    def update_message(message, save_env: false)
-      @redis.hset(hash_key, message.key, message.to_json(exclude_env: true))
-      push_env(message.key, message.env) if save_env
+    def update_message(message, save_env: false, redis: @redis)
+      redis.hset(hash_key, message.key, message.to_json(exclude_env: true))
+      push_env(message.key, message.env, redis: redis) if save_env
       if message.protected
-        @redis.sadd(protected_key, message.key)
+        redis.sadd(protected_key, message.key)
       else
-        @redis.srem(protected_key, message.key)
+        redis.srem(protected_key, message.key)
       end
     end
 
@@ -640,15 +641,15 @@ module Logster
       rate_limiter
     end
 
-    def push_env(message_key, env)
+    def push_env(message_key, env, redis: @redis)
       prefixed = env_prefix(message_key)
       env = [env] unless Array === env
-      @redis.lpush(prefixed, env.map(&:to_json).reverse)
-      @redis.ltrim(prefixed, 0, Logster.config.max_env_count_per_message - 1)
+      redis.lpush(prefixed, env.map(&:to_json).reverse)
+      redis.ltrim(prefixed, 0, Logster.config.max_env_count_per_message - 1)
     end
 
-    def delete_env(message_key)
-      @redis.del(env_prefix(message_key))
+    def delete_env(message_key, redis: @redis)
+      redis.del(env_prefix(message_key))
     end
 
     def env_unprefix(key, with_namespace: false)
