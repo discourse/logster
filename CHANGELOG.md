@@ -1,4 +1,7 @@
 # CHANGELOG
+- 2022-04-28: 2.11.2
+
+  - FIX: store override level in thread local storage (Truffle Ruby compatability)
 
 - 2022-04-21: 2.11.1
 
