@@ -4,7 +4,7 @@ require 'logger'
 
 module Logster
   class Logger < ::Logger
-    LOGSTER_ENV = "logster_env".freeze
+    LOGSTER_ENV = "logster_env"
 
     attr_accessor :store, :skip_store
     attr_reader :chained
@@ -12,21 +12,12 @@ module Logster
     def initialize(store)
       super(nil)
       @store = store
-      @override_levels = nil
       @chained = []
       @skip_store = false
     end
 
     def override_level=(val)
-      tid = Thread.current.object_id
-
-      ol = @override_levels
-      if val.nil? && ol && ol.key?(tid)
-        ol.delete(tid)
-        @override_levels = nil if ol.length == 0
-      elsif val
-        (@override_levels ||= {})[tid] = val
-      end
+      Thread.current[:logster_override_level] = val
     end
 
     def chain(logger)
@@ -55,8 +46,7 @@ module Logster
     end
 
     def level
-      ol = @override_levels
-      (ol && ol[Thread.current.object_id]) || @level
+      Thread.current[:logster_override_level] || @level
     end
 
     def add_with_opts(severity, message = nil, progname = progname(), opts = nil, &block)
