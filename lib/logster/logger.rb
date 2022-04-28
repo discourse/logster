@@ -14,10 +14,15 @@ module Logster
       @store = store
       @chained = []
       @skip_store = false
+      @logster_override_level_key = "logster_override_level_#{object_id}"
     end
 
     def override_level=(val)
-      Thread.current[:logster_override_level] = val
+      Thread.current[@logster_override_level_key] = val
+    end
+
+    def override_level
+      Thread.current[@logster_override_level_key]
     end
 
     def chain(logger)
@@ -46,7 +51,7 @@ module Logster
     end
 
     def level
-      Thread.current[:logster_override_level] || @level
+      Thread.current[@logster_override_level_key] || @level
     end
 
     def add_with_opts(severity, message = nil, progname = progname(), opts = nil, &block)

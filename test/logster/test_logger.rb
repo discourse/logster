@@ -26,6 +26,12 @@ class TestLogger < Minitest::Test
   end
 
   def test_per_thread_override
+    logger2 = Logster::Logger.new(@store)
+    logger2.override_level = 2
+
+    # we should not leak between objects
+    assert_nil @logger.override_level
+
     @logger.override_level = 2
 
     @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
