@@ -81,8 +81,11 @@ module Logster
 
     def self.hostname
       @hostname ||= begin
-        command = (Logster.config.use_full_hostname ? `hostname -f` : `hostname`) rescue "<unknown>"
+        command = Logster.config.use_full_hostname ? `hostname -f` : `hostname`
         command.strip!
+        command
+      rescue
+        "<unknown>"
       end
     end
 
