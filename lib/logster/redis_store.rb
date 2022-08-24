@@ -318,11 +318,11 @@ module Logster
     end
 
     def insert_pattern(set_name, pattern)
-      @redis.sadd(set_name, pattern)
+      @redis.sadd(set_name, [pattern])
     end
 
     def remove_pattern(set_name, pattern)
-      @redis.srem(set_name, pattern)
+      @redis.srem(set_name, [pattern])
     end
 
     def get_patterns(set_name)
@@ -434,9 +434,9 @@ module Logster
       redis.hset(hash_key, message.key, message.to_json(exclude_env: true))
       push_env(message.key, message.env, redis: redis) if save_env
       if message.protected
-        redis.sadd(protected_key, message.key)
+        redis.sadd(protected_key, [message.key])
       else
-        redis.srem(protected_key, message.key)
+        redis.srem(protected_key, [message.key])
       end
     end
 
