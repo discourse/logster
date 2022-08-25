@@ -1,4 +1,8 @@
 # CHANGELOG
+- 2022-08-25: 2.11.3
+
+- DEV: Avoid deprecation warning in Redis 4.8 (#166)
+
 - 2022-04-28: 2.11.2
 
   - FIX: store override level in thread local storage (Truffle Ruby compatability)
