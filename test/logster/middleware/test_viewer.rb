@@ -304,7 +304,7 @@ class TestViewer < Minitest::Test
     ).each do |path|
       response = request.get(path)
       assert_equal(200, response.status)
-      assert_equal('application/javascript', response.headers['Content-Type'])
+      assert_equal('application/javascript', response.headers['content-type'])
     end
   end
 
@@ -315,7 +315,7 @@ class TestViewer < Minitest::Test
     ).each do |path|
       response = request.get(path)
       assert_equal(200, response.status)
-      assert_equal('text/css', response.headers['Content-Type'])
+      assert_equal('text/css', response.headers['content-type'])
     end
   end
 
@@ -387,7 +387,7 @@ class TestViewer < Minitest::Test
     %i[get head options].each do |m|
       response = request.public_send(m, "/logsie/solve-group", params: { regex: "/gotta be post/" })
       assert_equal(405, response.status)
-      assert_equal("POST", response.headers["Allow"])
+      assert_equal("POST", response.headers["allow"])
     end
     latest = Logster.store.latest
     assert_equal(1, latest.size)
