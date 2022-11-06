@@ -59,5 +59,8 @@
   },
   "dependencies": {
     "moment": "~2.29.4"
+  },
+  "overrides": {
+    "testem": "^3.9.0"
   }
 }
