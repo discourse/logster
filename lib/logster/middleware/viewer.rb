@@ -18,7 +18,7 @@ module Logster
         (@store = Logster.store) || raise(ArgumentError.new("store"))
 
         @assets_path = File.expand_path("../../../../assets", __FILE__)
-        @fileserver = Rack::File.new(@assets_path)
+        @fileserver = Rack::Files.new(@assets_path)
       end
 
       def call(env)
@@ -102,10 +102,10 @@ module Logster
             end
 
             if json
-              [200, { "Content-Type" => "application/json; charset=utf-8" }, [message.to_json]]
+              [200, { "content-type" => "application/json; charset=utf-8" }, [message.to_json]]
             else
               preload = { "/show/#{key}" => message }
-              [200, { "Content-Type" => "text/html; charset=utf-8" }, [body(preload)]]
+              [200, { "content-type" => "text/html; charset=utf-8" }, [body(preload)]]
             end
 
           elsif resource =~ /\/settings(\.json)?$/
@@ -128,9 +128,9 @@ module Logster
               grouping = Logster::GroupingPattern.find_all(raw: true).map do |pattern|
                 { value: pattern }
               end
-              [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(suppression: suppression, grouping: grouping)]]
+              [200, { "content-type" => "application/json; charset=utf-8" }, [JSON.generate(suppression: suppression, grouping: grouping)]]
             else
-              [200, { "Content-Type" => "text/html; charset=utf-8" }, [body]]
+              [200, { "content-type" => "text/html; charset=utf-8" }, [body]]
             end
           elsif resource =~ /\/patterns\/([a-zA-Z0-9_]+)\.json$/
             unless Logster.config.enable_custom_patterns_via_ui
@@ -161,12 +161,12 @@ module Logster
             Logster.store.remove_ignore_count(pattern)
             [200, {}, ["OK"]]
           elsif resource == "/"
-            [200, { "Content-Type" => "text/html; charset=utf-8" }, [body]]
+            [200, { "content-type" => "text/html; charset=utf-8" }, [body]]
           elsif resource =~ /\/fetch-env\/([0-9a-f]+)\.json$/
             key = $1
             env = Logster.store.get_env(key)
             if env
-              [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(env)]]
+              [200, { "content-type" => "application/json; charset=utf-8" }, [JSON.generate(env)]]
             else
               not_found
             end
@@ -181,7 +181,7 @@ module Logster
             group.messages_keys.each { |k| Logster.store.solve(k) }
             [200, {}, []]
           elsif resource == '/development-preload.json' && ENV["LOGSTER_ENV"] == "development"
-            [200, { "Content-Type" => "application/json; charset=utf-8" }, [JSON.generate(preloaded_data)]]
+            [200, { "content-type" => "application/json; charset=utf-8" }, [JSON.generate(preloaded_data)]]
           else
             not_found
           end
@@ -230,7 +230,7 @@ module Logster
         }
 
         json = JSON.generate(payload)
-        [200, { "Content-Type" => "application/json" }, [json]]
+        [200, { "content-type" => "application/json" }, [json]]
       end
 
       def update_patterns(set_name, req)
@@ -258,7 +258,7 @@ module Logster
           return method_not_allowed(%w[POST PUT DELETE])
         end
 
-        [200, { "Content-Type" => "application/json" }, [JSON.generate(pattern: record.to_s)]]
+        [200, { "content-type" => "application/json" }, [JSON.generate(pattern: record.to_s)]]
       rescue => err
         error_message = err.message
 
@@ -293,7 +293,7 @@ module Logster
         if Array === allowed_methods
           allowed_methods = allowed_methods.join(", ")
         end
-        [405, { "Allow" => allowed_methods }, []]
+        [405, { "allow" => allowed_methods }, []]
       end
 
       def parse_regex(string)
