@@ -4,13 +4,13 @@
       {{yield}}
     </div>
   {{/if}}
-  <button {{action 'expandMenu'}} class="expand btn no-text">{{fa-icon 'ellipsis-h'}}</button>
+  <button class="expand btn no-text" type="button" {{action 'expandMenu'}}>{{fa-icon 'ellipsis-h'}}</button>
   {{#if showShare}}
-    <button {{action "share"}} class="share btn">{{fa-icon "share"}}<span>Share</span></button>
+    <button class="share btn" type="button" {{action "share"}}>{{fa-icon "share"}}<span>Share</span></button>
   {{/if}}
 {{else}}
   {{yield}}
   {{#if showShare}}
-    <button {{action "share"}} class="share btn">{{fa-icon "share"}}<span>Share</span></button>
+    <button class="share btn" type="button" {{action "share"}}>{{fa-icon "share"}}<span>Share</span></button>
   {{/if}}
 {{/if}}

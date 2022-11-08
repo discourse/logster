@@ -1,5 +1,5 @@
 {{#if mutable}}
-  <button {{action "create"}} class="btn new-pattern">{{fa-icon "plus"}}<span>New</span></button>
+  <button class="btn new-pattern" type="button" {{action "create"}}>{{fa-icon "plus"}}<span>New</span></button>
 {{/if}}
 {{#each allPatterns as |pattern|}}
   <div class="pattern-wrapper">
@@ -12,18 +12,18 @@
     }}
     {{#if mutable}}
       {{#if pattern.hasBuffer}}
-        <button {{action "save" pattern}} disabled={{pattern.saving}} class="btn ok no-text save shrink">
+        <button disabled={{pattern.saving}} class="btn ok no-text save shrink" type="button" {{action "save" pattern}}>
           {{fa-icon "check"}}
         </button>
       {{/if}}
-      <button {{action "trash" pattern}} disabled={{pattern.saving}} class="btn no-text trash shrink">
+      <button disabled={{pattern.saving}} class="btn no-text trash shrink" type="button" {{action "trash" pattern}}>
         {{fa-icon "trash-alt"}}
       </button>
     {{/if}}
 
     {{#if showCounter}}
       <input disabled=true title="Number of logs that have been suppressed by this pattern" class="count shrink" value={{pattern.count}}>
-      <button {{action "resetCount" pattern}} class="btn no-text reset shrink" title="Reset count of suppressed logs" disabled={{pattern.zeroCount}}>
+      <button class="btn no-text reset shrink" title="Reset count of suppressed logs" disabled={{pattern.zeroCount}} type="button" {{action "resetCount" pattern}}>
         {{fa-icon "redo-alt"}}
       </button>
     {{/if}}
