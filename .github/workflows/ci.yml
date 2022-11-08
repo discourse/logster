@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  build:
+  backend:
     runs-on: ubuntu-latest
 
     services:
@@ -35,9 +35,15 @@ jobs:
       - name: Tests
         run: bundle exec rake test
 
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 14
           cache: npm
           cache-dependency-path: client-app/package-lock.json
 
@@ -49,13 +55,17 @@ jobs:
         working-directory: client-app
         run: npm run lint
 
+      - name: JS tests
+        working-directory: client-app
+        run: npm test
+
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build
+    needs: [backend, frontend]
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Release Gem
         uses: discourse/publish-rubygems-action@v2
