@@ -50,10 +50,12 @@ export default Component.extend({
       );
     }
 
-    MOVE_EVENTS.forEach(name =>
+    MOVE_EVENTS.forEach((name) =>
       document.removeEventListener(name, this.performDrag)
     );
-    UP_EVENTS.forEach(name => document.removeEventListener(name, this.endDrag));
+    UP_EVENTS.forEach((name) =>
+      document.removeEventListener(name, this.endDrag)
+    );
   },
 
   @bound
@@ -63,16 +65,17 @@ export default Component.extend({
     overlay.id = "overlay";
     document.body.appendChild(overlay);
     this.set("resizing", true);
-    MOVE_EVENTS.forEach(name =>
+    MOVE_EVENTS.forEach((name) =>
       document.addEventListener(name, this.performDrag)
     );
-    UP_EVENTS.forEach(name => document.addEventListener(name, this.endDrag));
+    UP_EVENTS.forEach((name) => document.addEventListener(name, this.endDrag));
   },
 
   didInsertElement() {
+    this._super(...arguments);
     // inspired by http://plugins.jquery.com/misc/textarea.js
     this.set("divider", document.querySelector(".divider"));
-    DOWN_EVENTS.forEach(name => {
+    DOWN_EVENTS.forEach((name) => {
       this.divider.addEventListener(name, this.dividerClickHandler);
     });
     scheduleOnce("afterRender", this, "initialDivideView");
@@ -85,8 +88,9 @@ export default Component.extend({
   },
 
   willDestroyElement() {
-    DOWN_EVENTS.forEach(name =>
+    this._super(...arguments);
+    DOWN_EVENTS.forEach((name) =>
       this.divider.removeEventListener(name, this.dividerClickHandler)
     );
-  }
+  },
 });

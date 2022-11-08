@@ -1,7 +1,11 @@
 import { debounce } from "@ember/runloop";
 import { computed } from "@ember/object";
 import Controller from "@ember/controller";
-import { ajax, getLocalStorage, setLocalStorage } from "client-app/lib/utilities";
+import {
+  ajax,
+  getLocalStorage,
+  setLocalStorage,
+} from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
 
 export default Controller.extend({
@@ -13,7 +17,7 @@ export default Controller.extend({
   search: null,
   queryParams: ["search"],
 
-  showSettings: computed(function() {
+  showSettings: computed(function () {
     return Preload.get("patterns_enabled");
   }),
 
@@ -24,9 +28,7 @@ export default Controller.extend({
     topPanel.style.bottom = `${amount + 12}px`;
   },
 
-  actionsInMenu: computed(function() {
-    return this.site.isMobile;
-  }),
+  actionsInMenu: computed.reads("site.isMobile"),
 
   actions: {
     expandMessage(message) {
@@ -123,12 +125,12 @@ export default Controller.extend({
       }
 
       debounce(this, this.doSearch, term, 250);
-    }
+    },
   },
 
   searchTerm: computed("search", function () {
     if (this.search) {
-      this.doSearch(this.search)
+      this.doSearch(this.search);
       return this.search;
     }
     return null;
@@ -137,5 +139,5 @@ export default Controller.extend({
   doSearch(term) {
     this.model.set("search", term);
     this.model.reload().then(() => this.model.updateSelectedRow());
-  }
+  },
 });

@@ -17,7 +17,7 @@ export default EmberObject.extend({
   currentEnvPosition: 0,
   currentGroupedMessagesPosition: 0,
 
-  filter: computed(...SEVERITIES.map(s => `show${s}`), function() {
+  filter: computed(...SEVERITIES.map((s) => `show${s}`), function () {
     const filter = [];
     SEVERITIES.forEach((severity, index) => {
       if (this[`show${severity}`]) {
@@ -32,14 +32,14 @@ export default EmberObject.extend({
     this._super(...arguments);
     this.setProperties({
       search: "",
-      rows: A()
+      rows: A(),
     });
   },
 
   currentMessage: computed(
     "currentRow",
     "currentGroupedMessagesPosition",
-    function() {
+    function () {
       const row = this.currentRow;
       const position = this.currentGroupedMessagesPosition;
       if (row && row.group) {
@@ -69,7 +69,7 @@ export default EmberObject.extend({
       currentRow: row,
       loadingEnv: false,
       currentGroupedMessagesPosition,
-      currentEnvPosition: 0
+      currentEnvPosition: 0,
     });
     if (shouldRefresh)
       this.notifyPropertyChange("currentGroupedMessagesPosition");
@@ -80,7 +80,7 @@ export default EmberObject.extend({
   tabChanged(newTab) {
     this.setProperties({
       currentTab: newTab,
-      loadingEnv: false
+      loadingEnv: false,
     });
     this.fetchEnv();
   },
@@ -88,7 +88,7 @@ export default EmberObject.extend({
   groupedMessageChanged(newPosition) {
     this.setProperties({
       currentGroupedMessagesPosition: newPosition,
-      currentEnvPosition: 0
+      currentEnvPosition: 0,
     });
     const forceFetchEnv = this.currentMessage && !this.currentMessage.env;
     this.fetchEnv({ force: forceFetchEnv });
@@ -128,7 +128,7 @@ export default EmberObject.extend({
   updateSelectedRow() {
     const currentKey = this.get("currentRow.key");
     if (currentKey && this.rows) {
-      const match = this.rows.find(m => m.key === currentKey);
+      const match = this.rows.find((m) => m.key === currentKey);
       if (match) {
         const messageIndex = this.findEquivalentMessageIndex(match);
         this.selectRow(match, { messageIndex });
@@ -136,7 +136,7 @@ export default EmberObject.extend({
         this.setProperties({
           currentRow: null,
           currentEnvPosition: 0,
-          currentGroupedMessagesPosition: 0
+          currentGroupedMessagesPosition: 0,
         });
       }
     }
@@ -146,7 +146,7 @@ export default EmberObject.extend({
     opts = opts || {};
 
     const data = {
-      filter: this.filter.join("_")
+      filter: this.filter.join("_"),
     };
 
     if (this.search && this.search.length > 0) {
@@ -171,9 +171,9 @@ export default EmberObject.extend({
     this.set("loading", true);
     return ajax("/messages.json", {
       data: data,
-      method: "POST"
+      method: "POST",
     })
-      .then(data => {
+      .then((data) => {
         // guard against race: ensure the results we're trying to apply
         //                     match the current search terms
         if (compare(data.filter, this.filter) != 0) {
@@ -189,8 +189,8 @@ export default EmberObject.extend({
           if (opts.before) {
             rows.unshiftObjects(newRows);
           } else {
-            newRows.forEach(nrow => {
-              rows.forEach(erow => {
+            newRows.forEach((nrow) => {
+              rows.forEach((erow) => {
                 if (erow.key === nrow.key) {
                   rows.removeObject(erow);
                   if (this.currentRow === erow) {
@@ -217,7 +217,7 @@ export default EmberObject.extend({
     this.set("total", 0);
     this.rows.clear();
 
-    return this.load().then(data => this.updateCanLoadMore(data));
+    return this.load().then((data) => this.updateCanLoadMore(data));
   },
 
   updateCanLoadMore(data) {
@@ -241,26 +241,26 @@ export default EmberObject.extend({
     const lastLog = rows[rows.length - 1];
     const lastKey = lastLog.group ? lastLog.row_id : lastLog.key;
     this.load({
-      after: lastKey
+      after: lastKey,
     });
   },
 
-  hideCountInLoadMore: computed("search", "filter", function() {
+  hideCountInLoadMore: computed("filter", "search.length", function () {
     const filter = this.filter;
     return (
       (this.search && this.search.length > 0) || (filter && filter.length < 6)
     );
   }),
 
-  moreBefore: computed("rows.length", "canLoadMore", function() {
+  moreBefore: computed("rows.length", "canLoadMore", function () {
     return this.get("rows.length") >= BATCH_SIZE && this.canLoadMore;
   }),
 
-  totalBefore: computed("total", "rows.length", function() {
+  totalBefore: computed("total", "rows.length", function () {
     return this.total - this.rows.length;
   }),
 
-  showMoreBefore: function() {
+  showMoreBefore: function () {
     const rows = this.rows;
     const firstLog = rows[0];
     const firstKey = firstLog.group ? firstLog.row_id : firstLog.key;
@@ -268,11 +268,11 @@ export default EmberObject.extend({
 
     this.load({
       before: firstKey,
-      knownGroups
-    }).then(data => this.updateCanLoadMore(data));
+      knownGroups,
+    }).then((data) => this.updateCanLoadMore(data));
   },
 
-  regexSearch: computed("search", function() {
+  regexSearch: computed("search", function () {
     const search = this.search;
     if (search && search.length > 2 && search[0] === "/") {
       const match = search.match(/\/(.*)\/(.*)/);
@@ -288,12 +288,12 @@ export default EmberObject.extend({
   }),
 
   toObjects(rows) {
-    return rows.map(m => {
+    return rows.map((m) => {
       if (m.group) {
         return Group.create(m);
       } else {
         return Message.create(m);
       }
     });
-  }
+  },
 });

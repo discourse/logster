@@ -9,7 +9,7 @@ export default Component.extend({
   classNameBindings: [
     "model.rowClass",
     ":message-row",
-    "model.selected:selected"
+    "model.selected:selected",
   ],
 
   click() {
@@ -17,6 +17,7 @@ export default Component.extend({
   },
 
   willInsertElement() {
+    this._super(...arguments);
     if (CHECKED_BOTTOM) {
       return;
     }
@@ -30,6 +31,7 @@ export default Component.extend({
   },
 
   didInsertElement() {
+    this._super(...arguments);
     const topPanel = document.getElementById("top-panel");
     if (!topPanel) return;
 
@@ -39,5 +41,5 @@ export default Component.extend({
       topPanel.scrollTop =
         topPanel.scrollHeight - parseFloat(getComputedStyle(topPanel).height);
     }
-  }
+  },
 });

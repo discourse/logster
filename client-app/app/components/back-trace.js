@@ -55,7 +55,7 @@ export default Component.extend({
     const [, gemWithVersion, path, filename, lineNumber] = regexResults || [];
     const gemsData = Preloaded.get("gems_data");
     const match = gemsData
-      .filter(g => startsWith(gemWithVersion, `${g.name}-`))
+      .filter((g) => startsWith(gemWithVersion, `${g.name}-`))
       .sortBy("name.length")
       .reverse()[0];
 
@@ -75,7 +75,7 @@ export default Component.extend({
     const projectDirs = Preloaded.get("directories");
 
     const match = projectDirs
-      .filter(dir => startsWith(line, dir.path))
+      .filter((dir) => startsWith(line, dir.path))
       .sortBy("path.length")
       .reverse()[0];
 
@@ -107,7 +107,7 @@ export default Component.extend({
           path,
           filename,
           lineNumber,
-          commitSha
+          commitSha,
         });
       }
     }
@@ -117,7 +117,7 @@ export default Component.extend({
   findGithubURL(line, shortenedLine) {
     const projectDirs = Preloaded.get("directories") || [];
     const isGem = startsWith(line, Preloaded.get("gems_dir"));
-    const isApp = projectDirs.some(p => startsWith(line, p.path));
+    const isApp = projectDirs.some((p) => startsWith(line, p.path));
     if (isGem || !isApp) {
       return this.GithubURLForGem(shortenedLine);
     } else {
@@ -125,26 +125,26 @@ export default Component.extend({
     }
   },
 
-  commitSha: computed("env", function() {
+  commitSha: computed("env.application_version", function () {
     let env = null;
     if (Array.isArray(this.env)) {
-      env = this.env.map(e => e.application_version).filter(e => e)[0];
+      env = this.env.map((e) => e.application_version).filter((e) => e)[0];
     } else if (this.env) {
       env = this.env.application_version;
     }
     return env || Preloaded.get("application_version");
   }),
 
-  lines: computed("backtrace", "commitSha", function() {
+  lines: computed("backtrace.length", "commitSha", function () {
     if (!this.backtrace || this.backtrace.length === 0) {
       return [];
     }
-    return this.backtrace.split("\n").map(line => {
+    return this.backtrace.split("\n").map((line) => {
       const shortenedLine = shortenLine(line);
       return {
         line: shortenedLine,
-        url: this.findGithubURL(line, shortenedLine)
+        url: this.findGithubURL(line, shortenedLine),
       };
     });
-  })
+  }),
 });

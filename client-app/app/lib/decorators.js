@@ -6,6 +6,6 @@ export function bound(target, key, desc) {
       if (this[boundKey]) return this[boundKey];
       this.set(boundKey, orig.bind(this));
       return this[boundKey];
-    }
+    },
   };
 }

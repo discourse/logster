@@ -10,14 +10,14 @@ export default Component.extend({
 
   init() {
     this._super(...arguments);
-    if (this.get("patterns.length") < 1 && this.get("mutable")) {
+    if (this.get("patterns.length") < 1 && this.mutable) {
       this.send("create");
     }
   },
 
-  allPatterns: computed("patterns.[]", "newPatterns.[]", function() {
-    const patterns = this.get("patterns");
-    const newPatterns = this.get("newPatterns") || [];
+  allPatterns: computed("patterns.[]", "newPatterns.[]", function () {
+    const patterns = this.patterns;
+    const newPatterns = this.newPatterns || [];
     return [...newPatterns.reverse(), ...patterns.reverse()];
   }),
 
@@ -25,7 +25,7 @@ export default Component.extend({
     const { method } = data;
     delete data.method;
 
-    return ajax(`/patterns/${this.get("key")}.json`, { method, data });
+    return ajax(`/patterns/${this.key}.json`, { method, data });
   },
 
   finallyBlock(pattern) {
@@ -43,33 +43,33 @@ export default Component.extend({
   requestInit(pattern) {
     pattern.setProperties({
       saving: true,
-      error: null
+      error: null,
     });
   },
 
   actions: {
     create() {
-      if (!this.get("newPatterns")) {
+      if (!this.newPatterns) {
         this.set("newPatterns", []);
       }
-      this.get("newPatterns").pushObject(Pattern.create({ isNew: true }));
+      this.newPatterns.pushObject(Pattern.create({ isNew: true }));
     },
 
     trash(pattern) {
       if (pattern.get("isNew")) {
-        this.get("newPatterns").removeObject(pattern);
+        this.newPatterns.removeObject(pattern);
         pattern.destroy();
       } else {
         this.requestInit(pattern);
         this.makeAPICall({
           method: "DELETE",
-          pattern: pattern.get("value")
+          pattern: pattern.get("value"),
         })
           .then(() => {
-            this.get("patterns").removeObject(pattern);
+            this.patterns.removeObject(pattern);
             pattern.destroy();
           })
-          .catch(response => this.catchBlock(pattern, response))
+          .catch((response) => this.catchBlock(pattern, response))
           .finally(() => this.finallyBlock(pattern));
       }
     },
@@ -81,25 +81,25 @@ export default Component.extend({
         promise = this.makeAPICall({
           method: "POST",
           pattern: pattern.valueBuffer,
-          retroactive: !!pattern.retroactive
-        }).then(response => {
+          retroactive: !!pattern.retroactive,
+        }).then((response) => {
           pattern.updateValue(response.pattern);
           pattern.set("isNew", false);
-          this.get("patterns").pushObject(pattern);
-          this.get("newPatterns").removeObject(pattern);
+          this.patterns.pushObject(pattern);
+          this.newPatterns.removeObject(pattern);
         });
       } else {
         promise = this.makeAPICall({
           method: "PUT",
           pattern: pattern.get("value"),
-          new_pattern: pattern.get("valueBuffer")
-        }).then(response => {
+          new_pattern: pattern.get("valueBuffer"),
+        }).then((response) => {
           pattern.updateValue(response.pattern);
           pattern.set("count", 0);
         });
       }
       promise
-        .catch(response => {
+        .catch((response) => {
           this.catchBlock(pattern, response);
         })
         .finally(() => this.finallyBlock(pattern));
@@ -109,17 +109,17 @@ export default Component.extend({
       pattern.set("saving", true);
       ajax("/reset-count.json", {
         method: "PUT",
-        data: { pattern: pattern.get("value"), hard: !!pattern.get("hard") }
+        data: { pattern: pattern.get("value"), hard: !!pattern.get("hard") },
       })
         .then(() => {
           pattern.set("count", 0);
         })
-        .catch(response => this.catchBlock(pattern, response))
+        .catch((response) => this.catchBlock(pattern, response))
         .finally(() => this.finallyBlock(pattern));
     },
 
     checkboxChanged(pattern) {
       pattern.toggleProperty("retroactive");
-    }
-  }
+    },
+  },
 });

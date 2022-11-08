@@ -6,75 +6,80 @@ import { bool } from "@ember/object/computed";
 export default Component.extend({
   showSolveAllButton: bool("currentRow.group"),
 
-  buttons: computed("currentMessage.protected", "showSolveButton", function() {
-    const protect = this.get("currentMessage.protected");
-    const buttons = [];
-    const prefix = "fas";
+  buttons: computed(
+    "currentMessage.protected",
+    "showSolveAllButton",
+    "showSolveButton",
+    function () {
+      const protect = this.get("currentMessage.protected");
+      const buttons = [];
+      const prefix = "fas";
 
-    if (!protect && this.showSolveButton) {
-      buttons.push({
-        klass: "solve",
-        action: "solve",
-        icon: "check-square",
-        label: "Solve",
-        prefix: "far",
-        danger: true
-      });
-    }
-
-    if (this.showSolveAllButton) {
-      buttons.push({
-        klass: "solve-all",
-        action: "solveAll",
-        icon: "check-square",
-        label: "Solve All",
-        prefix: "far",
-        danger: true
-      });
-    }
-
-    if (!protect) {
-      buttons.push(
-        {
-          klass: "remove",
-          action: "remove",
-          icon: "trash-alt",
-          label: "Remove",
+      if (!protect && this.showSolveButton) {
+        buttons.push({
+          klass: "solve",
+          action: "solve",
+          icon: "check-square",
+          label: "Solve",
           prefix: "far",
-          danger: true
-        },
-        {
-          klass: "protect",
-          action: "protect",
-          icon: "lock",
-          prefix,
-          label: "Protect"
-        }
-      );
-    } else {
-      buttons.push({
-        klass: "unprotect",
-        action: "unprotect",
-        icon: "unlock",
-        prefix,
-        label: "Unprotect"
-      });
-    }
+          danger: true,
+        });
+      }
 
-    buttons.push({
-      klass: "copy",
-      action: "copyAction",
-      icon: "copy",
-      prefix: "far",
-      label: "Copy"
-    });
-    return buttons;
-  }),
+      if (this.showSolveAllButton) {
+        buttons.push({
+          klass: "solve-all",
+          action: "solveAll",
+          icon: "check-square",
+          label: "Solve All",
+          prefix: "far",
+          danger: true,
+        });
+      }
+
+      if (!protect) {
+        buttons.push(
+          {
+            klass: "remove",
+            action: "remove",
+            icon: "trash-alt",
+            label: "Remove",
+            prefix: "far",
+            danger: true,
+          },
+          {
+            klass: "protect",
+            action: "protect",
+            icon: "lock",
+            prefix,
+            label: "Protect",
+          }
+        );
+      } else {
+        buttons.push({
+          klass: "unprotect",
+          action: "unprotect",
+          icon: "unlock",
+          prefix,
+          label: "Unprotect",
+        });
+      }
+
+      buttons.push({
+        klass: "copy",
+        action: "copyAction",
+        icon: "copy",
+        prefix: "far",
+        label: "Copy",
+      });
+      return buttons;
+    }
+  ),
 
   showSolveButton: computed(
     "showSolveAllButton",
     "currentMessage.{canSolve,env}",
-    function() {
+    function () {
       if (this.showSolveAllButton) return false;
       // env isn't loaded until you switch to the env tab
       // so if we don't have env we show the button if
@@ -100,13 +105,13 @@ export default Component.extend({
 
     const httpHosts = Array.isArray(this.currentMessage.env)
       ? this.currentMessage.env
-          .map(e => e["HTTP_HOST"])
+          .map((e) => e["HTTP_HOST"])
           .filter((e, i, a) => e && a.indexOf(e) === i)
           .join(", ")
       : this.currentMessage.env["HTTP_HOST"];
 
     const env = httpHosts ? `Env\n\nHTTP HOSTS: ${httpHosts}` : "";
-    const lines = [message, backtrace, env].filter(l => l).join("\n\n");
+    const lines = [message, backtrace, env].filter((l) => l).join("\n\n");
     temp.value = lines;
     temp.select();
     document.execCommand("copy");
@@ -146,6 +151,6 @@ export default Component.extend({
 
     copyAction() {
       this.copy();
-    }
-  }
+    },
+  },
 });

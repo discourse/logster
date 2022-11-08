@@ -5,15 +5,15 @@ export default Controller.extend({
 
   actions: {
     protect() {
-      this.get("model").protect();
+      this.model.protect();
     },
 
     unprotect() {
-      this.get("model").unprotect();
+      this.model.unprotect();
     },
 
     envChanged(newPosition) {
       this.set("envPosition", newPosition);
-    }
-  }
+    },
+  },
 });

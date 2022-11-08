@@ -11,19 +11,19 @@ export default EmberObject.extend({
 
   init() {
     this._super(...arguments);
-    const messages = this.messages.map(m => Message.create(m));
+    const messages = this.messages.map((m) => Message.create(m));
     this.set("messages", messages);
   },
 
-  glyph: computed(function() {
+  glyph: computed(function () {
     return "clone";
   }),
 
-  prefix: computed(function() {
+  prefix: computed(function () {
     return "far";
   }),
 
   solveAll() {
     return ajax("/solve-group", { type: "POST", data: { regex: this.regex } });
-  }
+  },
 });

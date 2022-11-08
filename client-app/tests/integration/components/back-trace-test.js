@@ -4,18 +4,18 @@ import { render, find, findAll } from "@ember/test-helpers";
 import hbs from "htmlbars-inline-precompile";
 import { uninitialize, mutatePreload } from "client-app/lib/preload";
 
-module("Integration | Component | back-trace", function(hooks) {
+module("Integration | Component | back-trace", function (hooks) {
   setupRenderingTest(hooks);
 
-  hooks.beforeEach(function() {
+  hooks.beforeEach(function () {
     uninitialize();
   });
 
-  hooks.afterEach(function() {
+  hooks.afterEach(function () {
     uninitialize();
   });
 
-  test("backtrace lines display and work correctly", async function(assert) {
+  test("backtrace lines display and work correctly", async function (assert) {
     const backtrace = `/var/www/discourse/vendor/bundle/ruby/2.6.0/gems/activerecord-6.0.1/lib/active_record/relation/finder_methods.rb:317:in \`exists?'
 /var/www/discourse/lib/permalink_constraint.rb:6:in \`matches?'
 /var/www/discourse/plugins/discourse-prometheus/lib/middleware/metrics.rb:17:in \`call'
@@ -52,7 +52,7 @@ activerecord-6.0.1/lib/active_record/relation/finder_methods.rb:317:in \`exists?
     );
   });
 
-  test("non-ruby backtraces don't break things", async function(assert) {
+  test("non-ruby backtraces don't break things", async function (assert) {
     this.set(
       "backtrace",
       `m/<@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27448
@@ -66,15 +66,15 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
     });
   });
 
-  test("Github links use commit sha", async function(assert) {
+  test("Github links use commit sha", async function (assert) {
     const backtrace = `/var/www/discourse/lib/permalink_constraint.rb:6:in \`matches?'`;
     let env = [
       { application_version: "123abc" },
-      { application_version: "abc123" }
+      { application_version: "abc123" },
     ];
     this.setProperties({
       backtrace,
-      env
+      env,
     });
     await render(hbs`{{back-trace backtrace=backtrace env=env}}`);
     let href = find("a").href;

@@ -7,19 +7,17 @@ export default Component.extend({
   classNames: "auto-update-time",
   attributeBindings: ["dataTimestamp:data-timestamp", "title"],
 
-  title: computed(function() {
-    return this.get("moment").format();
+  title: computed("moment", function () {
+    return this.moment.format();
   }),
 
-  dataTimestamp: computed(function() {
-    return this.get("timestamp");
+  dataTimestamp: computed.reads("timestamp"),
+
+  moment: computed("timestamp", function () {
+    return moment(this.timestamp);
   }),
 
-  moment: computed(function() {
-    return moment(this.get("timestamp"));
+  time: computed("timestamp", function () {
+    return formatTime(this.timestamp);
   }),
-
-  time: computed("timestamp", function() {
-    return formatTime(this.get("timestamp"));
-  })
 });
