@@ -1,6 +1,6 @@
 <div class="message-info">
-  {{#tabbed-section onTabChange=(action "tabChanged")}}
-    {{#tab-contents name="info" hint="show info" currentMessage=currentMessage}}
+  <TabbedSection @onTabChange={{action "tabChanged"}}>
+    <TabContents @name="info" @hint="show info" @currentMessage={{currentMessage}}>
       {{#if showTitle}}
         <h3>Message
           {{#if currentMessage.showCount}}
@@ -9,8 +9,8 @@
         </h3>
       {{/if}}
       <pre>{{currentMessage.message}}</pre>
-    {{/tab-contents}}
-    {{#tab-contents name="backtrace" defaultTab="true" hint="show backtrace" currentMessage=currentMessage}}
+    </TabContents>
+    <TabContents @name="backtrace" @defaultTab="true" @hint="show backtrace" @currentMessage={{currentMessage}}>
       {{#if showTitle}}
         <h3>Backtrace</h3>
       {{/if}}
@@ -20,8 +20,8 @@
           backtrace=currentMessage.backtrace
           env=currentMessage.env~}}
       </pre>
-    {{/tab-contents}}
-    {{#tab-contents className="env" name="env" hint="show environment" currentMessage=currentMessage }}
+    </TabContents>
+    <TabContents @className="env" @name="env" @hint="show environment" @currentMessage={{currentMessage}}>
       {{#if currentMessage}}
         {{#if currentMessage.env}}
           {{#if showTitle}}
@@ -37,19 +37,19 @@
           No env for this message.
         {{/if}}
       {{/if}}
-    {{/tab-contents}}
-  {{/tabbed-section}}
+    </TabContents>
+  </TabbedSection>
 
   {{#if currentMessage}}
     <div class='message-actions'>
-      {{#actions-menu actionsInMenu=actionsInMenu showShare=showShare share=(action "share")}}
+      <ActionsMenu @actionsInMenu={{actionsInMenu}} @showShare={{showShare}} @share={{action "share"}}>
         {{#each buttons as |btn|}}
-          <button {{action btn.action}} class="{{btn.klass}} btn {{if btn.danger 'danger' ''}}">
+          <button class="{{btn.klass}} btn {{if btn.danger 'danger' ''}}" type="button" {{action btn.action}}>
             {{fa-icon btn.icon prefix=btn.prefix}}
             <span>{{btn.label}}</span>
           </button>
         {{/each}}
-      {{/actions-menu}}
+      </ActionsMenu>
     </div>
   {{/if}}
 </div>
