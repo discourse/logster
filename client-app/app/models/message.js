@@ -6,7 +6,7 @@ export default Em.Object.extend({
   MAX_LEN: 200,
 
   fetchEnv() {
-    return ajax(`/fetch-env/${this.key}.json`).then(env =>
+    return ajax(`/fetch-env/${this.key}.json`).then((env) =>
       this.set("env", env)
     );
   },
@@ -33,44 +33,51 @@ export default Em.Object.extend({
     return ajax(`/unprotect/${this.key}`, { type: "DELETE" });
   },
 
-  showCount: computed("count", function() {
-    return this.count > 1;
-  }),
+  showCount: computed.gt("count", 1),
 
-  hasMore: computed("message", "expanded", function() {
+  hasMore: computed("MAX_LEN", "expanded", "message.length", function () {
     return !this.expanded && this.message.length > this.MAX_LEN;
   }),
 
-  shareUrl: computed("key", function() {
+  shareUrl: computed("key", function () {
     return `${getRootPath()}/show/${this.key}`;
   }),
 
-  displayMessage: computed("message", "expanded", function() {
-    let message = this.message;
+  displayMessage: computed(
+    "MAX_LEN",
+    "expanded",
+    "message.length",
+    function () {
+      let message = this.message;
 
-    if (!this.expanded && this.message.length > this.MAX_LEN) {
-      message = this.message.substr(0, this.MAX_LEN);
+      if (!this.expanded && this.message.length > this.MAX_LEN) {
+        message = this.message.substr(0, this.MAX_LEN);
+      }
+      return message;
     }
-    return message;
-  }),
+  ),
 
   updateFromObject(other) {
     // XXX Only updatable property is count right now
     this.set("count", other.get("count"));
   },
 
-  canSolve: computed("env.{application_version,length}", function() {
-    const appVersion = Array.isArray(this.env)
-      ? this.env
-          .map(e => e.application_version)
-          .compact()
-          .join("")
-      : this.env && this.env.application_version;
-    return appVersion && this.backtrace && this.backtrace.length > 0;
-  }),
+  canSolve: computed(
+    "backtrace.length",
+    "env.{application_version,length}",
+    function () {
+      const appVersion = Array.isArray(this.env)
+        ? this.env
+            .map((e) => e.application_version)
+            .compact()
+            .join("")
+        : this.env && this.env.application_version;
+      return appVersion && this.backtrace && this.backtrace.length > 0;
+    }
+  ),
 
-  rowClass: computed("severity", function() {
-    switch (this.get("severity")) {
+  rowClass: computed("severity", function () {
+    switch (this.severity) {
       case 0:
         return "debug";
       case 1:
@@ -86,7 +93,7 @@ export default Em.Object.extend({
     }
   }),
 
-  glyph: computed("severity", function() {
+  glyph: computed("severity", function () {
     switch (this.severity) {
       case 0:
         return "";
@@ -103,11 +110,11 @@ export default Em.Object.extend({
     }
   }),
 
-  prefix: computed(function() {
+  prefix: computed(function () {
     return "fas";
   }),
 
-  klass: computed("severity", function() {
+  klass: computed("severity", function () {
     switch (this.severity) {
       case 0:
         return "";
@@ -122,5 +129,5 @@ export default Em.Object.extend({
       default:
         return "unknown";
     }
-  })
+  }),
 });

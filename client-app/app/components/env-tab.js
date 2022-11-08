@@ -4,38 +4,52 @@ import { buildHashString, clone } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
 
 export default Component.extend({
-  currentEnv: computed("isEnvArray", "currentEnvPosition", function() {
-    if (this.isEnvArray) {
-      return this.message.env[this.currentEnvPosition];
-    } else {
-      return this.message.env;
+  currentEnv: computed(
+    "currentEnvPosition",
+    "isEnvArray",
+    "message.env",
+    function () {
+      if (this.isEnvArray) {
+        return this.message.env[this.currentEnvPosition];
+      } else {
+        return this.message.env;
+      }
     }
-  }),
+  ),
 
-  isEnvArray: computed("message.env", function() {
+  isEnvArray: computed("message.env", function () {
     return Array.isArray(this.get("message.env"));
   }),
 
-  html: computed("isEnvArray", "currentEnv", "expanded.[]", function() {
-    if (!this.isEnvArray) {
-      return buildHashString(this.get("message.env"));
-    } else {
-      const currentEnv = clone(this.currentEnv);
-      const expandableKeys = Preload.get("env_expandable_keys") || [];
-      expandableKeys.forEach(key => {
-        if (currentEnv.hasOwnProperty(key) && !Array.isArray(currentEnv[key])) {
-          const list = [currentEnv[key]];
-          this.message.env.forEach(env => {
-            if (env[key] && list.indexOf(env[key]) === -1) {
-              list.push(env[key]);
-            }
-          });
-          currentEnv[key] = list.length > 1 ? list : list[0];
-        }
-      });
-      return buildHashString(currentEnv, false, this.expanded || []);
+  html: computed(
+    "currentEnv",
+    "expanded.[]",
+    "isEnvArray",
+    "message.env",
+    function () {
+      if (!this.isEnvArray) {
+        return buildHashString(this.get("message.env"));
+      } else {
+        const currentEnv = clone(this.currentEnv);
+        const expandableKeys = Preload.get("env_expandable_keys") || [];
+        expandableKeys.forEach((key) => {
+          if (
+            currentEnv.hasOwnProperty(key) &&
+            !Array.isArray(currentEnv[key])
+          ) {
+            const list = [currentEnv[key]];
+            this.message.env.forEach((env) => {
+              if (env[key] && list.indexOf(env[key]) === -1) {
+                list.push(env[key]);
+              }
+            });
+            currentEnv[key] = list.length > 1 ? list : list[0];
+          }
+        });
+        return buildHashString(currentEnv, false, this.expanded || []);
+      }
     }
-  }),
+  ),
 
   click(e) {
     const elem = e.target;
@@ -52,5 +66,5 @@ export default Component.extend({
         this.expanded.pushObject(dataKey);
       }
     }
-  }
+  },
 });

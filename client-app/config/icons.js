@@ -1,4 +1,4 @@
-module.exports = function() {
+module.exports = function () {
   return {
     "free-solid-svg-icons": [
       "check-square",
@@ -18,9 +18,9 @@ module.exports = function() {
       "question-circle",
       "cog",
       "lock",
-      "unlock"
+      "unlock",
     ],
-    "free-regular-svg-icons": ["trash-alt", "check-square", "copy", "clone"]
+    "free-regular-svg-icons": ["trash-alt", "check-square", "copy", "clone"],
     // "free-brands-svg-icons": []
   };
 };

@@ -4,13 +4,13 @@ import hbs from "htmlbars-inline-precompile";
 import { fillIn, render, findAll } from "@ember/test-helpers";
 import Pattern from "client-app/models/pattern-item";
 
-module("Integration | Component | patterns-list", function(hooks) {
+module("Integration | Component | patterns-list", function (hooks) {
   setupRenderingTest(hooks);
 
-  test("it renders", async function(assert) {
+  test("it renders", async function (assert) {
     this.setProperties({
       mutable: true,
-      patterns: []
+      patterns: [],
     });
     await render(
       hbs`{{patterns-list patterns=patterns mutable=mutable key="suppression"}}`
@@ -36,13 +36,15 @@ module("Integration | Component | patterns-list", function(hooks) {
     const counters = findAll("input.count");
     assert.equal(counters.length, 3, "counters shown for all patterns");
     assert.ok(
-      counters.every(c => c.disabled),
+      counters.every((c) => c.disabled),
       "counters are disabled"
     );
 
     pattern1.set("count", 6);
     this.set("patterns", [pattern1, pattern2]);
-    const counterPresent = !!findAll("input.count").find(c => c.value === "6");
+    const counterPresent = !!findAll("input.count").find(
+      (c) => c.value === "6"
+    );
     assert.ok(counterPresent, "counter shows correct value");
     assert.dom(".btn.reset").exists("Reset button is shown");
 
@@ -55,7 +57,7 @@ module("Integration | Component | patterns-list", function(hooks) {
       .exists("Save buttons are shown when there is buffer");
     assert.dom(".btn.trash").exists("Trash buttons are shown");
 
-    let disabled = inputs.every(inp => inp.disabled);
+    let disabled = inputs.every((inp) => inp.disabled);
     assert.notOk(
       disabled,
       "All inputs are not disabled when the list is mutable"
@@ -64,7 +66,7 @@ module("Integration | Component | patterns-list", function(hooks) {
     this.set("mutable", false);
 
     inputs = findAll(".pattern-input");
-    disabled = inputs.every(inp => inp.disabled);
+    disabled = inputs.every((inp) => inp.disabled);
     assert.ok(disabled, "All inputs are disabled when the list is immutable");
     assert
       .dom(".btn.trash")

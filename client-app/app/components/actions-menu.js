@@ -45,6 +45,6 @@ export default Component.extend({
     },
     share() {
       this.share();
-    }
-  }
+    },
+  },
 });

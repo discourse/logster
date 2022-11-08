@@ -10,20 +10,21 @@ const messageTitle = "This Is Title";
 const message = Message.create({
   backtrace,
   message: messageTitle,
-  env: { c: "cc", d: "dd" }
+  env: { c: "cc", d: "dd" },
 });
 
-module("Integration | Component | message-info", function(hooks) {
+module("Integration | Component | message-info", function (hooks) {
   setupRenderingTest(hooks);
 
-  test("it renders", async function(assert) {
-    const callback = newPosition => this.set("currentEnvPosition", newPosition);
+  test("it renders", async function (assert) {
+    const callback = (newPosition) =>
+      this.set("currentEnvPosition", newPosition);
     this.setProperties({
       actionsInMenu: true,
       showTitle: false,
       envPosition: 0,
       message,
-      callback
+      callback,
     });
 
     await render(
@@ -73,7 +74,7 @@ module("Integration | Component | message-info", function(hooks) {
 
     this.setProperties({
       showTitle: true,
-      actionsInMenu: false
+      actionsInMenu: false,
     });
 
     assert.equal(
@@ -108,7 +109,7 @@ module("Integration | Component | message-info", function(hooks) {
 
     message.set("env", [
       { sd: "dx", application_version: "fsfdsf" },
-      { vcv: "dxc" }
+      { vcv: "dxc" },
     ]);
     this.set("message", message);
     assert

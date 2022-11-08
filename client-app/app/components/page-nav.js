@@ -7,11 +7,11 @@ export default Component.extend({
   classNameBindings: ["extraClasses"],
   disableBackButtons: equal("position", 0),
 
-  disableForwardButtons: computed("position", "list.length", function() {
+  disableForwardButtons: computed("position", "list.length", function () {
     return this.position === this.get("list.length") - 1;
   }),
 
-  displayNumber: computed("position", function() {
+  displayNumber: computed("position", function () {
     return this.position + 1;
   }),
 
@@ -28,6 +28,6 @@ export default Component.extend({
     bigJump(dir) {
       const newPos = dir === "back" ? 0 : this.get("list.length") - 1;
       this.navigate(newPos);
-    }
-  }
+    },
+  },
 });

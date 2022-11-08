@@ -10,21 +10,19 @@ export default EmberObject.extend({
 
   init() {
     this._super(...arguments);
-    this.set("valueBuffer", this.get("value"));
+    this.set("valueBuffer", this.value);
   },
 
   updateValue(newValue) {
     this.setProperties({
       value: newValue,
-      valueBuffer: newValue
+      valueBuffer: newValue,
     });
   },
 
-  hasBuffer: computed("value", "valueBuffer", function() {
-    return this.get("value") !== this.get("valueBuffer");
+  hasBuffer: computed("value", "valueBuffer", function () {
+    return this.value !== this.valueBuffer;
   }),
 
-  zeroCount: computed("count", function() {
-    return this.get("count") <= 0;
-  })
+  zeroCount: computed.lte("count", 0),
 });

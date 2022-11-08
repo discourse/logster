@@ -1,7 +1,7 @@
 import Route from "@ember/routing/route";
 import {
   default as MessageCollection,
-  SEVERITIES
+  SEVERITIES,
 } from "client-app/models/message-collection";
 import { isHidden } from "client-app/lib/utilities";
 
@@ -13,7 +13,7 @@ export default Route.extend({
 
   setupController(controller, model) {
     this._super(controller, model);
-    SEVERITIES.forEach(severity =>
+    SEVERITIES.forEach((severity) =>
       model.set(`show${severity}`, controller[`show${severity}`])
     );
     model.reload();
@@ -46,12 +46,12 @@ export default Route.extend({
       }
     }, 3000);
 
-    this.events.on("panelResized", amount => {
+    this.events.on("panelResized", (amount) => {
       controller.resizePanels(amount);
     });
   },
 
   deactivate() {
     clearInterval(this.refreshInterval);
-  }
+  },
 });

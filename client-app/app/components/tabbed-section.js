@@ -8,7 +8,7 @@ export default Component.extend({
       return;
     }
 
-    const selected = this.get("selected");
+    const selected = this.selected;
     if (selected) {
       selected.set("active", false);
     }
@@ -18,16 +18,16 @@ export default Component.extend({
   },
 
   addTab(tab) {
-    this.get("tabs").addObject(tab);
-    if (!this.get("selected") && !tab.get("isLink")) {
+    this.tabs.addObject(tab);
+    if (!this.selected && !tab.get("isLink")) {
       this.selectTab(tab);
     }
   },
 
   removeTab(tab) {
-    if (this.get("selected") === tab) {
+    if (this.selected === tab) {
       this.set("selected", null);
     }
-    this.get("tabs").removeObject(tab);
-  }
+    this.tabs.removeObject(tab);
+  },
 });

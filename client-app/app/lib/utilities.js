@@ -7,11 +7,11 @@ const entityMap = {
   ">": "&gt;",
   '"': "&quot;",
   "'": "&#39;",
-  "/": "&#x2F;"
+  "/": "&#x2F;",
 };
 
 export function escapeHtml(string) {
-  return String(string).replace(/[&<>"'/]/g, s => entityMap[s]);
+  return String(string).replace(/[&<>"'/]/g, (s) => entityMap[s]);
 }
 
 export function ajax(url, settings) {
@@ -116,7 +116,7 @@ export function formatTime(timestamp) {
 
 export function buildArrayString(array) {
   const buffer = [];
-  array.forEach(v => {
+  array.forEach((v) => {
     if (v === null) {
       buffer.push("null");
     } else if (Object.prototype.toString.call(v) === "[object Array]") {
@@ -134,7 +134,7 @@ export function buildHashString(hash, recurse, expanded = []) {
   const buffer = [];
   const hashes = [];
   const expandableKeys = Preload.get("env_expandable_keys") || [];
-  Object.keys(hash).forEach(k => {
+  Object.keys(hash).forEach((k) => {
     const v = hash[k];
     if (v === null) {
       buffer.push("null");
@@ -171,7 +171,7 @@ export function buildHashString(hash, recurse, expanded = []) {
   });
 
   if (hashes.length > 0) {
-    hashes.forEach(k1 => {
+    hashes.forEach((k1) => {
       const v = hash[k1];
       buffer.push("<tr><td></td><td><table>");
       buffer.push(
@@ -188,7 +188,7 @@ export function clone(object) {
   // simple function to clone an object
   // we don't need it fancier than this
   const copy = {};
-  Object.keys(object).forEach(k => {
+  Object.keys(object).forEach((k) => {
     copy[k] = object[k];
   });
   return copy;
@@ -200,7 +200,9 @@ export function setLocalStorage(key, value) {
       key = "logster-" + key;
       window.localStorage.setItem(key, value);
     }
-  } catch { /* do nothing */ }
+  } catch {
+    /* do nothing */
+  }
 }
 
 export function getLocalStorage(key, fallback) {

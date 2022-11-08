@@ -5,7 +5,7 @@ export default Component.extend({
   isLink: false,
 
   invokeParent(name) {
-    let current = this.get("parentView");
+    let current = this.parentView;
     while (current && !current[name]) {
       current = current.get("parentView");
     }
@@ -15,13 +15,15 @@ export default Component.extend({
   },
 
   didInsertElement() {
+    this._super(...arguments);
     this.invokeParent("addTab");
-    if (this.get("defaultTab")) {
+    if (this.defaultTab) {
       this.invokeParent("selectTab");
     }
   },
 
   willDestroyElement() {
+    this._super(...arguments);
     this.invokeParent("removeTab");
-  }
+  },
 });

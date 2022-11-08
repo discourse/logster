@@ -24,7 +24,7 @@ export default {
       init();
     }
     return Em.get(CONTAINER, key);
-  }
+  },
 };
 
 // used in tests

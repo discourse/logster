@@ -1,7 +1,7 @@
 import {
   updateHiddenProperty,
   resetTitleCount,
-  ajax
+  ajax,
 } from "client-app/lib/utilities";
 import Evented from "@ember/object/evented";
 import EmberObject from "@ember/object";
@@ -16,11 +16,11 @@ export function initialize(app) {
   if (config.environment === "development") {
     app.deferReadiness();
     ajax("/development-preload.json")
-      .then(data => {
+      .then((data) => {
         const elem = document.getElementById("preloaded-data");
         elem.setAttribute("data-preloaded", JSON.stringify(data));
       })
-      .catch(xhr => console.error("Fetching preload data failed.", xhr)) // eslint-disable-line no-console
+      .catch((xhr) => console.error("Fetching preload data failed.", xhr)) // eslint-disable-line no-console
       .finally(() => app.advanceReadiness());
   }
   // config for moment.js
@@ -38,15 +38,15 @@ export function initialize(app) {
       M: "a mth",
       MM: "%d mths",
       y: "a yr",
-      yy: "%d yrs"
-    }
+      yy: "%d yrs",
+    },
   });
 
   // setup event for updating document title and title count
   let hiddenProperty;
   let visibilitychange;
 
-  ["", "webkit", "ms", "moz", "ms"].forEach(prefix => {
+  ["", "webkit", "ms", "moz", "ms"].forEach((prefix) => {
     const check = prefix + (prefix === "" ? "hidden" : "Hidden");
     if (document[check] !== undefined && !hiddenProperty) {
       hiddenProperty = check;
@@ -64,9 +64,9 @@ export function initialize(app) {
   );
 
   app.register("events:main", EmberObject.extend(Evented).create(), {
-    instantiate: false
+    instantiate: false,
   });
-  TARGETS.forEach(t => app.inject(t, "events", "events:main"));
+  TARGETS.forEach((t) => app.inject(t, "events", "events:main"));
 
   const isMobile =
     /mobile/i.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent);
@@ -78,5 +78,5 @@ export function initialize(app) {
 }
 
 export default {
-  initialize
+  initialize,
 };

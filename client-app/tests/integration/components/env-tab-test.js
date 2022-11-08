@@ -9,11 +9,14 @@ const time1 = new Date("2010-01-01T01:00:00").getTime();
 const time2 = new Date("2015-01-01T01:00:00").getTime();
 
 const message = Message.create({
-  env: [{ a: "aa", b: "bb", time: time1 }, { c: "cc", d: "dd", time: time2 }]
+  env: [
+    { a: "aa", b: "bb", time: time1 },
+    { c: "cc", d: "dd", time: time2 },
+  ],
 });
 
 const message2 = Message.create({
-  env: { e: "ee", f: "ff" }
+  env: { e: "ee", f: "ff" },
 });
 
 const message3 = Message.create({
@@ -21,12 +24,12 @@ const message3 = Message.create({
     { env_key_2: "value1", default_expanded: "vvv1", notExpanded: "dsdcz" },
     { env_key_2: "value2", default_expanded: "vvv2", notExpanded: "uerue" },
     { env_key_2: "value3", notExpanded: "weeww" },
-    { env_key_2: "value4", notExpanded: "cxc" }
-  ]
+    { env_key_2: "value4", notExpanded: "cxc" },
+  ],
 });
 
 const message4 = Message.create({
-  env: { env_key_2: "value", default_expanded: "vvv", notExpanded: "wwww" }
+  env: { env_key_2: "value", default_expanded: "vvv", notExpanded: "wwww" },
 });
 
 function reduceToContent(node) {
@@ -35,15 +38,15 @@ function reduceToContent(node) {
   );
 }
 
-module("Integration | Component | env-tab", function(hooks) {
+module("Integration | Component | env-tab", function (hooks) {
   setupRenderingTest(hooks);
 
-  test("it renders", async function(assert) {
-    const callback = newPosition => this.set("envPosition", newPosition);
+  test("it renders", async function (assert) {
+    const callback = (newPosition) => this.set("envPosition", newPosition);
     this.setProperties({
       message,
       callback,
-      envPosition: 0
+      envPosition: 0,
     });
     await render(
       hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
@@ -81,12 +84,12 @@ module("Integration | Component | env-tab", function(hooks) {
     assert.equal(reduceToContent(trs[1]), "f: ff", "has the right content");
   });
 
-  test("it works correctly", async function(assert) {
-    const callback = newPosition => this.set("envPosition", newPosition);
+  test("it works correctly", async function (assert) {
+    const callback = (newPosition) => this.set("envPosition", newPosition);
     this.setProperties({
       message,
       callback,
-      envPosition: 0
+      envPosition: 0,
     });
     await render(
       hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
@@ -119,18 +122,17 @@ module("Integration | Component | env-tab", function(hooks) {
     assert.ok(buttons[3].disabled, "forward buttons are disabled");
   });
 
-  test("expandable env keys", async function(assert) {
-    document.getElementById(
-      "preloaded-data"
-    ).dataset.preloaded = JSON.stringify({
-      env_expandable_keys: ["env_key_2", "default_expanded"]
-    });
+  test("expandable env keys", async function (assert) {
+    document.getElementById("preloaded-data").dataset.preloaded =
+      JSON.stringify({
+        env_expandable_keys: ["env_key_2", "default_expanded"],
+      });
     init();
-    const callback = newPosition => this.set("envPosition", newPosition);
+    const callback = (newPosition) => this.set("envPosition", newPosition);
     this.setProperties({
       message: message3,
       callback,
-      envPosition: 0
+      envPosition: 0,
     });
     await render(
       hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
@@ -172,18 +174,17 @@ module("Integration | Component | env-tab", function(hooks) {
     this.setProperties({
       message: message4,
       callback,
-      envPosition: 0
+      envPosition: 0,
     });
     await render(
       hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
     );
     const recreatedEnv = {};
-    findAll(".env-table tr").forEach(node => {
-      recreatedEnv[
-        node.children[0].innerText.trim()
-      ] = node.children[1].innerText.trim();
+    findAll(".env-table tr").forEach((node) => {
+      recreatedEnv[node.children[0].innerText.trim()] =
+        node.children[1].innerText.trim();
     });
-    Object.keys(recreatedEnv).forEach(k => {
+    Object.keys(recreatedEnv).forEach((k) => {
       assert.equal(
         recreatedEnv[k],
         this.message.env[k],
