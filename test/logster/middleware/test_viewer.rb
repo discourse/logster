@@ -43,21 +43,27 @@ class TestViewer < Minitest::Test
   end
 
   def test_search_raceguard_s
-    response = request.get('/logsie/messages.json?search=searchkey')
+    response = request.post('/logsie/messages.json?search=searchkey')
     result = JSON.parse(response.body)
     assert_equal('searchkey', result['search'])
   end
 
   def test_search_raceguard_sr
-    response = request.get('/logsie/messages.json?search=/regex/&regex_search=true')
+    response = request.post('/logsie/messages.json?search=/regex/&regex_search=true')
     result = JSON.parse(response.body)
     assert_equal('/regex/', result['search'])
   end
 
   def test_search_raceguard_f
-    response = request.get("/logsie/messages.json?filter=0_1_2_3_4")
+    response = request.post("/logsie/messages.json?filter=0_1_2_3_4")
     result = JSON.parse(response.body)
     assert_equal([0, 1, 2, 3, 4], result['filter'])
+  end
+
+  def test_search_does_not_respond_to_get_requests
+    response = request.get("/logsie/messages.json?filter=0_1_2_3_4")
+    assert_equal(404, response.status)
+    assert_equal("Not found", response.body)
   end
 
   def test_regex_parse
@@ -335,7 +341,7 @@ class TestViewer < Minitest::Test
     Logster.store.clear_all
     env = { "b" => 1, "c" => 2 }
     msg = Logster.store.report(Logger::INFO, "test", "something hello", env: env)
-    response = request.get("/logsie/messages.json")
+    response = request.post("/logsie/messages.json")
     assert_equal(200, response.status)
     messages = JSON.parse(response.body)["messages"]
     assert_equal(1, messages.size)
@@ -348,7 +354,7 @@ class TestViewer < Minitest::Test
     Logster.store.clear_all
     env = { "b" => 1, "c" => 2 }
     msg = Logster.store.report(Logger::INFO, "test", "something hello", env: env)
-    response = request.get("/logsie/messages.json?search=something")
+    response = request.post("/logsie/messages.json?search=something")
     assert_equal(200, response.status)
     messages = JSON.parse(response.body)["messages"]
     assert_equal(1, messages.size)

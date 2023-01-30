@@ -33,7 +33,7 @@ module Logster
           if resource =~ /\.ico$|\.js$|\.png|\.handlebars$|\.css$|\.woff$|\.ttf$|\.woff2$|\.svg$|\.otf$|\.eot$/
             serve_file(env, resource)
 
-          elsif resource.start_with?("/messages.json")
+          elsif resource.start_with?("/messages.json") && env[REQUEST_METHOD] == "POST"
             serve_messages(Rack::Request.new(env))
 
           elsif resource =~ /\/message\/([0-9a-f]+)$/

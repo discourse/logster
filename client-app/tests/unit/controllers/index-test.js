@@ -25,6 +25,6 @@ module('Unit | Controller | index', function (hooks) {
 
     assert.equal(controller.searchTerm, "tomtom", 'search sets search term');
     assert.equal(ajaxStub.firstCall.args[0], "/messages.json", "get messages");
-    assert.deepEqual(ajaxStub.firstCall.args[1], {"data": {"filter": "5", "search": "tomtom"}}, "with correct terms");
+    assert.deepEqual(ajaxStub.firstCall.args[1], {"data": {"filter": "5", "search": "tomtom"}, "method": "POST"}, "with correct terms");
   });
 });

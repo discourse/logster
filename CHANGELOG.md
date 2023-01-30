@@ -1,4 +1,9 @@
 # CHANGELOG
+- 2023-01-30: 2.11.4
+
+- DEV: Various dependencies upgrade
+- FIX: Switch the `/messages.json` endpoint from `GET` to `POST`
+
 - 2022-08-25: 2.11.3
 
 - DEV: Avoid deprecation warning in Redis 4.8 (#166)
