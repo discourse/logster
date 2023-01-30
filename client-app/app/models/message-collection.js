@@ -170,7 +170,8 @@ export default EmberObject.extend({
 
     this.set("loading", true);
     return ajax("/messages.json", {
-      data: data
+      data: data,
+      method: "POST"
     })
       .then(data => {
         // guard against race: ensure the results we're trying to apply
