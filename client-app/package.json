@@ -73,6 +73,7 @@
     "moment": "~2.29.4"
   },
   "overrides": {
-    "testem": "^3.9.0"
+    "testem": "^3.9.0",
+    "workerpool": "^6.3.1"
   }
 }
