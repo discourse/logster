@@ -1,3 +1,5 @@
+import { set } from "@ember/object";
+
 let CONTAINER = {};
 let isInitialized = false;
 let rootPath;
@@ -23,7 +25,7 @@ export default {
     if (!isInitialized) {
       init();
     }
-    return Em.get(CONTAINER, key);
+    return CONTAINER[key];
   },
 };
 
@@ -32,7 +34,8 @@ export function mutatePreload(key, value) {
   if (!isInitialized) {
     init();
   }
-  Em.set(CONTAINER, key, value);
+
+  set(CONTAINER, key, value);
 }
 
 export function uninitialize() {

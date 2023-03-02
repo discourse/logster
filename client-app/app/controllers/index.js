@@ -1,5 +1,6 @@
 import { debounce } from "@ember/runloop";
 import { computed } from "@ember/object";
+import { reads } from "@ember/object/computed";
 import Controller from "@ember/controller";
 import {
   ajax,
@@ -28,7 +29,7 @@ export default Controller.extend({
     topPanel.style.bottom = `${amount + 12}px`;
   },
 
-  actionsInMenu: computed.reads("site.isMobile"),
+  actionsInMenu: reads("site.isMobile"),
 
   actions: {
     expandMessage(message) {

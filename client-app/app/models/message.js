@@ -1,8 +1,10 @@
+import EmberObject from "@ember/object";
 import { ajax } from "client-app/lib/utilities";
 import { getRootPath } from "client-app/lib/preload";
 import { computed } from "@ember/object";
+import { gt } from "@ember/object/computed";
 
-export default Em.Object.extend({
+export default EmberObject.extend({
   MAX_LEN: 200,
 
   fetchEnv() {
@@ -33,7 +35,7 @@ export default Em.Object.extend({
     return ajax(`/unprotect/${this.key}`, { type: "DELETE" });
   },
 
-  showCount: computed.gt("count", 1),
+  showCount: gt("count", 1),
 
   hasMore: computed("MAX_LEN", "expanded", "message.length", function () {
     return !this.expanded && this.message.length > this.MAX_LEN;
