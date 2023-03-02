@@ -1,94 +1,90 @@
+import classic from "ember-classic-decorator";
+import { bool } from "@ember/object/computed";
 import Component from "@ember/component";
 import { action, computed } from "@ember/object";
 import Preload from "client-app/lib/preload";
-import { bool } from "@ember/object/computed";
 
-export default Component.extend({
-  showSolveAllButton: bool("currentRow.group"),
+@classic
+export default class MessageInfo extends Component {
+  @bool("currentRow.group")
+  showSolveAllButton;
 
-  buttons: computed(
-    "currentMessage.protected",
-    "showSolveAllButton",
-    "showSolveButton",
-    function () {
-      const protect = this.get("currentMessage.protected");
-      const buttons = [];
-      const prefix = "fas";
+  @computed("currentMessage.protected", "showSolveAllButton", "showSolveButton")
+  get buttons() {
+    const protect = this.get("currentMessage.protected");
+    const buttons = [];
+    const prefix = "fas";
 
-      if (!protect && this.showSolveButton) {
-        buttons.push({
-          klass: "solve",
-          action: "solve",
-          icon: "check-square",
-          label: "Solve",
-          prefix: "far",
-          danger: true,
-        });
-      }
-
-      if (this.showSolveAllButton) {
-        buttons.push({
-          klass: "solve-all",
-          action: "solveAll",
-          icon: "check-square",
-          label: "Solve All",
-          prefix: "far",
-          danger: true,
-        });
-      }
-
-      if (!protect) {
-        buttons.push(
-          {
-            klass: "remove",
-            action: "remove",
-            icon: "trash-alt",
-            label: "Remove",
-            prefix: "far",
-            danger: true,
-          },
-          {
-            klass: "protect",
-            action: "protect",
-            icon: "lock",
-            prefix,
-            label: "Protect",
-          }
-        );
-      } else {
-        buttons.push({
-          klass: "unprotect",
-          action: "unprotect",
-          icon: "unlock",
-          prefix,
-          label: "Unprotect",
-        });
-      }
-
+    if (!protect && this.showSolveButton) {
       buttons.push({
-        klass: "copy",
-        action: "copyAction",
-        icon: "copy",
+        klass: "solve",
+        action: "solve",
+        icon: "check-square",
+        label: "Solve",
         prefix: "far",
-        label: "Copy",
+        danger: true,
       });
-      return buttons;
     }
-  ),
 
-  showSolveButton: computed(
-    "showSolveAllButton",
-    "currentMessage.{canSolve,env}",
-    function () {
-      if (this.showSolveAllButton) return false;
-      // env isn't loaded until you switch to the env tab
-      // so if we don't have env we show the button if
-      // application_version is provided in the config
-      return this.currentMessage.env
-        ? this.currentMessage.canSolve
-        : !!Preload.get("application_version");
+    if (this.showSolveAllButton) {
+      buttons.push({
+        klass: "solve-all",
+        action: "solveAll",
+        icon: "check-square",
+        label: "Solve All",
+        prefix: "far",
+        danger: true,
+      });
     }
-  ),
+
+    if (!protect) {
+      buttons.push(
+        {
+          klass: "remove",
+          action: "remove",
+          icon: "trash-alt",
+          label: "Remove",
+          prefix: "far",
+          danger: true,
+        },
+        {
+          klass: "protect",
+          action: "protect",
+          icon: "lock",
+          prefix,
+          label: "Protect",
+        }
+      );
+    } else {
+      buttons.push({
+        klass: "unprotect",
+        action: "unprotect",
+        icon: "unlock",
+        prefix,
+        label: "Unprotect",
+      });
+    }
+
+    buttons.push({
+      klass: "copy",
+      action: "copyAction",
+      icon: "copy",
+      prefix: "far",
+      label: "Copy",
+    });
+    return buttons;
+  }
+
+  @computed("showSolveAllButton", "currentMessage.{canSolve,env}")
+  get showSolveButton() {
+    if (this.showSolveAllButton) return false;
+    // env isn't loaded until you switch to the env tab
+    // so if we don't have env we show the button if
+    // application_version is provided in the config
+    return this.currentMessage.env
+      ? this.currentMessage.canSolve
+      : !!Preload.get("application_version");
+  }
 
   copy() {
     const temp = document.createElement("TEXTAREA");
@@ -116,47 +112,47 @@ export default Component.extend({
     temp.select();
     document.execCommand("copy");
     document.body.removeChild(temp);
-  },
+  }
 
   @action
   tabChanged(newTab) {
     if (this.onTabChange) {
       this.onTabChange(newTab);
     }
-  },
+  }
 
   @action
   protect() {
     this.currentMessage.protect();
-  },
+  }
 
   @action
   unprotect() {
     this.currentMessage.unprotect();
-  },
+  }
 
   @action
   remove() {
     this.removeMessage(this.currentMessage);
-  },
+  }
 
   @action
   solve() {
     this.solveMessage(this.currentMessage);
-  },
+  }
 
   @action
   solveAll() {
     this.currentRow.solveAll();
-  },
+  }
 
   @action
   share() {
     window.location.pathname = this.get("currentMessage.shareUrl");
-  },
+  }
 
   @action
   copyAction() {
     this.copy();
-  },
-});
+  }
+}

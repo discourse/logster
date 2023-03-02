@@ -1,3 +1,4 @@
+import classic from "ember-classic-decorator";
 import { ajax, increaseTitleCount } from "client-app/lib/utilities";
 import Message from "client-app/models/message";
 import Group from "client-app/models/group";
@@ -9,15 +10,25 @@ const BATCH_SIZE = 50;
 
 export const SEVERITIES = ["Debug", "Info", "Warn", "Err", "Fatal"];
 
-export default EmberObject.extend({
-  total: 0,
-  rows: null,
-  currentRow: null,
-  currentTab: null,
-  currentEnvPosition: 0,
-  currentGroupedMessagesPosition: 0,
+@classic
+export default class MessageCollection extends EmberObject {
+  total = 0;
+  rows = null;
+  currentRow = null;
+  currentTab = null;
+  currentEnvPosition = 0;
+  currentGroupedMessagesPosition = 0;
 
-  filter: computed(...SEVERITIES.map((s) => `show${s}`), function () {
+  init() {
+    super.init(...arguments);
+    this.setProperties({
+      search: "",
+      rows: A(),
+    });
+  }
+
+  @computed(...SEVERITIES.map((s) => `show${s}`))
+  get filter() {
     const filter = [];
     SEVERITIES.forEach((severity, index) => {
       if (this[`show${severity}`]) {
@@ -26,35 +37,58 @@ export default EmberObject.extend({
     });
     filter.push(5); // always show unknown, rare
     return filter;
-  }),
+  }
 
-  init() {
-    this._super(...arguments);
-    this.setProperties({
-      search: "",
-      rows: A(),
-    });
-  },
+  @computed("currentRow", "currentGroupedMessagesPosition")
+  get currentMessage() {
+    const row = this.currentRow;
+    const position = this.currentGroupedMessagesPosition;
+    if (row && row.group) {
+      return row.messages[position];
+    } else {
+      return row;
+    }
+  }
 
-  currentMessage: computed(
-    "currentRow",
-    "currentGroupedMessagesPosition",
-    function () {
-      const row = this.currentRow;
-      const position = this.currentGroupedMessagesPosition;
-      if (row && row.group) {
-        return row.messages[position];
-      } else {
-        return row;
+  @computed("filter", "search.length")
+  get hideCountInLoadMore() {
+    const filter = this.filter;
+    return (
+      (this.search && this.search.length > 0) || (filter && filter.length < 6)
+    );
+  }
+
+  @computed("rows.length", "canLoadMore")
+  get moreBefore() {
+    return this.get("rows.length") >= BATCH_SIZE && this.canLoadMore;
+  }
+
+  @computed("total", "rows.length")
+  get totalBefore() {
+    return this.total - this.rows.length;
+  }
+
+  @computed("search")
+  get regexSearch() {
+    const search = this.search;
+    if (search && search.length > 2 && search[0] === "/") {
+      const match = search.match(/\/(.*)\/(.*)/);
+      if (match && match.length === 3) {
+        try {
+          return new RegExp(match[1], match[2]);
+        } catch (err) {
+          // don't care
+        }
       }
     }
-  ),
+    return null;
+  }
 
   solve(message) {
     message.solve().then(() => {
       this.reload();
     });
-  },
+  }
 
   selectRow(row, opts = {}) {
     const old = this.currentRow;
@@ -75,7 +109,7 @@ export default EmberObject.extend({
       this.notifyPropertyChange("currentGroupedMessagesPosition");
     const forceFetchEnv = this.currentMessage && !this.currentMessage.env;
     this.fetchEnv({ force: forceFetchEnv });
-  },
+  }
 
   tabChanged(newTab) {
     this.setProperties({
@@ -83,7 +117,7 @@ export default EmberObject.extend({
       loadingEnv: false,
     });
     this.fetchEnv();
-  },
+  }
 
   groupedMessageChanged(newPosition) {
     this.setProperties({
@@ -92,12 +126,12 @@ export default EmberObject.extend({
     });
     const forceFetchEnv = this.currentMessage && !this.currentMessage.env;
     this.fetchEnv({ force: forceFetchEnv });
-  },
+  }
 
   envChanged(newPosition) {
     this.set("currentEnvPosition", newPosition);
     this.fetchEnv();
-  },
+  }
 
   fetchEnv(opts = {}) {
     const message = this.currentMessage;
@@ -108,7 +142,7 @@ export default EmberObject.extend({
       this.set("loadingEnv", true);
       return message.fetchEnv().finally(() => this.set("loadingEnv", false));
     }
-  },
+  }
 
   findEquivalentMessageIndex(row) {
     let messageIndex = 0;
@@ -123,7 +157,7 @@ export default EmberObject.extend({
       messageIndex = Math.max(0, messageIndex);
     }
     return messageIndex;
-  },
+  }
 
   updateSelectedRow() {
     const currentKey = this.get("currentRow.key");
@@ -140,7 +174,7 @@ export default EmberObject.extend({
         });
       }
     }
-  },
+  }
 
   load(opts) {
     opts = opts || {};
@@ -211,14 +245,14 @@ export default EmberObject.extend({
         return data;
       })
       .finally(() => this.set("loading", false));
-  },
+  }
 
   reload() {
     this.set("total", 0);
     this.rows.clear();
 
     return this.load().then((data) => this.updateCanLoadMore(data));
-  },
+  }
 
   updateCanLoadMore(data) {
     if (!data) {
@@ -229,7 +263,7 @@ export default EmberObject.extend({
     } else {
       this.set("canLoadMore", true);
     }
-  },
+  }
 
   loadMore() {
     const rows = this.rows;
@@ -243,24 +277,9 @@ export default EmberObject.extend({
     this.load({
       after: lastKey,
     });
-  },
+  }
 
-  hideCountInLoadMore: computed("filter", "search.length", function () {
-    const filter = this.filter;
-    return (
-      (this.search && this.search.length > 0) || (filter && filter.length < 6)
-    );
-  }),
-
-  moreBefore: computed("rows.length", "canLoadMore", function () {
-    return this.get("rows.length") >= BATCH_SIZE && this.canLoadMore;
-  }),
-
-  totalBefore: computed("total", "rows.length", function () {
-    return this.total - this.rows.length;
-  }),
-
-  showMoreBefore: function () {
+  showMoreBefore() {
     const rows = this.rows;
     const firstLog = rows[0];
     const firstKey = firstLog.group ? firstLog.row_id : firstLog.key;
@@ -270,22 +289,7 @@ export default EmberObject.extend({
       before: firstKey,
       knownGroups,
     }).then((data) => this.updateCanLoadMore(data));
-  },
-
-  regexSearch: computed("search", function () {
-    const search = this.search;
-    if (search && search.length > 2 && search[0] === "/") {
-      const match = search.match(/\/(.*)\/(.*)/);
-      if (match && match.length === 3) {
-        try {
-          return new RegExp(match[1], match[2]);
-        } catch (err) {
-          // don't care
-        }
-      }
-    }
-    return null;
-  }),
+  }
 
   toObjects(rows) {
     return rows.map((m) => {
@@ -295,5 +299,5 @@ export default EmberObject.extend({
         return Message.create(m);
       }
     });
-  },
-});
+  }
+}

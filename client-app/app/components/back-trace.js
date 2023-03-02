@@ -1,6 +1,7 @@
+import classic from "ember-classic-decorator";
+import { computed } from "@ember/object";
 import Component from "@ember/component";
 import Preloaded from "client-app/lib/preload";
-import { computed } from "@ember/object";
 
 function startsWith(str, search) {
   if (!str || !search || search.length > str.length) {
@@ -44,8 +45,34 @@ function shortenLine(line) {
   }
 }
 
-export default Component.extend({
-  GithubURLForGem(line) {
+@classic
+export default class BackTrace extends Component {
+  @computed("env.application_version")
+  get commitSha() {
+    let env = null;
+    if (Array.isArray(this.env)) {
+      env = this.env.map((e) => e.application_version).filter((e) => e)[0];
+    } else if (this.env) {
+      env = this.env.application_version;
+    }
+    return env || Preloaded.get("application_version");
+  }
+
+  @computed("backtrace.length", "commitSha")
+  get lines() {
+    if (!this.backtrace || this.backtrace.length === 0) {
+      return [];
+    }
+    return this.backtrace.split("\n").map((line) => {
+      const shortenedLine = shortenLine(line);
+      return {
+        line: shortenedLine,
+        url: this.findGithubURL(line, shortenedLine),
+      };
+    });
+  }
+
+  githubURLForGem(line) {
     let url = null;
     if (!backtraceLinksEnabled()) {
       return url;
@@ -63,9 +90,9 @@ export default Component.extend({
       url = assembleURL({ repo: match.url, path, filename, lineNumber });
     }
     return url;
-  },
+  }
 
-  GithubURLForApp(line) {
+  githubURLForApp(line) {
     let url = null;
 
     if (!backtraceLinksEnabled()) {
@@ -112,39 +139,17 @@ export default Component.extend({
       }
     }
     return url;
-  },
+  }
 
   findGithubURL(line, shortenedLine) {
     const projectDirs = Preloaded.get("directories") || [];
     const isGem = startsWith(line, Preloaded.get("gems_dir"));
     const isApp = projectDirs.some((p) => startsWith(line, p.path));
+
     if (isGem || !isApp) {
-      return this.GithubURLForGem(shortenedLine);
+      return this.githubURLForGem(shortenedLine);
     } else {
-      return this.GithubURLForApp(line);
+      return this.githubURLForApp(line);
     }
-  },
-
-  commitSha: computed("env.application_version", function () {
-    let env = null;
-    if (Array.isArray(this.env)) {
-      env = this.env.map((e) => e.application_version).filter((e) => e)[0];
-    } else if (this.env) {
-      env = this.env.application_version;
-    }
-    return env || Preloaded.get("application_version");
-  }),
-
-  lines: computed("backtrace.length", "commitSha", function () {
-    if (!this.backtrace || this.backtrace.length === 0) {
-      return [];
-    }
-    return this.backtrace.split("\n").map((line) => {
-      const shortenedLine = shortenLine(line);
-      return {
-        line: shortenedLine,
-        url: this.findGithubURL(line, shortenedLine),
-      };
-    });
-  }),
-});
+  }
+}

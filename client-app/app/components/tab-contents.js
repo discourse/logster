@@ -1,8 +1,24 @@
+import classic from "ember-classic-decorator";
+import { classNameBindings } from "@ember-decorators/component";
 import Component from "@ember/component";
 
-export default Component.extend({
-  classNameBindings: ["active", ":content", "name"],
-  isLink: false,
+@classic
+@classNameBindings("active", ":content", "name")
+export default class TabContents extends Component {
+  isLink = false;
+
+  didInsertElement() {
+    super.didInsertElement(...arguments);
+    this.invokeParent("addTab");
+    if (this.defaultTab) {
+      this.invokeParent("selectTab");
+    }
+  }
+
+  willDestroyElement() {
+    super.willDestroyElement(...arguments);
+    this.invokeParent("removeTab");
+  }
 
   invokeParent(name) {
     let current = this.parentView;
@@ -12,18 +28,5 @@ export default Component.extend({
     if (current) {
       current[name](this);
     }
-  },
-
-  didInsertElement() {
-    this._super(...arguments);
-    this.invokeParent("addTab");
-    if (this.defaultTab) {
-      this.invokeParent("selectTab");
-    }
-  },
-
-  willDestroyElement() {
-    this._super(...arguments);
-    this.invokeParent("removeTab");
-  },
-});
+  }
+}

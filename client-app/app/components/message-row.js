@@ -1,23 +1,16 @@
+import classic from "ember-classic-decorator";
+import { classNameBindings, tagName } from "@ember-decorators/component";
 import Component from "@ember/component";
 
 let CHECKED_BOTTOM;
 let STICK_TO_BOTTOM;
 
-export default Component.extend({
-  tagName: "div",
-
-  classNameBindings: [
-    "model.rowClass",
-    ":message-row",
-    "model.selected:selected",
-  ],
-
-  click() {
-    this.selectRow();
-  },
-
+@classic
+@tagName("div")
+@classNameBindings("model.rowClass", ":message-row", "model.selected:selected")
+export default class MessageRow extends Component {
   willInsertElement() {
-    this._super(...arguments);
+    super.willInsertElement(...arguments);
     if (CHECKED_BOTTOM) {
       return;
     }
@@ -28,10 +21,10 @@ export default Component.extend({
     const height = parseFloat(getComputedStyle(topPanel).height);
     STICK_TO_BOTTOM = topPanel.scrollHeight - 20 < height + topPanel.scrollTop;
     CHECKED_BOTTOM = true;
-  },
+  }
 
   didInsertElement() {
-    this._super(...arguments);
+    super.didInsertElement(...arguments);
     const topPanel = document.getElementById("top-panel");
     if (!topPanel) return;
 
@@ -41,5 +34,9 @@ export default Component.extend({
       topPanel.scrollTop =
         topPanel.scrollHeight - parseFloat(getComputedStyle(topPanel).height);
     }
-  },
-});
+  }
+
+  click() {
+    this.selectRow();
+  }
+}

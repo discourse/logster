@@ -1,29 +1,32 @@
-import EmberObject, { computed } from "@ember/object";
+import classic from "ember-classic-decorator";
 import { lte } from "@ember/object/computed";
+import EmberObject, { computed } from "@ember/object";
 
-export default EmberObject.extend({
-  isNew: false,
-  value: "",
-  valueBuffer: "",
-  error: null,
-  saving: false,
-  count: 0,
+@classic
+export default class PatternItem extends EmberObject {
+  isNew = false;
+  value = "";
+  valueBuffer = "";
+  error = null;
+  saving = false;
+  count = 0;
+
+  @lte("count", 0) zeroCount;
 
   init() {
-    this._super(...arguments);
+    super.init(...arguments);
     this.set("valueBuffer", this.value);
-  },
+  }
+
+  @computed("value", "valueBuffer")
+  get hasBuffer() {
+    return this.value !== this.valueBuffer;
+  }
 
   updateValue(newValue) {
     this.setProperties({
       value: newValue,
       valueBuffer: newValue,
     });
-  },
-
-  hasBuffer: computed("value", "valueBuffer", function () {
-    return this.value !== this.valueBuffer;
-  }),
-
-  zeroCount: lte("count", 0),
-});
+  }
+}

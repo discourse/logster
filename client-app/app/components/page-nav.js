@@ -1,19 +1,24 @@
+import classic from "ember-classic-decorator";
+import { classNameBindings, classNames } from "@ember-decorators/component";
+import { equal } from "@ember/object/computed";
 import Component from "@ember/component";
 import { action, computed } from "@ember/object";
-import { equal } from "@ember/object/computed";
 
-export default Component.extend({
-  classNames: ["nav-controls"],
-  classNameBindings: ["extraClasses"],
-  disableBackButtons: equal("position", 0),
+@classic
+@classNames("nav-controls")
+@classNameBindings("extraClasses")
+export default class PageNav extends Component {
+  @equal("position", 0) disableBackButtons;
 
-  disableForwardButtons: computed("position", "list.length", function () {
+  @computed("position", "list.length")
+  get disableForwardButtons() {
     return this.position === this.get("list.length") - 1;
-  }),
+  }
 
-  displayNumber: computed("position", function () {
+  @computed("position")
+  get displayNumber() {
     return this.position + 1;
-  }),
+  }
 
   @action
   takeStep(dir) {
@@ -23,11 +28,11 @@ export default Component.extend({
 
     const newPos = this.position + amount;
     this.navigate(newPos);
-  },
+  }
 
   @action
   bigJump(dir) {
     const newPos = dir === "back" ? 0 : this.get("list.length") - 1;
     this.navigate(newPos);
-  },
-});
+  }
+}
