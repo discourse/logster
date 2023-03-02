@@ -1,14 +1,16 @@
+import classic from "ember-classic-decorator";
 import Route from "@ember/routing/route";
 import { ajax } from "client-app/lib/utilities";
 import Pattern from "client-app/models/pattern-item";
 
-export default Route.extend({
+@classic
+export default class SettingsRoute extends Route {
   model() {
     return ajax("/settings.json");
-  },
+  }
 
   setupController(controller, model) {
-    this._super(...arguments);
+    super.setupController(...arguments);
     const suppression = model.suppression;
     const codedSuppression = suppression
       .filter((p) => p.hard)
@@ -26,5 +28,5 @@ export default Route.extend({
       customSuppression,
       grouping,
     });
-  },
-});
+  }
+}

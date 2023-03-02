@@ -1,3 +1,4 @@
+import classic from "ember-classic-decorator";
 import { debounce } from "@ember/runloop";
 import { action, computed } from "@ember/object";
 import Controller from "@ember/controller";
@@ -8,56 +9,72 @@ import {
 } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
 
-export default Controller.extend({
-  showDebug: getLocalStorage("showDebug", false),
-  showInfo: getLocalStorage("showInfo", false),
-  showWarn: getLocalStorage("showWarn", true),
-  showErr: getLocalStorage("showErr", true),
-  showFatal: getLocalStorage("showFatal", true),
-  search: null,
-  queryParams: ["search"],
+@classic
+export default class IndexController extends Controller {
+  showDebug = getLocalStorage("showDebug", false);
+  showInfo = getLocalStorage("showInfo", false);
+  showWarn = getLocalStorage("showWarn", true);
+  showErr = getLocalStorage("showErr", true);
+  showFatal = getLocalStorage("showFatal", true);
+  search = null;
+  queryParams = ["search"];
 
-  showSettings: computed(function () {
+  @computed
+  get showSettings() {
     return Preload.get("patterns_enabled");
-  }),
+  }
+
+  get actionsInMenu() {
+    return (
+      /mobile/i.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent)
+    );
+  }
+
+  @computed("search")
+  get searchTerm() {
+    if (this.search) {
+      this.doSearch(this.search);
+      return this.search;
+    }
+    return null;
+  }
+
+  doSearch(term) {
+    this.model.set("search", term);
+    this.model.reload().then(() => this.model.updateSelectedRow());
+  }
 
   resizePanels(amount) {
     const bottomPanel = document.getElementById("bottom-panel");
     const topPanel = document.getElementById("top-panel");
     bottomPanel.style.height = `${amount - 13}px`;
     topPanel.style.bottom = `${amount + 12}px`;
-  },
-
-  get actionsInMenu() {
-    return (
-      /mobile/i.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent)
-    );
-  },
+  }
 
   @action
   expandMessage(message) {
     message.expand();
-  },
+  }
 
   @action
   selectRowAction(row, opts = {}) {
     this.model.selectRow(row, opts);
-  },
+  }
 
   @action
   tabChangedAction(newTab) {
     this.model.tabChanged(newTab);
-  },
+  }
 
   @action
   showMoreBefore() {
     this.model.showMoreBefore();
-  },
+  }
 
   @action
   loadMore() {
     return this.model.loadMore();
-  },
+  }
 
   @action
   clear() {
@@ -66,7 +83,7 @@ export default Controller.extend({
         this.model.reload();
       });
     }
-  },
+  }
 
   @action
   removeMessage(msg) {
@@ -104,22 +121,22 @@ export default Controller.extend({
     } else if (group) {
       this.model.selectRow(rows[idx], { messageIndex });
     }
-  },
+  }
 
   @action
   solveMessage(msg) {
     this.model.solve(msg);
-  },
+  }
 
   @action
   groupedMessageChangedAction(newPosition) {
     this.model.groupedMessageChanged(newPosition);
-  },
+  }
 
   @action
   envChangedAction(newPosition) {
     this.model.envChanged(newPosition);
-  },
+  }
 
   @action
   updateFilter(name) {
@@ -127,7 +144,7 @@ export default Controller.extend({
     this.model.set(name, this[name]);
     setLocalStorage(name, this[name]);
     this.model.reload().then(() => this.model.updateSelectedRow());
-  },
+  }
 
   @action
   updateSearch(event) {
@@ -142,18 +159,5 @@ export default Controller.extend({
     }
 
     debounce(this, this.doSearch, term, 250);
-  },
-
-  searchTerm: computed("search", function () {
-    if (this.search) {
-      this.doSearch(this.search);
-      return this.search;
-    }
-    return null;
-  }),
-
-  doSearch(term) {
-    this.model.set("search", term);
-    this.model.reload().then(() => this.model.updateSelectedRow());
-  },
-});
+  }
+}

@@ -1,5 +1,7 @@
-import Component from "@ember/component";
+import classic from "ember-classic-decorator";
+import { classNames } from "@ember-decorators/component";
 import { inject as service } from "@ember/service";
+import Component from "@ember/component";
 import { scheduleOnce, throttle } from "@ember/runloop";
 import { bound } from "client-app/lib/decorators";
 
@@ -7,11 +9,35 @@ const MOVE_EVENTS = ["touchmove", "mousemove"];
 const UP_EVENTS = ["touchend", "mouseup"];
 const DOWN_EVENTS = ["touchstart", "mousedown"];
 
-export default Component.extend({
-  events: service(),
+@classic
+@classNames("divider")
+export default class PanelResizer extends Component {
+  @service events;
 
-  resizing: false,
-  classNames: ["divider"],
+  resizing = false;
+
+  didInsertElement() {
+    super.didInsertElement(...arguments);
+    // inspired by http://plugins.jquery.com/misc/textarea.js
+    this.set("divider", document.querySelector(".divider"));
+    DOWN_EVENTS.forEach((name) => {
+      this.divider.addEventListener(name, this.dividerClickHandler);
+    });
+    scheduleOnce("afterRender", this, "initialDivideView");
+  }
+
+  willDestroyElement() {
+    super.willDestroyElement(...arguments);
+    DOWN_EVENTS.forEach((name) =>
+      this.divider.removeEventListener(name, this.dividerClickHandler)
+    );
+  }
+
+  initialDivideView() {
+    const amount = (localStorage && localStorage.logster_divider_bottom) || 300;
+    const fromTop = window.innerHeight - parseInt(amount, 10);
+    this.divideView(fromTop);
+  }
 
   divideView(fromTop) {
     const height = window.innerHeight;
@@ -23,12 +49,12 @@ export default Component.extend({
 
     this.divider.style.bottom = `${fromBottom - 5}px`;
     this.events.trigger("panelResized", fromBottom);
-  },
+  }
 
   @bound
   performDrag(e) {
     throttle(this, this.throttledPerformDrag, e, 25);
-  },
+  }
 
   throttledPerformDrag(e) {
     if (this.resizing) {
@@ -36,10 +62,10 @@ export default Component.extend({
         e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY)
       );
     }
-  },
+  }
 
   @bound
-  endDrag(/* e */) {
+  endDrag /* e */() {
     const overlay = document.getElementById("overlay");
     if (overlay) {
       overlay.parentElement.removeChild(overlay);
@@ -59,7 +85,7 @@ export default Component.extend({
     UP_EVENTS.forEach((name) =>
       document.removeEventListener(name, this.endDrag)
     );
-  },
+  }
 
   @bound
   dividerClickHandler(e) {
@@ -72,28 +98,5 @@ export default Component.extend({
       document.addEventListener(name, this.performDrag)
     );
     UP_EVENTS.forEach((name) => document.addEventListener(name, this.endDrag));
-  },
-
-  didInsertElement() {
-    this._super(...arguments);
-    // inspired by http://plugins.jquery.com/misc/textarea.js
-    this.set("divider", document.querySelector(".divider"));
-    DOWN_EVENTS.forEach((name) => {
-      this.divider.addEventListener(name, this.dividerClickHandler);
-    });
-    scheduleOnce("afterRender", this, "initialDivideView");
-  },
-
-  initialDivideView() {
-    const amount = (localStorage && localStorage.logster_divider_bottom) || 300;
-    const fromTop = window.innerHeight - parseInt(amount, 10);
-    this.divideView(fromTop);
-  },
-
-  willDestroyElement() {
-    this._super(...arguments);
-    DOWN_EVENTS.forEach((name) =>
-      this.divider.removeEventListener(name, this.dividerClickHandler)
-    );
-  },
-});
+  }
+}

@@ -1,8 +1,10 @@
+import classic from "ember-classic-decorator";
 import Component from "@ember/component";
 import { A } from "@ember/array";
 
-export default Component.extend({
-  tabs: A(),
+@classic
+export default class TabbedSection extends Component {
+  tabs = A();
 
   selectTab(view) {
     if (view.get("isLink")) {
@@ -17,19 +19,19 @@ export default Component.extend({
     this.set("selected", view);
     view.set("active", true);
     this.onTabChange(view.name);
-  },
+  }
 
   addTab(tab) {
     this.tabs.addObject(tab);
     if (!this.selected && !tab.get("isLink")) {
       this.selectTab(tab);
     }
-  },
+  }
 
   removeTab(tab) {
     if (this.selected === tab) {
       this.set("selected", null);
     }
     this.tabs.removeObject(tab);
-  },
-});
+  }
+}

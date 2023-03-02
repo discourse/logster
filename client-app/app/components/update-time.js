@@ -1,12 +1,14 @@
+import classic from "ember-classic-decorator";
 import Component from "@ember/component";
 import { formatTime } from "client-app/lib/utilities";
 import { later } from "@ember/runloop";
 
-export default Component.extend({
+@classic
+export default class UpdateTime extends Component {
   didInsertElement() {
-    this._super(...arguments);
+    super.didInsertElement(...arguments);
     later(this, this.updateTimes, 60000);
-  },
+  }
 
   updateTimes() {
     Array.from(document.querySelectorAll(".auto-update-time")).forEach(
@@ -20,5 +22,5 @@ export default Component.extend({
       }
     );
     later(this, this.updateTimes, 60000);
-  },
-});
+  }
+}

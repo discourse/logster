@@ -1,24 +1,33 @@
-import Component from "@ember/component";
-import { formatTime } from "client-app/lib/utilities";
+import classic from "ember-classic-decorator";
+import {
+  attributeBindings,
+  classNames,
+  tagName,
+} from "@ember-decorators/component";
 import { computed } from "@ember/object";
 import { reads } from "@ember/object/computed";
+import Component from "@ember/component";
+import { formatTime } from "client-app/lib/utilities";
 
-export default Component.extend({
-  tagName: "span",
-  classNames: "auto-update-time",
-  attributeBindings: ["dataTimestamp:data-timestamp", "title"],
+@classic
+@tagName("span")
+@classNames("auto-update-time")
+@attributeBindings("dataTimestamp:data-timestamp", "title")
+export default class TimeFormatter extends Component {
+  @reads("timestamp") dataTimestamp;
 
-  title: computed("moment", function () {
+  @computed("moment")
+  get title() {
     return this.moment.format();
-  }),
+  }
 
-  dataTimestamp: reads("timestamp"),
-
-  moment: computed("timestamp", function () {
+  @computed("timestamp")
+  get moment() {
     return moment(this.timestamp);
-  }),
+  }
 
-  time: computed("timestamp", function () {
+  @computed("timestamp")
+  get time() {
     return formatTime(this.timestamp);
-  }),
-});
+  }
+}

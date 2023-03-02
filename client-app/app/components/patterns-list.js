@@ -1,36 +1,39 @@
+import classic from "ember-classic-decorator";
+import { equal, not } from "@ember/object/computed";
 import Component from "@ember/component";
-import { not, equal } from "@ember/object/computed";
 import { action, computed } from "@ember/object";
 import Pattern from "client-app/models/pattern-item";
 import { ajax } from "client-app/lib/utilities";
 
-export default Component.extend({
-  immutable: not("mutable"),
-  showCounter: equal("key", "suppression"),
+@classic
+export default class PatternsList extends Component {
+  @not("mutable") immutable;
+  @equal("key", "suppression") showCounter;
 
   init() {
-    this._super(...arguments);
+    super.init(...arguments);
     if (this.get("patterns.length") < 1 && this.mutable) {
       this.send("create");
     }
-  },
+  }
 
-  allPatterns: computed("patterns.[]", "newPatterns.[]", function () {
+  @computed("patterns.[]", "newPatterns.[]")
+  get allPatterns() {
     const patterns = this.patterns;
     const newPatterns = this.newPatterns || [];
     return [...newPatterns.reverse(), ...patterns.reverse()];
-  }),
+  }
 
   makeAPICall(data = {}) {
     const { method } = data;
     delete data.method;
 
     return ajax(`/patterns/${this.key}.json`, { method, data });
-  },
+  }
 
   finallyBlock(pattern) {
     pattern.set("saving", false);
-  },
+  }
 
   catchBlock(pattern, response) {
     if (response.responseText) {
@@ -38,14 +41,14 @@ export default Component.extend({
     } else {
       pattern.set("error", "Unkown error occured. Please see dev console.");
     }
-  },
+  }
 
   requestInit(pattern) {
     pattern.setProperties({
       saving: true,
       error: null,
     });
-  },
+  }
 
   @action
   create() {
@@ -53,7 +56,7 @@ export default Component.extend({
       this.set("newPatterns", []);
     }
     this.newPatterns.pushObject(Pattern.create({ isNew: true }));
-  },
+  }
 
   @action
   trash(pattern) {
@@ -73,7 +76,7 @@ export default Component.extend({
         .catch((response) => this.catchBlock(pattern, response))
         .finally(() => this.finallyBlock(pattern));
     }
-  },
+  }
 
   @action
   save(pattern) {
@@ -105,7 +108,7 @@ export default Component.extend({
         this.catchBlock(pattern, response);
       })
       .finally(() => this.finallyBlock(pattern));
-  },
+  }
 
   @action
   resetCount(pattern) {
@@ -119,10 +122,10 @@ export default Component.extend({
       })
       .catch((response) => this.catchBlock(pattern, response))
       .finally(() => this.finallyBlock(pattern));
-  },
+  }
 
   @action
   checkboxChanged(pattern) {
     pattern.toggleProperty("retroactive");
-  },
-});
+  }
+}

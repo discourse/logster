@@ -1,84 +1,49 @@
+import classic from "ember-classic-decorator";
+import { gt } from "@ember/object/computed";
 import EmberObject from "@ember/object";
 import { ajax } from "client-app/lib/utilities";
 import { getRootPath } from "client-app/lib/preload";
 import { computed } from "@ember/object";
-import { gt } from "@ember/object/computed";
 
-export default EmberObject.extend({
-  MAX_LEN: 200,
+@classic
+export default class Message extends EmberObject {
+  MAX_LEN = 200;
 
-  fetchEnv() {
-    return ajax(`/fetch-env/${this.key}.json`).then((env) =>
-      this.set("env", env)
-    );
-  },
+  @gt("count", 1) showCount;
 
-  expand() {
-    this.set("expanded", true);
-  },
-
-  solve() {
-    return ajax(`/solve/${this.key}`, { type: "PUT" });
-  },
-
-  destroy() {
-    return ajax(`/message/${this.key}`, { type: "DELETE" });
-  },
-
-  protect() {
-    this.set("protected", true);
-    return ajax(`/protect/${this.key}`, { type: "PUT" });
-  },
-
-  unprotect() {
-    this.set("protected", false);
-    return ajax(`/unprotect/${this.key}`, { type: "DELETE" });
-  },
-
-  showCount: gt("count", 1),
-
-  hasMore: computed("MAX_LEN", "expanded", "message.length", function () {
+  @computed("MAX_LEN", "expanded", "message.length")
+  get hasMore() {
     return !this.expanded && this.message.length > this.MAX_LEN;
-  }),
+  }
 
-  shareUrl: computed("key", function () {
+  @computed("key")
+  get shareUrl() {
     return `${getRootPath()}/show/${this.key}`;
-  }),
+  }
 
-  displayMessage: computed(
-    "MAX_LEN",
-    "expanded",
-    "message.length",
-    function () {
-      let message = this.message;
+  @computed("MAX_LEN", "expanded", "message.length")
+  get displayMessage() {
+    let message = this.message;
 
-      if (!this.expanded && this.message.length > this.MAX_LEN) {
-        message = this.message.substr(0, this.MAX_LEN);
-      }
-      return message;
+    if (!this.expanded && this.message.length > this.MAX_LEN) {
+      message = this.message.substr(0, this.MAX_LEN);
     }
-  ),
+    return message;
+  }
 
-  updateFromObject(other) {
-    // XXX Only updatable property is count right now
-    this.set("count", other.get("count"));
-  },
+  @computed("backtrace.length", "env.{application_version,length}")
+  get canSolve() {
+    const appVersion = Array.isArray(this.env)
+      ? this.env
+          .map((e) => e.application_version)
+          .compact()
+          .join("")
+      : this.env && this.env.application_version;
+    return appVersion && this.backtrace && this.backtrace.length > 0;
+  }
 
-  canSolve: computed(
-    "backtrace.length",
-    "env.{application_version,length}",
-    function () {
-      const appVersion = Array.isArray(this.env)
-        ? this.env
-            .map((e) => e.application_version)
-            .compact()
-            .join("")
-        : this.env && this.env.application_version;
-      return appVersion && this.backtrace && this.backtrace.length > 0;
-    }
-  ),
-
-  rowClass: computed("severity", function () {
+  @computed("severity")
+  get rowClass() {
     switch (this.severity) {
       case 0:
         return "debug";
@@ -93,9 +58,10 @@ export default EmberObject.extend({
       default:
         return "unknown";
     }
-  }),
+  }
 
-  glyph: computed("severity", function () {
+  @computed("severity")
+  get glyph() {
     switch (this.severity) {
       case 0:
         return "";
@@ -110,13 +76,14 @@ export default EmberObject.extend({
       default:
         return "question-circle";
     }
-  }),
+  }
 
-  prefix: computed(function () {
+  get prefix() {
     return "fas";
-  }),
+  }
 
-  klass: computed("severity", function () {
+  @computed("severity")
+  get klass() {
     switch (this.severity) {
       case 0:
         return "";
@@ -131,5 +98,38 @@ export default EmberObject.extend({
       default:
         return "unknown";
     }
-  }),
-});
+  }
+
+  fetchEnv() {
+    return ajax(`/fetch-env/${this.key}.json`).then((env) =>
+      this.set("env", env)
+    );
+  }
+
+  expand() {
+    this.set("expanded", true);
+  }
+
+  solve() {
+    return ajax(`/solve/${this.key}`, { type: "PUT" });
+  }
+
+  destroy() {
+    return ajax(`/message/${this.key}`, { type: "DELETE" });
+  }
+
+  protect() {
+    this.set("protected", true);
+    return ajax(`/protect/${this.key}`, { type: "PUT" });
+  }
+
+  unprotect() {
+    this.set("protected", false);
+    return ajax(`/unprotect/${this.key}`, { type: "DELETE" });
+  }
+
+  updateFromObject(other) {
+    // XXX Only updatable property is count right now
+    this.set("count", other.get("count"));
+  }
+}

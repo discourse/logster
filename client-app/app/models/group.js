@@ -1,29 +1,34 @@
+import classic from "ember-classic-decorator";
+import { reads } from "@ember/object/computed";
 import Message from "client-app/models/message";
 import { default as EmberObject, computed } from "@ember/object";
-import { reads } from "@ember/object/computed";
 import { ajax } from "client-app/lib/utilities";
 
-export default EmberObject.extend({
-  selected: false,
-  showCount: true,
-  key: reads("regex"),
-  displayMessage: reads("messages.firstObject.message"),
+@classic
+export default class Group extends EmberObject {
+  selected = false;
+  showCount = true;
+
+  @reads("regex") key;
+  @reads("messages.firstObject.message") displayMessage;
 
   init() {
-    this._super(...arguments);
+    super.init(...arguments);
     const messages = this.messages.map((m) => Message.create(m));
     this.set("messages", messages);
-  },
+  }
 
-  glyph: computed(function () {
+  @computed
+  get glyph() {
     return "clone";
-  }),
+  }
 
-  prefix: computed(function () {
+  @computed
+  get prefix() {
     return "far";
-  }),
+  }
 
   solveAll() {
     return ajax("/solve-group", { type: "POST", data: { regex: this.regex } });
-  },
-});
+  }
+}

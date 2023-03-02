@@ -1,55 +1,46 @@
-import Component from "@ember/component";
+import classic from "ember-classic-decorator";
 import { computed } from "@ember/object";
+import Component from "@ember/component";
 import { buildHashString, clone } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
 
-export default Component.extend({
-  currentEnv: computed(
-    "currentEnvPosition",
-    "isEnvArray",
-    "message.env",
-    function () {
-      if (this.isEnvArray) {
-        return this.message.env[this.currentEnvPosition];
-      } else {
-        return this.message.env;
-      }
+@classic
+export default class EnvTab extends Component {
+  @computed("currentEnvPosition", "isEnvArray", "message.env")
+  get currentEnv() {
+    if (this.isEnvArray) {
+      return this.message.env[this.currentEnvPosition];
+    } else {
+      return this.message.env;
     }
-  ),
+  }
 
-  isEnvArray: computed("message.env", function () {
+  @computed("message.env")
+  get isEnvArray() {
     return Array.isArray(this.get("message.env"));
-  }),
+  }
 
-  html: computed(
-    "currentEnv",
-    "expanded.[]",
-    "isEnvArray",
-    "message.env",
-    function () {
-      if (!this.isEnvArray) {
-        return buildHashString(this.get("message.env"));
-      } else {
-        const currentEnv = clone(this.currentEnv);
-        const expandableKeys = Preload.get("env_expandable_keys") || [];
-        expandableKeys.forEach((key) => {
-          if (
-            currentEnv.hasOwnProperty(key) &&
-            !Array.isArray(currentEnv[key])
-          ) {
-            const list = [currentEnv[key]];
-            this.message.env.forEach((env) => {
-              if (env[key] && list.indexOf(env[key]) === -1) {
-                list.push(env[key]);
-              }
-            });
-            currentEnv[key] = list.length > 1 ? list : list[0];
-          }
-        });
-        return buildHashString(currentEnv, false, this.expanded || []);
-      }
+  @computed("currentEnv", "expanded.[]", "isEnvArray", "message.env")
+  get html() {
+    if (!this.isEnvArray) {
+      return buildHashString(this.get("message.env"));
+    } else {
+      const currentEnv = clone(this.currentEnv);
+      const expandableKeys = Preload.get("env_expandable_keys") || [];
+      expandableKeys.forEach((key) => {
+        if (currentEnv.hasOwnProperty(key) && !Array.isArray(currentEnv[key])) {
+          const list = [currentEnv[key]];
+          this.message.env.forEach((env) => {
+            if (env[key] && list.indexOf(env[key]) === -1) {
+              list.push(env[key]);
+            }
+          });
+          currentEnv[key] = list.length > 1 ? list : list[0];
+        }
+      });
+      return buildHashString(currentEnv, false, this.expanded || []);
     }
-  ),
+  }
 
   click(e) {
     const elem = e.target;
@@ -66,5 +57,5 @@ export default Component.extend({
         this.expanded.pushObject(dataKey);
       }
     }
-  },
-});
+  }
+}

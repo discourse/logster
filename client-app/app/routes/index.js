@@ -1,21 +1,23 @@
-import Route from "@ember/routing/route";
+import classic from "ember-classic-decorator";
 import { inject as service } from "@ember/service";
+import Route from "@ember/routing/route";
 import {
   default as MessageCollection,
   SEVERITIES,
 } from "client-app/models/message-collection";
 import { isHidden } from "client-app/lib/utilities";
 
-export default Route.extend({
-  events: service(),
+@classic
+export default class IndexRoute extends Route {
+  @service events;
 
   model() {
     // TODO from preload json?
     return MessageCollection.create();
-  },
+  }
 
   setupController(controller, model) {
-    this._super(controller, model);
+    super.setupController(controller, model);
     SEVERITIES.forEach((severity) =>
       model.set(`show${severity}`, controller[`show${severity}`])
     );
@@ -52,9 +54,9 @@ export default Route.extend({
     this.events.on("panelResized", (amount) => {
       controller.resizePanels(amount);
     });
-  },
+  }
 
   deactivate() {
     clearInterval(this.refreshInterval);
-  },
-});
+  }
+}
