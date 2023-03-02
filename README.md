@@ -63,12 +63,14 @@ Logster can be configured using `Logster.config`:
 - `Logster.config.gems_dir` : The value of this config is `Gem.dir + "/gems/"` by default. You probably don't need to change this config, but it's available in case your app gems are installed in a different directory. An example where this config is needed is Logster [demo site](http://logster.info/logs/): [https://github.com/discourse/logster/blob/master/website/sample.rb#L77](https://github.com/discourse/logster/blob/master/website/sample.rb#L77).
 
 ### Tracking Error Rate
+
 Logster allows you to register a callback when the rate of errors has exceeded
 a given limit.
 
 Tracking buckets available are one minute and an hour.
 
 Example:
+
 ```
 Logster.register_rate_limit_per_minute(Logger::WARN, 60) do |rate|
   puts "O no! The error rate is now #{rate} errors/min"
@@ -80,6 +82,7 @@ end
 ```
 
 ### Note
+
 If you are seeing the error `No such middleware to insert before: ActionDispatch::DebugExceptions` after installing logster,
 then you are using a conflicting gem like `better_errors` or `web-console`.
 
@@ -90,6 +93,7 @@ If you're using Logster with a non-rails app, you'll need to be careful that the
 The reason this doesn't happen in rails apps is because ActiveSupport has a monkey patch for [`#to_json`](https://github.com/rails/rails/blob/master/activesupport/lib/active_support/core_ext/object/json.rb).
 
 ### Mount using warden (devise)
+
 ```
   admin_constraint = lambda do |request|
     request.env['warden'].authenticate? and request.env['warden'].user.admin?
@@ -101,9 +105,11 @@ The reason this doesn't happen in rails apps is because ActiveSupport has a monk
 ```
 
 ### Mount using devise (method 2)
+
 Change :admin_user symbol with your devise user, example :user.
 In -> lambda block change admin? method with your authorization method
 Or simply define a admin? method in you user model.
+
 ```
   authenticate :admin_user, ->(u) { u.admin? } do
     mount Logster::Web, at: "/logs"
@@ -117,7 +123,9 @@ Logster.store = Logster::RedisStore.new(redis_connection)
 ```
 
 ### Heroku Deployment
+
 In case you may be using the `rails_12factor` gem in a production deployment on Heroku, the standard `Rails.logger` will not cooperate properly with Logster. Extend Rails.logger in your `config/application.rb` or `config/initializers/logster.rb` with:
+
 ```
 if Rails.env.production?
     Rails.logger.extend(ActiveSupport::Logger.broadcast(Logster.logger))

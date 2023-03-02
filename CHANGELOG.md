@@ -1,16 +1,17 @@
 # CHANGELOG
+
 - 2023-01-30: 2.11.4
 
-- DEV: Various dependencies upgrade
-- FIX: Switch the `/messages.json` endpoint from `GET` to `POST`
+  - DEV: Various dependencies upgrade
+  - FIX: Switch the `/messages.json` endpoint from `GET` to `POST`
 
 - 2022-08-25: 2.11.3
 
-- DEV: Avoid deprecation warning in Redis 4.8 (#166)
+  - DEV: Avoid deprecation warning in Redis 4.8 (#166)
 
 - 2022-04-28: 2.11.2
 
-  - FIX: store override level in thread local storage (Truffle Ruby compatability)
+  - FIX: store override level in thread local storage (Truffle Ruby compatibility)
 
 - 2022-04-21: 2.11.1
 
@@ -359,7 +360,7 @@
 
 - 2014-05-13: Version 0.0.8
 
-  - Fix pacakging binstubs by mistake
+  - Fix packaging binstubs by mistake
 
 - 2014-05-13: Version 0.0.7
 
