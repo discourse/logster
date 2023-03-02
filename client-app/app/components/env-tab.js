@@ -28,7 +28,10 @@ export default class EnvTab extends Component {
       const currentEnv = clone(this.currentEnv);
       const expandableKeys = Preload.get("env_expandable_keys") || [];
       expandableKeys.forEach((key) => {
-        if (currentEnv.hasOwnProperty(key) && !Array.isArray(currentEnv[key])) {
+        if (
+          Object.prototype.hasOwnProperty.call(currentEnv, key) &&
+          !Array.isArray(currentEnv[key])
+        ) {
           const list = [currentEnv[key]];
           this.message.env.forEach((env) => {
             if (env[key] && list.indexOf(env[key]) === -1) {
