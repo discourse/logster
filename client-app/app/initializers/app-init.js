@@ -64,8 +64,6 @@ export function initialize(app) {
   if (isMobile) {
     document.body.classList.add("mobile");
   }
-  app.register("site:main", { isMobile }, { instantiate: false });
-  app.inject("controller", "site", "site:main");
 }
 
 export default {
