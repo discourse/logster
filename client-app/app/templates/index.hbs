@@ -1,7 +1,7 @@
 <div id='top-panel'>
   <div id="log-table">
     {{#if this.model.moreBefore}}
-      <div {{action "showMoreBefore"}} class="show-more">
+      <div {{on "click" this.showMoreBefore}} class="show-more">
         {{#if this.model.hideCountInLoadMore}}
           Load more
         {{else}}
@@ -13,7 +13,7 @@
     {{#each this.model.rows as |row|}}
       <MessageRow
         @model={{row}}
-        @selectRow={{action "selectRowAction" row}}
+        @selectRow={{fn this.selectRowAction row}}
       />
     {{/each}}
   </div>
@@ -25,7 +25,7 @@
       @list={{this.model.currentRow.messages}}
       @position={{this.model.currentGroupedMessagesPosition}}
       @extraClasses="group-nav"
-      @navigate={{action "groupedMessageChangedAction"}}
+      @navigate={{this.groupedMessageChangedAction}}
     />
   {{/if}}
 
@@ -33,10 +33,10 @@
     @currentMessage={{this.model.currentMessage}}
     @currentRow={{this.model.currentRow}}
     @loadingEnv={{this.model.loadingEnv}}
-    @removeMessage={{action "removeMessage"}}
-    @solveMessage={{action "solveMessage"}}
-    @onTabChange={{action "tabChangedAction"}}
-    @envChangedAction={{action "envChangedAction"}}
+    @removeMessage={{this.removeMessage}}
+    @solveMessage={{this.solveMessage}}
+    @onTabChange={{this.tabChangedAction}}
+    @envChangedAction={{this.envChangedAction}}
     @currentEnvPosition={{this.model.currentEnvPosition}}
     @actionsInMenu={{this.actionsInMenu}}
     @showShare={{true}}
@@ -49,7 +49,7 @@
           <input
             type="checkbox"
             checked={{this.showDebug}}
-            onchange={{action (action 'updateFilter' 'showDebug')}}
+            onchange={{fn this.updateFilter 'showDebug'}}
           />
           <span>Debug</span>
         </label>
@@ -58,7 +58,7 @@
           <input
             type="checkbox"
             checked={{this.showInfo}}
-            onchange={{action (action 'updateFilter' 'showInfo')}}
+            onchange={{fn this.updateFilter 'showInfo'}}
           />
           <span>Info</span>
         </label>
@@ -67,7 +67,7 @@
           <input
             type="checkbox"
             checked={{this.showWarn}}
-            onchange={{action (action 'updateFilter' 'showWarn')}}
+            onchange={{fn this.updateFilter 'showWarn'}}
           />
           <FaIcon @icon="exclamation-circle" class="warning" />
           <span>Warning</span>
@@ -77,7 +77,7 @@
           <input
             type="checkbox"
             checked={{this.showErr}}
-            onchange={{action (action 'updateFilter' 'showErr')}}
+            onchange={{fn this.updateFilter 'showErr'}}
           />
           <FaIcon @icon="times-circle" class="error" />
           <span>Error</span>
@@ -87,7 +87,7 @@
           <input
             type="checkbox"
             checked={{this.showFatal}}
-            onchange={{action (action 'updateFilter' 'showFatal')}}
+            onchange={{fn this.updateFilter 'showFatal'}}
           />
           <FaIcon @icon="times-circle" class="fatal" />
           <span>Fatal</span>
@@ -101,7 +101,7 @@
         class="search"
         placeholder="Search"
         value={{this.searchTerm}}
-        onkeyup={{action "updateSearch" value="target.value"}}
+        onkeyup={{this.updateSearch}}
       />
 
       <div class="footer-btns">
@@ -111,7 +111,10 @@
           </LinkTo>
         {{/if}}
 
-        <button class="clear btn danger" type="button" {{action "clear"}}><FaIcon @icon="trash-alt" prefix="far" /><span>Clear logs</span></button>
+        <button class="clear btn danger" type="button" {{on "click" this.clear}}>
+          <FaIcon @icon="trash-alt" prefix="far" />
+          <span>Clear logs</span>
+        </button>
       </div>
     </div>
   </div>

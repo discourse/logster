@@ -130,7 +130,9 @@ export default Controller.extend({
   },
 
   @action
-  updateSearch(term) {
+  updateSearch(event) {
+    const term = event.target.value;
+
     if (term === this.search) {
       return;
     }
