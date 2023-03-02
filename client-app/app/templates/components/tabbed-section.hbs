@@ -3,7 +3,7 @@
 <ul class="tabs">
   {{#each this.tabs as |tab|}}
     <li>
-      <a title="{{unbound tab.hint}}" href="#" class="{{if tab.active 'active'}}" {{action selectTab tab}}>
+      <a title="{{unbound tab.hint}}" href="#" class="{{if tab.active 'active'}}" {{on "click" (fn this.selectTab tab)}}>
         {{unbound tab.name}}
       </a>
     </li>
