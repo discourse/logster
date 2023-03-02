@@ -43,21 +43,21 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 14
-          cache: npm
-          cache-dependency-path: client-app/package-lock.json
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: client-app/yarn.lock
 
-      - name: Npm install
+      - name: Yarn install
         working-directory: client-app
-        run: npm install
+        run: yarn install
 
       - name: JS linting
         working-directory: client-app
-        run: npm run lint
+        run: yarn lint
 
       - name: JS tests
         working-directory: client-app
-        run: npm test
+        run: yarn test
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
