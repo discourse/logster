@@ -1,4 +1,5 @@
 import Component from "@ember/component";
+import { inject as service } from "@ember/service";
 import { scheduleOnce, throttle } from "@ember/runloop";
 import { bound } from "client-app/lib/decorators";
 
@@ -7,6 +8,8 @@ const UP_EVENTS = ["touchend", "mouseup"];
 const DOWN_EVENTS = ["touchstart", "mousedown"];
 
 export default Component.extend({
+  events: service(),
+
   resizing: false,
   classNames: ["divider"],
 
