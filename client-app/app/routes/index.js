@@ -1,4 +1,5 @@
 import Route from "@ember/routing/route";
+import { inject as service } from "@ember/service";
 import {
   default as MessageCollection,
   SEVERITIES,
@@ -6,6 +7,8 @@ import {
 import { isHidden } from "client-app/lib/utilities";
 
 export default Route.extend({
+  events: service(),
+
   model() {
     // TODO from preload json?
     return MessageCollection.create();

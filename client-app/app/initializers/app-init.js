@@ -3,11 +3,7 @@ import {
   resetTitleCount,
   ajax,
 } from "client-app/lib/utilities";
-import Evented from "@ember/object/evented";
-import EmberObject from "@ember/object";
 import { setRootPath } from "client-app/lib/preload";
-
-const TARGETS = ["component", "route"];
 
 export function initialize(app) {
   const config = app.resolveRegistration("config:environment");
@@ -62,11 +58,6 @@ export function initialize(app) {
     },
     false
   );
-
-  app.register("events:main", EmberObject.extend(Evented).create(), {
-    instantiate: false,
-  });
-  TARGETS.forEach((t) => app.inject(t, "events", "events:main"));
 
   const isMobile =
     /mobile/i.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent);
