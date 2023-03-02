@@ -1,6 +1,6 @@
 import Component from "@ember/component";
 import { not, equal } from "@ember/object/computed";
-import { computed } from "@ember/object";
+import { action, computed } from "@ember/object";
 import Pattern from "client-app/models/pattern-item";
 import { ajax } from "client-app/lib/utilities";
 
@@ -47,79 +47,82 @@ export default Component.extend({
     });
   },
 
-  actions: {
-    create() {
-      if (!this.newPatterns) {
-        this.set("newPatterns", []);
-      }
-      this.newPatterns.pushObject(Pattern.create({ isNew: true }));
-    },
+  @action
+  create() {
+    if (!this.newPatterns) {
+      this.set("newPatterns", []);
+    }
+    this.newPatterns.pushObject(Pattern.create({ isNew: true }));
+  },
 
-    trash(pattern) {
-      if (pattern.get("isNew")) {
-        this.newPatterns.removeObject(pattern);
-        pattern.destroy();
-      } else {
-        this.requestInit(pattern);
-        this.makeAPICall({
-          method: "DELETE",
-          pattern: pattern.get("value"),
-        })
-          .then(() => {
-            this.patterns.removeObject(pattern);
-            pattern.destroy();
-          })
-          .catch((response) => this.catchBlock(pattern, response))
-          .finally(() => this.finallyBlock(pattern));
-      }
-    },
-
-    save(pattern) {
+  @action
+  trash(pattern) {
+    if (pattern.get("isNew")) {
+      this.newPatterns.removeObject(pattern);
+      pattern.destroy();
+    } else {
       this.requestInit(pattern);
-      let promise;
-      if (pattern.get("isNew")) {
-        promise = this.makeAPICall({
-          method: "POST",
-          pattern: pattern.valueBuffer,
-          retroactive: !!pattern.retroactive,
-        }).then((response) => {
-          pattern.updateValue(response.pattern);
-          pattern.set("isNew", false);
-          this.patterns.pushObject(pattern);
-          this.newPatterns.removeObject(pattern);
-        });
-      } else {
-        promise = this.makeAPICall({
-          method: "PUT",
-          pattern: pattern.get("value"),
-          new_pattern: pattern.get("valueBuffer"),
-        }).then((response) => {
-          pattern.updateValue(response.pattern);
-          pattern.set("count", 0);
-        });
-      }
-      promise
-        .catch((response) => {
-          this.catchBlock(pattern, response);
-        })
-        .finally(() => this.finallyBlock(pattern));
-    },
-
-    resetCount(pattern) {
-      pattern.set("saving", true);
-      ajax("/reset-count.json", {
-        method: "PUT",
-        data: { pattern: pattern.get("value"), hard: !!pattern.get("hard") },
+      this.makeAPICall({
+        method: "DELETE",
+        pattern: pattern.get("value"),
       })
         .then(() => {
-          pattern.set("count", 0);
+          this.patterns.removeObject(pattern);
+          pattern.destroy();
         })
         .catch((response) => this.catchBlock(pattern, response))
         .finally(() => this.finallyBlock(pattern));
-    },
+    }
+  },
 
-    checkboxChanged(pattern) {
-      pattern.toggleProperty("retroactive");
-    },
+  @action
+  save(pattern) {
+    this.requestInit(pattern);
+    let promise;
+    if (pattern.get("isNew")) {
+      promise = this.makeAPICall({
+        method: "POST",
+        pattern: pattern.valueBuffer,
+        retroactive: !!pattern.retroactive,
+      }).then((response) => {
+        pattern.updateValue(response.pattern);
+        pattern.set("isNew", false);
+        this.patterns.pushObject(pattern);
+        this.newPatterns.removeObject(pattern);
+      });
+    } else {
+      promise = this.makeAPICall({
+        method: "PUT",
+        pattern: pattern.get("value"),
+        new_pattern: pattern.get("valueBuffer"),
+      }).then((response) => {
+        pattern.updateValue(response.pattern);
+        pattern.set("count", 0);
+      });
+    }
+    promise
+      .catch((response) => {
+        this.catchBlock(pattern, response);
+      })
+      .finally(() => this.finallyBlock(pattern));
+  },
+
+  @action
+  resetCount(pattern) {
+    pattern.set("saving", true);
+    ajax("/reset-count.json", {
+      method: "PUT",
+      data: { pattern: pattern.get("value"), hard: !!pattern.get("hard") },
+    })
+      .then(() => {
+        pattern.set("count", 0);
+      })
+      .catch((response) => this.catchBlock(pattern, response))
+      .finally(() => this.finallyBlock(pattern));
+  },
+
+  @action
+  checkboxChanged(pattern) {
+    pattern.toggleProperty("retroactive");
   },
 });

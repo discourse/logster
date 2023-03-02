@@ -1,5 +1,5 @@
 import Component from "@ember/component";
-import { computed } from "@ember/object";
+import { action, computed } from "@ember/object";
 import Preload from "client-app/lib/preload";
 import { bool } from "@ember/object/computed";
 
@@ -118,39 +118,45 @@ export default Component.extend({
     document.body.removeChild(temp);
   },
 
-  actions: {
-    tabChanged(newTab) {
-      if (this.onTabChange) {
-        this.onTabChange(newTab);
-      }
-    },
+  @action
+  tabChanged(newTab) {
+    if (this.onTabChange) {
+      this.onTabChange(newTab);
+    }
+  },
 
-    protect() {
-      this.currentMessage.protect();
-    },
+  @action
+  protect() {
+    this.currentMessage.protect();
+  },
 
-    unprotect() {
-      this.currentMessage.unprotect();
-    },
+  @action
+  unprotect() {
+    this.currentMessage.unprotect();
+  },
 
-    remove() {
-      this.removeMessage(this.currentMessage);
-    },
+  @action
+  remove() {
+    this.removeMessage(this.currentMessage);
+  },
 
-    solve() {
-      this.solveMessage(this.currentMessage);
-    },
+  @action
+  solve() {
+    this.solveMessage(this.currentMessage);
+  },
 
-    solveAll() {
-      this.currentRow.solveAll();
-    },
+  @action
+  solveAll() {
+    this.currentRow.solveAll();
+  },
 
-    share() {
-      window.location.pathname = this.get("currentMessage.shareUrl");
-    },
+  @action
+  share() {
+    window.location.pathname = this.get("currentMessage.shareUrl");
+  },
 
-    copyAction() {
-      this.copy();
-    },
+  @action
+  copyAction() {
+    this.copy();
   },
 });

@@ -1,5 +1,5 @@
 import { debounce } from "@ember/runloop";
-import { computed } from "@ember/object";
+import { action, computed } from "@ember/object";
 import Controller from "@ember/controller";
 import {
   ajax,
@@ -34,102 +34,112 @@ export default Controller.extend({
     );
   },
 
-  actions: {
-    expandMessage(message) {
-      message.expand();
-    },
+  @action
+  expandMessage(message) {
+    message.expand();
+  },
 
-    selectRowAction(row, opts = {}) {
-      this.model.selectRow(row, opts);
-    },
+  @action
+  selectRowAction(row, opts = {}) {
+    this.model.selectRow(row, opts);
+  },
 
-    tabChangedAction(newTab) {
-      this.model.tabChanged(newTab);
-    },
+  @action
+  tabChangedAction(newTab) {
+    this.model.tabChanged(newTab);
+  },
 
-    showMoreBefore() {
-      this.model.showMoreBefore();
-    },
+  @action
+  showMoreBefore() {
+    this.model.showMoreBefore();
+  },
 
-    loadMore() {
-      return this.model.loadMore();
-    },
+  @action
+  loadMore() {
+    return this.model.loadMore();
+  },
 
-    clear() {
-      if (confirm("Clear the logs?\n\nCancel = No, OK = Clear")) {
-        ajax("/clear", { type: "POST" }).then(() => {
-          this.model.reload();
-        });
-      }
-    },
+  @action
+  clear() {
+    if (confirm("Clear the logs?\n\nCancel = No, OK = Clear")) {
+      ajax("/clear", { type: "POST" }).then(() => {
+        this.model.reload();
+      });
+    }
+  },
 
-    removeMessage(msg) {
-      const group = this.model.currentRow.group ? this.model.currentRow : null;
-      const rows = this.model.rows;
-      const idx = group ? rows.indexOf(group) : rows.indexOf(msg);
+  @action
+  removeMessage(msg) {
+    const group = this.model.currentRow.group ? this.model.currentRow : null;
+    const rows = this.model.rows;
+    const idx = group ? rows.indexOf(group) : rows.indexOf(msg);
 
-      msg.destroy();
-      msg.set("selected", false);
-      this.model.set("total", this.model.total - 1);
-      let removedRow = false;
-      let messageIndex = 0;
+    msg.destroy();
+    msg.set("selected", false);
+    this.model.set("total", this.model.total - 1);
+    let removedRow = false;
+    let messageIndex = 0;
 
-      if (group) {
-        messageIndex = group.messages.indexOf(msg);
-        group.messages.removeObject(msg);
-        messageIndex = Math.min(messageIndex, group.messages.length - 1);
-        if (group.messages.length === 0) {
-          rows.removeObject(group);
-          removedRow = true;
-        }
-      } else {
-        rows.removeObject(msg);
+    if (group) {
+      messageIndex = group.messages.indexOf(msg);
+      group.messages.removeObject(msg);
+      messageIndex = Math.min(messageIndex, group.messages.length - 1);
+      if (group.messages.length === 0) {
+        rows.removeObject(group);
         removedRow = true;
       }
+    } else {
+      rows.removeObject(msg);
+      removedRow = true;
+    }
 
-      if (removedRow) {
-        if (idx > 0) {
-          this.model.selectRow(rows[idx - 1]);
-        } else if (this.model.total > 0) {
-          this.model.selectRow(rows[0]);
-        } else {
-          this.model.reload();
-        }
-      } else if (group) {
-        this.model.selectRow(rows[idx], { messageIndex });
+    if (removedRow) {
+      if (idx > 0) {
+        this.model.selectRow(rows[idx - 1]);
+      } else if (this.model.total > 0) {
+        this.model.selectRow(rows[0]);
+      } else {
+        this.model.reload();
       }
-    },
+    } else if (group) {
+      this.model.selectRow(rows[idx], { messageIndex });
+    }
+  },
 
-    solveMessage(msg) {
-      this.model.solve(msg);
-    },
+  @action
+  solveMessage(msg) {
+    this.model.solve(msg);
+  },
 
-    groupedMessageChangedAction(newPosition) {
-      this.model.groupedMessageChanged(newPosition);
-    },
+  @action
+  groupedMessageChangedAction(newPosition) {
+    this.model.groupedMessageChanged(newPosition);
+  },
 
-    envChangedAction(newPosition) {
-      this.model.envChanged(newPosition);
-    },
+  @action
+  envChangedAction(newPosition) {
+    this.model.envChanged(newPosition);
+  },
 
-    updateFilter(name) {
-      this.toggleProperty(name);
-      this.model.set(name, this[name]);
-      setLocalStorage(name, this[name]);
-      this.model.reload().then(() => this.model.updateSelectedRow());
-    },
+  @action
+  updateFilter(name) {
+    this.toggleProperty(name);
+    this.model.set(name, this[name]);
+    setLocalStorage(name, this[name]);
+    this.model.reload().then(() => this.model.updateSelectedRow());
+  },
 
-    updateSearch(term) {
-      if (term === this.search) {
-        return;
-      }
+  @action
+  updateSearch(term) {
+    if (term === this.search) {
+      return;
+    }
 
-      if (term && term.length === 1) {
-        return;
-      }
+    if (term && term.length === 1) {
+      return;
+    }
 
-      debounce(this, this.doSearch, term, 250);
-    },
+    debounce(this, this.doSearch, term, 250);
   },
 
   searchTerm: computed("search", function () {

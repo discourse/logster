@@ -1,5 +1,6 @@
 import Component from "@ember/component";
 import { bound } from "client-app/lib/decorators";
+import { action } from "@ember/object";
 
 export default Component.extend({
   showMenu: false,
@@ -38,13 +39,14 @@ export default Component.extend({
     this.removeOutsideClickHandler();
   },
 
-  actions: {
-    expandMenu() {
-      this.toggleProperty("showMenu");
-      this.updateMenu();
-    },
-    share() {
-      this.share();
-    },
+  @action
+  expandMenu() {
+    this.toggleProperty("showMenu");
+    this.updateMenu();
+  },
+
+  @action
+  share() {
+    this.share();
   },
 });
