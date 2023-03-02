@@ -1,19 +1,21 @@
 import Controller from "@ember/controller";
+import { action } from "@ember/object";
 
 export default Controller.extend({
   envPosition: 0,
 
-  actions: {
-    protect() {
-      this.model.protect();
-    },
+  @action
+  protect() {
+    this.model.protect();
+  },
 
-    unprotect() {
-      this.model.unprotect();
-    },
+  @action
+  unprotect() {
+    this.model.unprotect();
+  },
 
-    envChanged(newPosition) {
-      this.set("envPosition", newPosition);
-    },
+  @action
+  envChanged(newPosition) {
+    this.set("envPosition", newPosition);
   },
 });
