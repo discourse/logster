@@ -1,6 +1,7 @@
 import Component from "@ember/component";
 import { formatTime } from "client-app/lib/utilities";
 import { computed } from "@ember/object";
+import { reads } from "@ember/object/computed";
 
 export default Component.extend({
   tagName: "span",
@@ -11,7 +12,7 @@ export default Component.extend({
     return this.moment.format();
   }),
 
-  dataTimestamp: computed.reads("timestamp"),
+  dataTimestamp: reads("timestamp"),
 
   moment: computed("timestamp", function () {
     return moment(this.timestamp);

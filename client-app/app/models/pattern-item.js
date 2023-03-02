@@ -1,4 +1,5 @@
-import { default as EmberObject, computed } from "@ember/object";
+import EmberObject, { computed } from "@ember/object";
+import { lte } from "@ember/object/computed";
 
 export default EmberObject.extend({
   isNew: false,
@@ -24,5 +25,5 @@ export default EmberObject.extend({
     return this.value !== this.valueBuffer;
   }),
 
-  zeroCount: computed.lte("count", 0),
+  zeroCount: lte("count", 0),
 });

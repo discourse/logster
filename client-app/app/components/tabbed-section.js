@@ -1,7 +1,9 @@
 import Component from "@ember/component";
+import { A } from "@ember/array";
 
 export default Component.extend({
-  tabs: Em.A(),
+  tabs: A(),
+
   selectTab(view) {
     if (view.get("isLink")) {
       this.triggerAction(view.get("action"));
