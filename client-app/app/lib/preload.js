@@ -13,7 +13,7 @@ export function getRootPath() {
 // exported so that it can be used in tests
 export function init() {
   const dataset = document.getElementById("preloaded-data").dataset;
-  CONTAINER = JSON.parse(dataset.preloaded);
+  CONTAINER = dataset.preloaded ? JSON.parse(dataset.preloaded) : {};
   CONTAINER.rootPath = rootPath;
   isInitialized = true;
 }
