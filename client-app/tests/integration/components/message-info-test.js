@@ -28,13 +28,14 @@ module("Integration | Component | message-info", function (hooks) {
     });
 
     await render(
-      hbs`{{message-info
-            currentMessage=message
-            showTitle=showTitle
-            currentEnvPosition=envPosition
-            envChangedAction=callback
-            showShare=true
-            actionsInMenu=actionsInMenu}}`
+      hbs`<MessageInfo
+        @currentMessage={{this.message}}
+        @showTitle={{this.showTitle}}
+        @currentEnvPosition={{this.envPosition}}
+        @envChangedAction={{this.callback}}
+        @showShare={{true}}
+        @actionsInMenu={{this.actionsInMenu}}
+      />`
     );
     let activeTab = find(".message-info .content.active pre");
     assert.strictEqual(

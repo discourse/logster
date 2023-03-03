@@ -13,8 +13,9 @@ module("Integration | Component | patterns-list", function (hooks) {
       patterns: [],
     });
     await render(
-      hbs`{{patterns-list patterns=patterns mutable=mutable key="suppression"}}`
+      hbs`<PatternsList @patterns={{this.patterns}} @mutable={{this.mutable}} @key="suppression" />`
     );
+
     assert
       .dom(".pattern-input")
       .exists("It shows an input when patterns are emtpy");
