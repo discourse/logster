@@ -1,6 +1,11 @@
 <div class="message-info">
-  <TabbedSection @onTabChange={{this.tabChanged}}>
-    <TabContents @name="info" @hint="show info" @currentMessage={{@currentMessage}}>
+  <TabbedSection @onTabChange={{this.tabChanged}} as |tabActions|>
+    <TabContents
+      @name="info"
+      @hint="show info"
+      @currentMessage={{@currentMessage}}
+      @tabActions={{tabActions}}
+    >
       {{#if @showTitle}}
         <h3>Message
           {{#if @currentMessage.showCount}}
@@ -12,7 +17,13 @@
       <pre>{{@currentMessage.message}}</pre>
     </TabContents>
 
-    <TabContents @name="backtrace" @defaultTab="true" @hint="show backtrace" @currentMessage={{@currentMessage}}>
+    <TabContents
+      @name="backtrace"
+      @defaultTab="true"
+      @hint="show backtrace"
+      @currentMessage={{@currentMessage}}
+      @tabActions={{tabActions}}
+    >
       {{#if @showTitle}}
         <h3>Backtrace</h3>
       {{/if}}
@@ -24,7 +35,13 @@
       /></pre>
     </TabContents>
 
-    <TabContents @className="env" @name="env" @hint="show environment" @currentMessage={{@currentMessage}}>
+    <TabContents
+      @className="env"
+      @name="env"
+      @hint="show environment"
+      @currentMessage={{@currentMessage}}
+      @tabActions={{tabActions}}
+    >
       {{#if @currentMessage}}
         {{#if @currentMessage.env}}
           {{#if @showTitle}}

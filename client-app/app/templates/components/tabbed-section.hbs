@@ -1,4 +1,6 @@
-{{yield}}
+{{yield
+  (hash addTab=this.addTab removeTab=this.removeTab selectTab=this.selectTab)
+}}
 
 <ul class="tabs">
   {{#each this.tabs as |tab|}}
