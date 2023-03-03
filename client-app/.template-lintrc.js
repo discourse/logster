@@ -1,7 +1,6 @@
-"use strict";
-
 module.exports = {
-  extends: "recommended",
+  plugins: ["ember-template-lint-plugin-discourse"],
+  extends: "discourse:recommended",
   rules: {
     "no-invalid-interactive": "off",
     "no-unbound": "off",
