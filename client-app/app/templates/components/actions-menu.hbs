@@ -1,16 +1,27 @@
-{{#if actionsInMenu}}
-  {{#if showMenu}}
+{{#if @actionsInMenu}}
+  {{#if this.showMenu}}
     <div class="actions-menu">
       {{yield}}
     </div>
   {{/if}}
-  <button class="expand btn no-text" type="button" {{action 'expandMenu'}}><FaIcon @icon='ellipsis-h' /></button>
-  {{#if showShare}}
-    <button class="share btn" type="button" {{action "share"}}><FaIcon @icon='share' /><span>Share</span></button>
+
+  <button class="expand btn no-text" type="button" {{action 'expandMenu'}}>
+    <FaIcon @icon='ellipsis-h' />
+  </button>
+
+  {{#if @showShare}}
+    <button class="share btn" type="button" {{action "share"}}>
+      <FaIcon @icon='share' />
+      <span>Share</span>
+    </button>
   {{/if}}
 {{else}}
   {{yield}}
-  {{#if showShare}}
-    <button class="share btn" type="button" {{action "share"}}><FaIcon @icon='share' /><span>Share</span></button>
+
+  {{#if @showShare}}
+    <button class="share btn" type="button" {{action "share"}}>
+      <FaIcon @icon='share' />
+      <span>Share</span>
+    </button>
   {{/if}}
 {{/if}}

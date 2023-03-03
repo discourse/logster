@@ -1,34 +1,41 @@
-{{#if mutable}}
-  <button class="btn new-pattern" type="button" {{action "create"}}><FaIcon @icon="plus" /><span>New</span></button>
+{{#if @mutable}}
+  <button class="btn new-pattern" type="button" {{action "create"}}>
+    <FaIcon @icon="plus" />
+    <span>New</span>
+  </button>
 {{/if}}
-{{#each allPatterns as |pattern|}}
+
+{{#each this.allPatterns as |pattern|}}
   <div class="pattern-wrapper">
-    {{input
-      type="textfield"
+    <Input
+      @type="textfield"
+      @value={{pattern.valueBuffer}}
       class="pattern-input"
       placeholder="Enter regular expression…"
-      value=pattern.valueBuffer
-      disabled=(or immutable pattern.saving)
-    }}
-    {{#if mutable}}
+      disabled={{or this.immutable pattern.saving}}
+    />
+
+    {{#if @mutable}}
       {{#if pattern.hasBuffer}}
         <button disabled={{pattern.saving}} class="btn ok no-text save shrink" type="button" {{action "save" pattern}}>
           <FaIcon @icon="check" />
         </button>
       {{/if}}
+
       <button disabled={{pattern.saving}} class="btn no-text trash shrink" type="button" {{action "trash" pattern}}>
         <FaIcon @icon="trash-alt" />
       </button>
     {{/if}}
 
-    {{#if showCounter}}
-      <input disabled=true title="Number of logs that have been suppressed by this pattern" class="count shrink" value={{pattern.count}}>
+    {{#if this.showCounter}}
+      <input disabled="true" title="Number of logs that have been suppressed by this pattern" class="count shrink" value={{pattern.count}}>
       <button class="btn no-text reset shrink" title="Reset count of suppressed logs" disabled={{pattern.zeroCount}} type="button" {{action "resetCount" pattern}}>
         <FaIcon @icon="redo-alt" />
       </button>
     {{/if}}
   </div>
-  {{#if applyRetroactivelyCheckbox}}
+
+  {{#if @applyRetroactivelyCheckbox}}
     {{#if pattern.isNew}}
       <div class="retro-checkbox">
         <input checked={{pattern.retroactive}} type="checkbox" class="checkbox" onclick={{action "checkboxChanged" pattern}}>
@@ -36,6 +43,7 @@
       </div>
     {{/if}}
   {{/if}}
+
   {{~#if pattern.error~}}
     <pre class="api-error">
       {{~pattern.error~}}
