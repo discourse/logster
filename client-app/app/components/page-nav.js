@@ -23,8 +23,12 @@ export default class PageNav extends Component {
   @action
   takeStep(dir) {
     const amount = dir === "back" ? -1 : 1;
-    if (amount === 1 && this.disableForwardButtons) return;
-    if (amount === -1 && this.disableBackButtons) return;
+    if (amount === 1 && this.disableForwardButtons) {
+      return;
+    }
+    if (amount === -1 && this.disableBackButtons) {
+      return;
+    }
 
     const newPos = this.position + amount;
     this.navigate(newPos);

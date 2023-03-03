@@ -2,7 +2,12 @@
   <div class="backtrace-line">
     {{~line.line~}}
     {{~#if line.url~}}
-      <a href="{{line.url}}" target="_blank" class="line-link" rel="noopener noreferrer">
+      <a
+        href={{line.url}}
+        target="_blank"
+        class="line-link"
+        rel="noopener noreferrer"
+      >
         <FaIcon @icon="external-link-square-alt" />
       </a>
     {{~/if~}}

@@ -1,7 +1,7 @@
 import {
-  updateHiddenProperty,
-  resetTitleCount,
   ajax,
+  resetTitleCount,
+  updateHiddenProperty,
 } from "client-app/lib/utilities";
 import { setRootPath } from "client-app/lib/preload";
 

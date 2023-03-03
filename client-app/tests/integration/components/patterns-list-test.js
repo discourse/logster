@@ -1,7 +1,7 @@
 import { module, test } from "qunit";
 import { setupRenderingTest } from "ember-qunit";
 import hbs from "htmlbars-inline-precompile";
-import { fillIn, render, findAll } from "@ember/test-helpers";
+import { fillIn, findAll, render } from "@ember/test-helpers";
 import Pattern from "client-app/models/pattern-item";
 
 module("Integration | Component | patterns-list", function (hooks) {
@@ -25,7 +25,7 @@ module("Integration | Component | patterns-list", function (hooks) {
     const pattern1 = Pattern.create({ value: "/somepattern/" });
     const pattern2 = Pattern.create({ value: "/anotherpattern/" });
     this.set("patterns", [pattern1, pattern2]);
-    assert.equal(
+    assert.strictEqual(
       findAll(".pattern-input").length,
       3, // yes 3 because there is always an empty pattern input
       "It correctly displays patterns"
@@ -34,7 +34,7 @@ module("Integration | Component | patterns-list", function (hooks) {
       .dom(".btn.save")
       .doesNotExist("No save buttons are shown when there is 0 buffer");
     const counters = findAll("input.count");
-    assert.equal(counters.length, 3, "counters shown for all patterns");
+    assert.strictEqual(counters.length, 3, "counters shown for all patterns");
     assert.ok(
       counters.every((c) => c.disabled),
       "counters are disabled"

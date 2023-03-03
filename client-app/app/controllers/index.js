@@ -78,6 +78,7 @@ export default class IndexController extends Controller {
 
   @action
   clear() {
+    // eslint-disable-next-line no-alert
     if (confirm("Clear the logs?\n\nCancel = No, OK = Clear")) {
       ajax("/clear", { type: "POST" }).then(() => {
         this.model.reload();

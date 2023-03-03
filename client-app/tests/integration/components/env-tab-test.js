@@ -1,6 +1,6 @@
 import { module, test } from "qunit";
 import { setupRenderingTest } from "ember-qunit";
-import { render, find, findAll, click } from "@ember/test-helpers";
+import { click, find, findAll, render } from "@ember/test-helpers";
 import hbs from "htmlbars-inline-precompile";
 import Message from "client-app/models/message";
 import { init } from "client-app/lib/preload";
@@ -52,16 +52,24 @@ module("Integration | Component | env-tab", function (hooks) {
       hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
     );
 
-    assert.equal(
+    assert.strictEqual(
       find(".current-number").textContent,
       "1/2",
       "shows the current over the total number of env objects"
     );
     let trs = findAll("tr");
-    assert.equal(trs.length, 3);
-    assert.equal(reduceToContent(trs[0]), "a: aa", "has the right content");
-    assert.equal(reduceToContent(trs[1]), "b: bb", "has the right content");
-    assert.equal(
+    assert.strictEqual(trs.length, 3);
+    assert.strictEqual(
+      reduceToContent(trs[0]),
+      "a: aa",
+      "has the right content"
+    );
+    assert.strictEqual(
+      reduceToContent(trs[1]),
+      "b: bb",
+      "has the right content"
+    );
+    assert.strictEqual(
       reduceToContent(trs[2]),
       "time: 1 Jan 10",
       "has the right content"
@@ -79,9 +87,17 @@ module("Integration | Component | env-tab", function (hooks) {
     assert.dom("button").doesNotExist("doesn't show buttons for non-array env");
 
     trs = findAll("tr");
-    assert.equal(trs.length, 2);
-    assert.equal(reduceToContent(trs[0]), "e: ee", "has the right content");
-    assert.equal(reduceToContent(trs[1]), "f: ff", "has the right content");
+    assert.strictEqual(trs.length, 2);
+    assert.strictEqual(
+      reduceToContent(trs[0]),
+      "e: ee",
+      "has the right content"
+    );
+    assert.strictEqual(
+      reduceToContent(trs[1]),
+      "f: ff",
+      "has the right content"
+    );
   });
 
   test("it works correctly", async function (assert) {
@@ -98,17 +114,25 @@ module("Integration | Component | env-tab", function (hooks) {
     const buttons = findAll("button.nav-btn");
     await click(buttons[2]);
 
-    assert.equal(
+    assert.strictEqual(
       find(".current-number").textContent,
       "2/2",
       "shows the current over the total number of env objects"
     );
 
     const trs = findAll("tr");
-    assert.equal(trs.length, 3);
-    assert.equal(reduceToContent(trs[0]), "c: cc", "has the right content");
-    assert.equal(reduceToContent(trs[1]), "d: dd", "has the right content");
-    assert.equal(
+    assert.strictEqual(trs.length, 3);
+    assert.strictEqual(
+      reduceToContent(trs[0]),
+      "c: cc",
+      "has the right content"
+    );
+    assert.strictEqual(
+      reduceToContent(trs[1]),
+      "d: dd",
+      "has the right content"
+    );
+    assert.strictEqual(
       reduceToContent(trs[2]),
       "time: 1 Jan 15",
       "has the right content"
@@ -142,30 +166,30 @@ module("Integration | Component | env-tab", function (hooks) {
     const expandable = trs[0];
     const defaultExpanded = trs[1];
 
-    assert.equal(
+    assert.strictEqual(
       expandable.children[1].textContent.trim(),
       "value1, 3 more",
       "expandable env keys shown correctly"
     );
 
-    assert.equal(
+    assert.strictEqual(
       defaultExpanded.children[1].textContent.trim(),
       "vvv1, [vvv2]",
       "list is expanded by default when its length is 3 or less"
     );
 
-    assert.equal(
+    assert.strictEqual(
       findAll("a.expand-list").length,
       1,
       "only whitelisted env keys are expandable"
     );
 
     const expandBtn = find("a.expand-list");
-    assert.equal(expandBtn.textContent.trim(), "3 more");
+    assert.strictEqual(expandBtn.textContent.trim(), "3 more");
     await click(expandBtn);
 
     const expanded = find(".env-table tr");
-    assert.equal(
+    assert.strictEqual(
       expanded.children[1].textContent.trim(),
       "value1, [value2, value3, value4]",
       "expanded env keys shown correctly"
@@ -185,7 +209,7 @@ module("Integration | Component | env-tab", function (hooks) {
         node.children[1].innerText.trim();
     });
     Object.keys(recreatedEnv).forEach((k) => {
-      assert.equal(
+      assert.strictEqual(
         recreatedEnv[k],
         this.message.env[k],
         `${k}: ${recreatedEnv[k]} === ${this.message.env[k]}`

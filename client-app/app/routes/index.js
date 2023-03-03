@@ -1,8 +1,7 @@
 import classic from "ember-classic-decorator";
 import { inject as service } from "@ember/service";
 import Route from "@ember/routing/route";
-import {
-  default as MessageCollection,
+import MessageCollection, {
   SEVERITIES,
 } from "client-app/models/message-collection";
 import { isHidden } from "client-app/lib/utilities";

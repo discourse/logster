@@ -5,13 +5,17 @@
     </div>
   {{/if}}
 
-  <button class="expand btn no-text" type="button" {{on "click" this.expandMenu}}>
-    <FaIcon @icon='ellipsis-h' />
+  <button
+    class="expand btn no-text"
+    type="button"
+    {{on "click" this.expandMenu}}
+  >
+    <FaIcon @icon="ellipsis-h" />
   </button>
 
   {{#if @showShare}}
     <button class="share btn" type="button" {{on "click" this.share}}>
-      <FaIcon @icon='share' />
+      <FaIcon @icon="share" />
       <span>Share</span>
     </button>
   {{/if}}
@@ -20,7 +24,7 @@
 
   {{#if @showShare}}
     <button class="share btn" type="button" {{on "click" this.share}}>
-      <FaIcon @icon='share' />
+      <FaIcon @icon="share" />
       <span>Share</span>
     </button>
   {{/if}}

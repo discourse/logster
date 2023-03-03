@@ -16,7 +16,9 @@ export default class MessageRow extends Component {
     }
 
     const topPanel = document.getElementById("top-panel");
-    if (!topPanel) return;
+    if (!topPanel) {
+      return;
+    }
 
     const height = parseFloat(getComputedStyle(topPanel).height);
     STICK_TO_BOTTOM = topPanel.scrollHeight - 20 < height + topPanel.scrollTop;
@@ -26,7 +28,9 @@ export default class MessageRow extends Component {
   didInsertElement() {
     super.didInsertElement(...arguments);
     const topPanel = document.getElementById("top-panel");
-    if (!topPanel) return;
+    if (!topPanel) {
+      return;
+    }
 
     CHECKED_BOTTOM = false;
     if (STICK_TO_BOTTOM) {

@@ -1,7 +1,7 @@
 import classic from "ember-classic-decorator";
 import { reads } from "@ember/object/computed";
 import Message from "client-app/models/message";
-import { default as EmberObject, computed } from "@ember/object";
+import EmberObject, { computed } from "@ember/object";
 import { ajax } from "client-app/lib/utilities";
 
 @classic
