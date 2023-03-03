@@ -1,33 +1,36 @@
 import classic from "ember-classic-decorator";
-import {
-  attributeBindings,
-  classNames,
-  tagName,
-} from "@ember-decorators/component";
+import { tagName } from "@ember-decorators/component";
 import { computed } from "@ember/object";
-import { reads } from "@ember/object/computed";
 import Component from "@ember/component";
 import { formatTime } from "client-app/lib/utilities";
+import { later } from "@ember/runloop";
+
+const UPDATE_INTERVAL = 60_000;
 
 @classic
-@tagName("span")
-@classNames("auto-update-time")
-@attributeBindings("dataTimestamp:data-timestamp", "title")
+@tagName("")
 export default class TimeFormatter extends Component {
-  @reads("timestamp") dataTimestamp;
-
-  @computed("moment")
-  get title() {
-    return this.moment.format();
+  didInsertElement() {
+    super.didInsertElement(...arguments);
+    later(this, this.updateTime, UPDATE_INTERVAL);
   }
 
   @computed("timestamp")
-  get moment() {
-    return moment(this.timestamp);
+  get title() {
+    return moment(this.timestamp).format();
   }
 
   @computed("timestamp")
   get time() {
     return formatTime(this.timestamp);
+  }
+
+  updateTime() {
+    if (this.isDestroying || this.isDestroyed) {
+      return;
+    }
+
+    this.notifyPropertyChange("timestamp");
+    later(this, this.updateTime, UPDATE_INTERVAL);
   }
 }
