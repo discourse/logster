@@ -29,9 +29,6 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
-      - name: Ruby lint
-        run: bundle exec rubocop
-
       - name: Tests
         run: bundle exec rake test
 
@@ -51,17 +48,45 @@ jobs:
         working-directory: client-app
         run: yarn install
 
+      - name: JS tests
+        working-directory: client-app
+        run: yarn test:ember
+
+  linting:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2
+          bundler-cache: true
+
+      - name: Ruby lint
+        run: bundle exec rubocop
+
+      - uses: actions/setup-node@v3
+        if: ${{ !cancelled() }}
+        with:
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: client-app/yarn.lock
+
+      - name: Yarn install
+        if: ${{ !cancelled() }}
+        working-directory: client-app
+        run: yarn install
+
       - name: JS linting
+        if: ${{ !cancelled() }}
         working-directory: client-app
         run: yarn lint
 
-      - name: JS tests
-        working-directory: client-app
-        run: yarn test
-
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [backend, frontend]
+    needs: [backend, frontend, linting]
     runs-on: ubuntu-latest
 
     steps:
