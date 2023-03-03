@@ -208,12 +208,13 @@ module("Integration | Component | env-tab", function (hooks) {
       recreatedEnv[node.children[0].innerText.trim()] =
         node.children[1].innerText.trim();
     });
-    Object.keys(recreatedEnv).forEach((k) => {
+
+    for (const [k, v] of Object.entries(recreatedEnv)) {
       assert.strictEqual(
-        recreatedEnv[k],
+        v,
         this.message.env[k],
-        `${k}: ${recreatedEnv[k]} === ${this.message.env[k]}`
+        `${k}: ${v} === ${this.message.env[k]}`
       );
-    });
+    }
   });
 });

@@ -20,17 +20,17 @@ export default class PanelResizer extends Component {
     super.didInsertElement(...arguments);
     // inspired by http://plugins.jquery.com/misc/textarea.js
     this.set("divider", document.querySelector(".divider"));
-    DOWN_EVENTS.forEach((name) => {
+    for (const name of DOWN_EVENTS) {
       this.divider.addEventListener(name, this.dividerClickHandler);
-    });
+    }
     scheduleOnce("afterRender", this, "initialDivideView");
   }
 
   willDestroyElement() {
     super.willDestroyElement(...arguments);
-    DOWN_EVENTS.forEach((name) =>
-      this.divider.removeEventListener(name, this.dividerClickHandler)
-    );
+    for (const name of DOWN_EVENTS) {
+      this.divider.removeEventListener(name, this.dividerClickHandler);
+    }
   }
 
   initialDivideView() {
@@ -70,6 +70,7 @@ export default class PanelResizer extends Component {
     if (overlay) {
       overlay.parentElement.removeChild(overlay);
     }
+
     this.set("resizing", false);
 
     if (localStorage) {
@@ -79,24 +80,29 @@ export default class PanelResizer extends Component {
       );
     }
 
-    MOVE_EVENTS.forEach((name) =>
-      document.removeEventListener(name, this.performDrag)
-    );
-    UP_EVENTS.forEach((name) =>
-      document.removeEventListener(name, this.endDrag)
-    );
+    for (const name of MOVE_EVENTS) {
+      document.removeEventListener(name, this.performDrag);
+    }
+    for (const name of UP_EVENTS) {
+      document.removeEventListener(name, this.endDrag);
+    }
   }
 
   @bound
   dividerClickHandler(e) {
     e.preventDefault(); // for disabling pull-down-to-refresh on mobile
+
     const overlay = document.createElement("DIV");
     overlay.id = "overlay";
     document.body.appendChild(overlay);
+
     this.set("resizing", true);
-    MOVE_EVENTS.forEach((name) =>
-      document.addEventListener(name, this.performDrag)
-    );
-    UP_EVENTS.forEach((name) => document.addEventListener(name, this.endDrag));
+
+    for (const name of MOVE_EVENTS) {
+      document.addEventListener(name, this.performDrag);
+    }
+    for (const name of UP_EVENTS) {
+      document.addEventListener(name, this.endDrag);
+    }
   }
 }

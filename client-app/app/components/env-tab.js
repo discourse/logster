@@ -29,20 +29,21 @@ export default class EnvTab extends Component {
 
     const currentEnv = clone(this.currentEnv);
     const expandableKeys = Preload.get("env_expandable_keys") || [];
-    expandableKeys.forEach((key) => {
+
+    for (const key of expandableKeys) {
       if (
         Object.prototype.hasOwnProperty.call(currentEnv, key) &&
         !Array.isArray(currentEnv[key])
       ) {
         const list = [currentEnv[key]];
-        this.message.env.forEach((env) => {
-          if (env[key] && list.indexOf(env[key]) === -1) {
+        for (const env of this.message.env) {
+          if (env[key] && !list.includes(env[key])) {
             list.push(env[key]);
           }
-        });
+        }
         currentEnv[key] = list.length > 1 ? list : list[0];
       }
-    });
+    }
 
     return htmlSafe(buildHashString(currentEnv, false, this.expanded || []));
   }
@@ -51,15 +52,16 @@ export default class EnvTab extends Component {
     const elem = e.target;
     const dataKey = elem.dataset.key;
     const expandableKeys = Preload.get("env_expandable_keys") || [];
+
     if (
-      expandableKeys.indexOf(dataKey) !== -1 &&
+      expandableKeys.includes(dataKey) &&
       elem.classList.contains("expand-list")
     ) {
       e.preventDefault();
-      if (!this.expanded) {
-        this.set("expanded", [dataKey]);
-      } else {
+      if (this.expanded) {
         this.expanded.pushObject(dataKey);
+      } else {
+        this.set("expanded", [dataKey]);
       }
     }
   }

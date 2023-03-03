@@ -17,9 +17,10 @@ export default class IndexRoute extends Route {
 
   setupController(controller, model) {
     super.setupController(controller, model);
-    SEVERITIES.forEach((severity) =>
-      model.set(`show${severity}`, controller[`show${severity}`])
-    );
+    for (const severity of SEVERITIES) {
+      model.set(`show${severity}`, controller[`show${severity}`]);
+    }
+
     model.reload();
 
     let times = 0;
@@ -29,6 +30,7 @@ export default class IndexRoute extends Route {
       if (model.loading) {
         return;
       }
+
       times += 1;
       const hidden = isHidden();
       let load = !hidden;
@@ -41,6 +43,7 @@ export default class IndexRoute extends Route {
           }
         }
       }
+
       // refresh a lot less aggressively in background
       if (load) {
         model.loadMore();

@@ -99,10 +99,9 @@ export default class Message extends EmberObject {
     }
   }
 
-  fetchEnv() {
-    return ajax(`/fetch-env/${this.key}.json`).then((env) =>
-      this.set("env", env)
-    );
+  async fetchEnv() {
+    const env = await ajax(`/fetch-env/${this.key}.json`);
+    this.set("env", env);
   }
 
   expand() {
@@ -125,10 +124,5 @@ export default class Message extends EmberObject {
   unprotect() {
     this.set("protected", false);
     return ajax(`/unprotect/${this.key}`, { type: "DELETE" });
-  }
-
-  updateFromObject(other) {
-    // XXX Only updatable property is count right now
-    this.set("count", other.get("count"));
   }
 }

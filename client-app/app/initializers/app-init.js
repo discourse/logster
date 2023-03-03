@@ -5,20 +5,24 @@ import {
 } from "client-app/lib/utilities";
 import { setRootPath } from "client-app/lib/preload";
 
-export function initialize(app) {
+export async function initialize(app) {
   const config = app.resolveRegistration("config:environment");
   setRootPath(config.rootURL.replace(/\/$/, ""));
 
   if (config.environment === "development") {
     app.deferReadiness();
-    ajax("/development-preload.json")
-      .then((data) => {
-        const elem = document.getElementById("preloaded-data");
-        elem.setAttribute("data-preloaded", JSON.stringify(data));
-      })
-      .catch((xhr) => console.error("Fetching preload data failed.", xhr)) // eslint-disable-line no-console
-      .finally(() => app.advanceReadiness());
+
+    try {
+      const data = await ajax("/development-preload.json");
+      const elem = document.getElementById("preloaded-data");
+      elem.setAttribute("data-preloaded", JSON.stringify(data));
+    } catch (xhr) {
+      console.error("Fetching preload data failed.", xhr); // eslint-disable-line no-console
+    } finally {
+      app.advanceReadiness();
+    }
   }
+
   // config for moment.js
   moment.updateLocale("en", {
     relativeTime: {
@@ -42,22 +46,18 @@ export function initialize(app) {
   let hiddenProperty;
   let visibilitychange;
 
-  ["", "webkit", "ms", "moz", "ms"].forEach((prefix) => {
+  for (const prefix of ["", "webkit", "ms", "moz", "ms"]) {
     const check = prefix + (prefix === "" ? "hidden" : "Hidden");
-    if (document[check] !== undefined && !hiddenProperty) {
+
+    if (document[check] !== undefined) {
       hiddenProperty = check;
       visibilitychange = prefix + "visibilitychange";
+      break;
     }
-  });
+  }
 
   updateHiddenProperty(hiddenProperty);
-  document.addEventListener(
-    visibilitychange,
-    () => {
-      resetTitleCount();
-    },
-    false
-  );
+  document.addEventListener(visibilitychange, resetTitleCount, false);
 
   const isMobile =
     /mobile/i.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent);

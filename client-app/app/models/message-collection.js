@@ -76,10 +76,9 @@ export default class MessageCollection extends EmberObject {
     return null;
   }
 
-  solve(message) {
-    message.solve().then(() => {
-      this.reload();
-    });
+  async solve(message) {
+    await message.solve();
+    this.reload();
   }
 
   selectRow(row, opts = {}) {
@@ -140,15 +139,14 @@ export default class MessageCollection extends EmberObject {
   findEquivalentMessageIndex(row) {
     let messageIndex = 0;
     if (
-      row &&
-      row.group &&
-      this.currentRow &&
-      this.currentRow.group &&
+      row?.group &&
+      this.currentRow?.group &&
       row.key === this.currentRow.key
     ) {
       messageIndex = row.messages.mapBy("key").indexOf(this.currentMessage.key);
       messageIndex = Math.max(0, messageIndex);
     }
+
     return messageIndex;
   }
 
@@ -170,7 +168,7 @@ export default class MessageCollection extends EmberObject {
     }
   }
 
-  load(opts) {
+  async load(opts) {
     opts ||= {};
 
     const data = {
@@ -197,62 +195,72 @@ export default class MessageCollection extends EmberObject {
     }
 
     this.set("loading", true);
-    return ajax("/messages.json", {
-      data,
-      method: "POST",
-    })
-      .then((response) => {
-        // guard against race: ensure the results we're trying to apply
-        //                     match the current search terms
-        if (compare(response.filter, this.filter) !== 0) {
-          return;
-        }
-        if (compare(response.search, this.search) !== 0) {
-          return;
-        }
 
-        if (response.messages.length > 0) {
-          const newRows = this.toObjects(response.messages);
-          const rows = this.rows;
-          if (opts.before) {
-            rows.unshiftObjects(newRows);
-          } else {
-            newRows.forEach((newRow) => {
-              rows.forEach((row) => {
-                if (row.key === newRow.key) {
-                  rows.removeObject(row);
-                  if (this.currentRow === row) {
-                    // TODO would updateFromJson() work here?
-                    const messageIndex =
-                      this.findEquivalentMessageIndex(newRow);
-                    this.selectRow(newRow, { messageIndex });
-                  }
-                }
-              });
-            });
-            rows.addObjects(newRows);
-            if (newRows.length > 0) {
-              increaseTitleCount(newRows.length);
+    try {
+      const response = await ajax("/messages.json", {
+        data,
+        method: "POST",
+      });
+
+      // guard against race: ensure the results we're trying to apply
+      //                     match the current search terms
+      if (compare(response.filter, this.filter) !== 0) {
+        return;
+      }
+
+      if (compare(response.search, this.search) !== 0) {
+        return;
+      }
+
+      if (response.messages.length > 0) {
+        const newRows = this.toObjects(response.messages);
+
+        if (opts.before) {
+          this.rows.unshiftObjects(newRows);
+        } else {
+          for (const newRow of newRows) {
+            for (const row of this.rows) {
+              if (row.key !== newRow.key) {
+                continue;
+              }
+
+              this.rows.removeObject(row);
+
+              if (this.currentRow === row) {
+                const messageIndex = this.findEquivalentMessageIndex(newRow);
+                this.selectRow(newRow, { messageIndex });
+              }
             }
           }
+
+          this.rows.addObjects(newRows);
+
+          if (newRows.length > 0) {
+            increaseTitleCount(newRows.length);
+          }
         }
-        this.set("total", response.total);
-        return response;
-      })
-      .finally(() => this.set("loading", false));
+      }
+
+      this.set("total", response.total);
+      return response;
+    } finally {
+      this.set("loading", false);
+    }
   }
 
-  reload() {
+  async reload() {
     this.set("total", 0);
     this.rows.clear();
 
-    return this.load().then((data) => this.updateCanLoadMore(data));
+    const data = await this.load();
+    this.updateCanLoadMore(data);
   }
 
   updateCanLoadMore(data) {
     if (!data) {
       return;
     }
+
     if (data.messages.length < BATCH_SIZE) {
       this.set("canLoadMore", false);
     } else {
@@ -261,38 +269,35 @@ export default class MessageCollection extends EmberObject {
   }
 
   loadMore() {
-    const rows = this.rows;
-    if (rows.length === 0) {
+    if (this.rows.length === 0) {
       this.load({});
       return;
     }
 
-    const lastLog = rows[rows.length - 1];
+    const lastLog = this.rows[this.rows.length - 1];
     const lastKey = lastLog.group ? lastLog.row_id : lastLog.key;
+
     this.load({
       after: lastKey,
     });
   }
 
-  showMoreBefore() {
-    const rows = this.rows;
-    const firstLog = rows[0];
+  async showMoreBefore() {
+    const firstLog = this.rows[0];
     const firstKey = firstLog.group ? firstLog.row_id : firstLog.key;
-    const knownGroups = rows.filterBy("group").mapBy("regex");
+    const knownGroups = this.rows.filterBy("group").mapBy("regex");
 
-    this.load({
+    const data = await this.load({
       before: firstKey,
       knownGroups,
-    }).then((data) => this.updateCanLoadMore(data));
+    });
+
+    this.updateCanLoadMore(data);
   }
 
   toObjects(rows) {
     return rows.map((m) => {
-      if (m.group) {
-        return Group.create(m);
-      } else {
-        return Message.create(m);
-      }
+      return m.group ? Group.create(m) : Message.create(m);
     });
   }
 }

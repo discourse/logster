@@ -9,28 +9,27 @@ export default class TabbedSection extends Component {
   selected = null;
 
   @action
-  selectTab(view) {
-    if (view.get("isLink")) {
-      this.triggerAction(view.get("action"));
+  selectTab(tab) {
+    if (tab.isLink) {
+      this.triggerAction(tab.action);
       return;
     }
 
-    const selected = this.selected;
-    if (selected) {
-      selected.set("active", false);
+    if (this.selected) {
+      this.selected.set("active", false);
     }
 
-    this.set("selected", view);
-    view.set("active", true);
+    this.set("selected", tab);
+    tab.set("active", true);
 
-    this.onTabChange(view.name);
+    this.onTabChange(tab.name);
   }
 
   @action
   addTab(tab) {
     this.tabs.addObject(tab);
 
-    if (!this.selected && !tab.get("isLink")) {
+    if (!this.selected && !tab.isLink) {
       this.selectTab(tab);
     }
   }

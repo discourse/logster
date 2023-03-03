@@ -60,69 +60,79 @@ export default class PatternsList extends Component {
   }
 
   @action
-  trash(pattern) {
-    if (pattern.get("isNew")) {
+  async trash(pattern) {
+    if (pattern.isNew) {
       this.newPatterns.removeObject(pattern);
       pattern.destroy();
-    } else {
-      this.requestInit(pattern);
-      this.makeAPICall({
+      return;
+    }
+
+    this.requestInit(pattern);
+
+    try {
+      await this.makeAPICall({
         method: "DELETE",
-        pattern: pattern.get("value"),
-      })
-        .then(() => {
-          this.patterns.removeObject(pattern);
-          pattern.destroy();
-        })
-        .catch((response) => this.catchBlock(pattern, response))
-        .finally(() => this.finallyBlock(pattern));
+        pattern: pattern.value,
+      });
+
+      this.patterns.removeObject(pattern);
+      pattern.destroy();
+    } catch (response) {
+      this.catchBlock(pattern, response);
+    } finally {
+      this.finallyBlock(pattern);
     }
   }
 
   @action
-  save(pattern) {
+  async save(pattern) {
     this.requestInit(pattern);
-    let promise;
-    if (pattern.get("isNew")) {
-      promise = this.makeAPICall({
-        method: "POST",
-        pattern: pattern.valueBuffer,
-        retroactive: !!pattern.retroactive,
-      }).then((response) => {
+
+    try {
+      if (pattern.isNew) {
+        const response = await this.makeAPICall({
+          method: "POST",
+          pattern: pattern.valueBuffer,
+          retroactive: !!pattern.retroactive,
+        });
+
         pattern.updateValue(response.pattern);
         pattern.set("isNew", false);
         this.patterns.pushObject(pattern);
         this.newPatterns.removeObject(pattern);
-      });
-    } else {
-      promise = this.makeAPICall({
-        method: "PUT",
-        pattern: pattern.get("value"),
-        new_pattern: pattern.get("valueBuffer"),
-      }).then((response) => {
+      } else {
+        const response = await this.makeAPICall({
+          method: "PUT",
+          pattern: pattern.value,
+          new_pattern: pattern.valueBuffer,
+        });
+
         pattern.updateValue(response.pattern);
         pattern.set("count", 0);
-      });
+      }
+    } catch (response) {
+      this.catchBlock(pattern, response);
+    } finally {
+      this.finallyBlock(pattern);
     }
-    promise
-      .catch((response) => {
-        this.catchBlock(pattern, response);
-      })
-      .finally(() => this.finallyBlock(pattern));
   }
 
   @action
-  resetCount(pattern) {
+  async resetCount(pattern) {
     pattern.set("saving", true);
-    ajax("/reset-count.json", {
-      method: "PUT",
-      data: { pattern: pattern.get("value"), hard: !!pattern.get("hard") },
-    })
-      .then(() => {
-        pattern.set("count", 0);
-      })
-      .catch((response) => this.catchBlock(pattern, response))
-      .finally(() => this.finallyBlock(pattern));
+
+    try {
+      await ajax("/reset-count.json", {
+        method: "PUT",
+        data: { pattern: pattern.value, hard: !!pattern.hard },
+      });
+
+      pattern.set("count", 0);
+    } catch (response) {
+      this.catchBlock(pattern, response);
+    } finally {
+      this.finallyBlock(pattern);
+    }
   }
 
   @action
