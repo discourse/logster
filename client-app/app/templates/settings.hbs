@@ -8,30 +8,39 @@
 
   <div class="settings-section suppression-patterns">
     <h2 class="section-title">Suppression Patterns</h2>
+
     <div>New messages that match these Regular Expression patterns will be suppressed. Checking Apply retroactively will remove all existing messages that match the patterns.</div>
 
-    {{#if showCodedSuppression}}
+    {{#if this.showCodedSuppression}}
       <h3 class="subsection-title">Hard-coded patterns:</h3>
+
       <div class="tip">These patterns can't be removed via the UI because they are commited to the source code of your app.</div>
-      {{patterns-list
-        patterns=codedSuppression
-        mutable=false}}
+
+      <PatternsList
+        @patterns={{this.codedSuppression}}
+        @mutable={{false}}
+      />
     {{/if}}
 
     <h3 class="subsection-title">Custom patterns:</h3>
-    {{patterns-list
-      patterns=customSuppression
-      key="suppression"
-      applyRetroactivelyCheckbox=true
-      mutable=true}}
+
+    <PatternsList
+      @patterns={{this.customSuppression}}
+      @key="suppression"
+      @applyRetroactivelyCheckbox={{true}}
+      @mutable={{true}}
+    />
   </div>
+
   <div class="settings-section grouping-patterns">
     <h2 class="section-title">Grouping Patterns</h2>
+
     <div>Add a Regular Expression pattern to group all new and existing messages into a single row when viewing the logs.</div>
 
-    {{patterns-list
-      patterns=grouping
-      key="grouping"
-      mutable=true}}
+    <PatternsList
+      @patterns={{this.grouping}}
+      @key="grouping"
+      @mutable={{true}}
+    />
   </div>
 </div>

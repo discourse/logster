@@ -1,37 +1,42 @@
 <div class="message-info">
   <TabbedSection @onTabChange={{action "tabChanged"}}>
-    <TabContents @name="info" @hint="show info" @currentMessage={{currentMessage}}>
-      {{#if showTitle}}
+    <TabContents @name="info" @hint="show info" @currentMessage={{@currentMessage}}>
+      {{#if @showTitle}}
         <h3>Message
-          {{#if currentMessage.showCount}}
-            ({{currentMessage.count}} copies reported)
+          {{#if @currentMessage.showCount}}
+            ({{@currentMessage.count}} copies reported)
           {{/if}}
         </h3>
       {{/if}}
-      <pre>{{currentMessage.message}}</pre>
+
+      <pre>{{@currentMessage.message}}</pre>
     </TabContents>
-    <TabContents @name="backtrace" @defaultTab="true" @hint="show backtrace" @currentMessage={{currentMessage}}>
-      {{#if showTitle}}
+
+    <TabContents @name="backtrace" @defaultTab="true" @hint="show backtrace" @currentMessage={{@currentMessage}}>
+      {{#if @showTitle}}
         <h3>Backtrace</h3>
       {{/if}}
-      <pre>
-        {{~back-trace
-          class="backtrace"
-          backtrace=currentMessage.backtrace
-          env=currentMessage.env~}}
-      </pre>
+
+      <pre><BackTrace
+        class="backtrace"
+        @backtrace={{@currentMessage.backtrace}}
+        @env={{@currentMessage.env}}
+      /></pre>
     </TabContents>
-    <TabContents @className="env" @name="env" @hint="show environment" @currentMessage={{currentMessage}}>
-      {{#if currentMessage}}
-        {{#if currentMessage.env}}
-          {{#if showTitle}}
+
+    <TabContents @className="env" @name="env" @hint="show environment" @currentMessage={{@currentMessage}}>
+      {{#if @currentMessage}}
+        {{#if @currentMessage.env}}
+          {{#if @showTitle}}
             <h3>Env</h3>
           {{/if}}
-          {{env-tab 
-            message=currentMessage
-            currentEnvPosition=currentEnvPosition
-            envChangedAction=envChangedAction}}
-        {{else if loadingEnv}}
+
+          <EnvTab
+            @message={{@currentMessage}}
+            @currentEnvPosition={{@currentEnvPosition}}
+            @envChangedAction={{@envChangedAction}}
+          />
+        {{else if @loadingEnv}}
           Loading env...
         {{else}}
           No env for this message.
@@ -40,10 +45,10 @@
     </TabContents>
   </TabbedSection>
 
-  {{#if currentMessage}}
+  {{#if @currentMessage}}
     <div class='message-actions'>
-      <ActionsMenu @actionsInMenu={{actionsInMenu}} @showShare={{showShare}} @share={{action "share"}}>
-        {{#each buttons as |btn|}}
+      <ActionsMenu @actionsInMenu={{@actionsInMenu}} @showShare={{@showShare}} @share={{action "share"}}>
+        {{#each this.buttons as |btn|}}
           <button class="{{btn.klass}} btn {{if btn.danger 'danger' ''}}" type="button" {{action btn.action}}>
             <FaIcon @icon={{btn.icon}} @prefix={{btn.prefix}} />
             <span>{{btn.label}}</span>

@@ -1,13 +1,17 @@
-<button disabled={{disableBackButtons}} class="btn nav-btn no-text" type="button" {{action "bigJump" "back"}}>
+<button disabled={{this.disableBackButtons}} class="btn nav-btn no-text" type="button" {{action "bigJump" "back"}}>
   <FaIcon @icon="fast-backward" />
 </button>
-<button disabled={{disableBackButtons}} class="btn nav-btn no-text" type="button" {{action "takeStep" "back"}}>
+
+<button disabled={{this.disableBackButtons}} class="btn nav-btn no-text" type="button" {{action "takeStep" "back"}}>
   <FaIcon @icon="backward" />
 </button>
-<span class="current-number">{{displayNumber}}/{{list.length}}</span>
-<button disabled={{disableForwardButtons}} class="btn nav-btn no-text" type="button" {{action "takeStep" "front"}}>
+
+<span class="current-number">{{this.displayNumber}}/{{@list.length}}</span>
+
+<button disabled={{this.disableForwardButtons}} class="btn nav-btn no-text" type="button" {{action "takeStep" "front"}}>
   <FaIcon @icon="forward" />
 </button>
-<button disabled={{disableForwardButtons}} class="btn nav-btn no-text" type="button" {{action "bigJump" "front"}}>
+
+<button disabled={{this.disableForwardButtons}} class="btn nav-btn no-text" type="button" {{action "bigJump" "front"}}>
   <FaIcon @icon="fast-forward" />
 </button>

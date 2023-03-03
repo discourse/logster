@@ -1,8 +1,10 @@
-{{#if isEnvArray}}
-  {{page-nav
-    list=message.env
-    position=currentEnvPosition
-    extraClasses="env-nav"
-    navigate=envChangedAction}}
+{{#if this.isEnvArray}}
+  <PageNav
+    @list={{@message.env}}
+    @position={{@currentEnvPosition}}
+    @extraClasses="env-nav"
+    @navigate={{@envChangedAction}}
+  />
 {{/if}}
-{{{html}}}
+
+{{{this.html}}}

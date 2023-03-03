@@ -1,10 +1,11 @@
-{{#link-to "index" class="recent-link"}}Recent{{/link-to}}
+<LinkTo @route="index" class="recent-link">Recent</LinkTo>
 
 <div id="bottom-panel" class="full">
-  {{message-info
-    currentMessage=model
-    showTitle="true"
-    envChangedAction=(action "envChanged")
-    currentEnvPosition=envPosition
-    actionsInMenu=false}}
+  <MessageInfo
+    @currentMessage={{this.model}}
+    @showTitle="true"
+    @envChangedAction={{action "envChanged"}}
+    @currentEnvPosition={{this.envPosition}}
+    @actionsInMenu={{false}}
+  />
 </div>
