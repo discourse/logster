@@ -12,7 +12,7 @@ export default class PageNav extends Component {
 
   @computed("position", "list.length")
   get disableForwardButtons() {
-    return this.position === this.get("list.length") - 1;
+    return this.position === this.list.length - 1;
   }
 
   @computed("position")
@@ -36,7 +36,7 @@ export default class PageNav extends Component {
 
   @action
   bigJump(dir) {
-    const newPos = dir === "back" ? 0 : this.get("list.length") - 1;
+    const newPos = dir === "back" ? 0 : this.list.length - 1;
     this.navigate(newPos);
   }
 }

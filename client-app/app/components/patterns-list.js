@@ -12,8 +12,9 @@ export default class PatternsList extends Component {
 
   init() {
     super.init(...arguments);
-    if (this.get("patterns.length") < 1 && this.mutable) {
-      this.send("create");
+
+    if (this.patterns.length < 1 && this.mutable) {
+      this.create();
     }
   }
 
@@ -39,7 +40,7 @@ export default class PatternsList extends Component {
     if (response.responseText) {
       pattern.set("error", response.responseText);
     } else {
-      pattern.set("error", "Unkown error occured. Please see dev console.");
+      pattern.set("error", "Unknown error occurred. Please see dev console.");
     }
   }
 
