@@ -39,9 +39,10 @@ export default class IndexController extends Controller {
     return null;
   }
 
-  doSearch(term) {
+  async doSearch(term) {
     this.model.set("search", term);
-    this.model.reload().then(() => this.model.updateSelectedRow());
+    await this.model.reload();
+    this.model.updateSelectedRow();
   }
 
   resizePanels(amount) {
@@ -77,12 +78,11 @@ export default class IndexController extends Controller {
   }
 
   @action
-  clear() {
+  async clear() {
     // eslint-disable-next-line no-alert
     if (confirm("Clear the logs?\n\nCancel = No, OK = Clear")) {
-      ajax("/clear", { type: "POST" }).then(() => {
-        this.model.reload();
-      });
+      await ajax("/clear", { type: "POST" });
+      this.model.reload();
     }
   }
 
@@ -140,11 +140,12 @@ export default class IndexController extends Controller {
   }
 
   @action
-  updateFilter(name) {
+  async updateFilter(name) {
     this.toggleProperty(name);
     this.model.set(name, this[name]);
     setLocalStorage(name, this[name]);
-    this.model.reload().then(() => this.model.updateSelectedRow());
+    await this.model.reload();
+    this.model.updateSelectedRow();
   }
 
   @action

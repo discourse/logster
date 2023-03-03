@@ -35,7 +35,15 @@ export default class MessageInfo extends Component {
       });
     }
 
-    if (!protect) {
+    if (protect) {
+      buttons.push({
+        klass: "unprotect",
+        action: this.unprotect,
+        icon: "unlock",
+        prefix: "fas",
+        label: "Unprotect",
+      });
+    } else {
       buttons.push(
         {
           klass: "remove",
@@ -53,14 +61,6 @@ export default class MessageInfo extends Component {
           label: "Protect",
         }
       );
-    } else {
-      buttons.push({
-        klass: "unprotect",
-        action: this.unprotect,
-        icon: "unlock",
-        prefix: "fas",
-        label: "Unprotect",
-      });
     }
 
     buttons.push({
@@ -89,8 +89,6 @@ export default class MessageInfo extends Component {
 
   @action
   copy() {
-    const temp = document.createElement("TEXTAREA");
-    document.body.appendChild(temp);
     const header = this.currentMessage.showCount
       ? `Message (${this.currentMessage.count} copies reported)`
       : "Message";
@@ -110,6 +108,9 @@ export default class MessageInfo extends Component {
 
     const env = httpHosts ? `Env\n\nHTTP HOSTS: ${httpHosts}` : "";
     const lines = [message, backtrace, env].filter((l) => l).join("\n\n");
+
+    const temp = document.createElement("TEXTAREA");
+    document.body.appendChild(temp);
     temp.value = lines;
     temp.select();
     document.execCommand("copy");

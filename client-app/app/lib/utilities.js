@@ -113,16 +113,16 @@ export function formatTime(timestamp) {
 }
 
 export function buildArrayString(array) {
-  const buffer = [];
-  array.forEach((v) => {
+  const buffer = array.map((v) => {
     if (v === null) {
-      buffer.push("null");
-    } else if (Object.prototype.toString.call(v) === "[object Array]") {
-      buffer.push(buildArrayString(v));
+      return "null";
+    } else if (Array.isArray(v)) {
+      return buildArrayString(v);
     } else {
-      buffer.push(escapeHtml(v.toString()));
+      return escapeHtml(v.toString());
     }
   });
+
   return "[" + buffer.join(", ") + "]";
 }
 
@@ -141,9 +141,9 @@ export function buildHashString(hash, recurse, expanded = []) {
     } else if (Object.prototype.toString.call(v) === "[object Array]") {
       let valueHtml = "";
       if (
-        expandableKeys.indexOf(k) !== -1 &&
+        expandableKeys.includes(k) &&
         !recurse &&
-        expanded.indexOf(k) === -1 &&
+        !expanded.includes(k) &&
         v.length > 3
       ) {
         valueHtml = `${escapeHtml(
@@ -170,15 +170,13 @@ export function buildHashString(hash, recurse, expanded = []) {
     }
   }
 
-  if (hashes.length > 0) {
-    hashes.forEach((k1) => {
-      const v = hash[k1];
-      buffer.push("<tr><td></td><td><table>");
-      buffer.push(
-        `<td>${escapeHtml(k1)}</td><td>${buildHashString(v, true)}</td>`
-      );
-      buffer.push("</table></td></tr>");
-    });
+  for (const k1 of hashes) {
+    const v = hash[k1];
+    buffer.push("<tr><td></td><td><table>");
+    buffer.push(
+      `<td>${escapeHtml(k1)}</td><td>${buildHashString(v, true)}</td>`
+    );
+    buffer.push("</table></td></tr>");
   }
 
   const className = recurse ? "" : "env-table";
@@ -189,9 +187,9 @@ export function clone(object) {
   // simple function to clone an object
   // we don't need it fancier than this
   const copy = {};
-  Object.keys(object).forEach((k) => {
-    copy[k] = object[k];
-  });
+  for (const [k, v] of Object.entries(object)) {
+    copy[k] = v;
+  }
   return copy;
 }
 
