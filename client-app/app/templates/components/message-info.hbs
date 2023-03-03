@@ -45,7 +45,7 @@
       <ActionsMenu @actionsInMenu={{actionsInMenu}} @showShare={{showShare}} @share={{action "share"}}>
         {{#each buttons as |btn|}}
           <button class="{{btn.klass}} btn {{if btn.danger 'danger' ''}}" type="button" {{action btn.action}}>
-            {{fa-icon btn.icon prefix=btn.prefix}}
+            <FaIcon @icon={{btn.icon}} @prefix={{btn.prefix}} />
             <span>{{btn.label}}</span>
           </button>
         {{/each}}
