@@ -10,7 +10,7 @@ export default class MessageInfo extends Component {
 
   @computed("currentMessage.protected", "showSolveAllButton", "showSolveButton")
   get buttons() {
-    const protect = this.get("currentMessage.protected");
+    const protect = this.currentMessage.protected;
     const buttons = [];
 
     if (!protect && this.showSolveButton) {
@@ -148,6 +148,6 @@ export default class MessageInfo extends Component {
 
   @action
   share() {
-    window.location.pathname = this.get("currentMessage.shareUrl");
+    window.location.pathname = this.currentMessage.shareUrl;
   }
 }

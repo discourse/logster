@@ -7,25 +7,17 @@ import EmberObject, { computed } from "@ember/object";
 import { A } from "@ember/array";
 
 const BATCH_SIZE = 50;
-
 export const SEVERITIES = ["Debug", "Info", "Warn", "Err", "Fatal"];
 
 @classic
 export default class MessageCollection extends EmberObject {
   total = 0;
-  rows = null;
+  rows = A();
   currentRow = null;
   currentTab = null;
   currentEnvPosition = 0;
   currentGroupedMessagesPosition = 0;
-
-  init() {
-    super.init(...arguments);
-    this.setProperties({
-      search: "",
-      rows: A(),
-    });
-  }
+  search = "";
 
   @computed(...SEVERITIES.map((s) => `show${s}`))
   get filter() {
@@ -60,7 +52,7 @@ export default class MessageCollection extends EmberObject {
 
   @computed("rows.length", "canLoadMore")
   get moreBefore() {
-    return this.get("rows.length") >= BATCH_SIZE && this.canLoadMore;
+    return this.rows.length >= BATCH_SIZE && this.canLoadMore;
   }
 
   @computed("total", "rows.length")
@@ -161,7 +153,8 @@ export default class MessageCollection extends EmberObject {
   }
 
   updateSelectedRow() {
-    const currentKey = this.get("currentRow.key");
+    const currentKey = this.currentRow?.key;
+
     if (currentKey && this.rows) {
       const match = this.rows.find((m) => m.key === currentKey);
       if (match) {
@@ -178,7 +171,7 @@ export default class MessageCollection extends EmberObject {
   }
 
   load(opts) {
-    opts = opts || {};
+    opts ||= {};
 
     const data = {
       filter: this.filter.join("_"),

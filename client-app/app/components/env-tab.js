@@ -18,13 +18,13 @@ export default class EnvTab extends Component {
 
   @computed("message.env")
   get isEnvArray() {
-    return Array.isArray(this.get("message.env"));
+    return Array.isArray(this.message.env);
   }
 
   @computed("currentEnv", "expanded.[]", "isEnvArray", "message.env")
   get html() {
     if (!this.isEnvArray) {
-      return htmlSafe(buildHashString(this.get("message.env")));
+      return htmlSafe(buildHashString(this.message.env));
     }
 
     const currentEnv = clone(this.currentEnv);

@@ -4,7 +4,7 @@
     // Temporarily disable some newer rules
     "ember/no-classic-components": "off",
     "ember/no-component-lifecycle-hooks": "off",
-    "ember/no-get": "off",
+    "ember/no-get": "error",
     "ember/require-tagless-components": "off"
   }
 }
