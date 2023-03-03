@@ -49,7 +49,7 @@ module("Integration | Component | env-tab", function (hooks) {
       envPosition: 0,
     });
     await render(
-      hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
+      hbs`<EnvTab @message={{this.message}} @envChangedAction={{this.callback}} @currentEnvPosition={{this.envPosition}} />`
     );
 
     assert.strictEqual(
@@ -108,7 +108,7 @@ module("Integration | Component | env-tab", function (hooks) {
       envPosition: 0,
     });
     await render(
-      hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
+      hbs`<EnvTab @message={{this.message}} @envChangedAction={{this.callback}} @currentEnvPosition={{this.envPosition}} />`
     );
 
     const buttons = findAll("button.nav-btn");
@@ -159,7 +159,7 @@ module("Integration | Component | env-tab", function (hooks) {
       envPosition: 0,
     });
     await render(
-      hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
+      hbs`<EnvTab @message={{this.message}} @envChangedAction={{this.callback}} @currentEnvPosition={{this.envPosition}} />`
     );
 
     const trs = findAll(".env-table tr");
@@ -201,7 +201,7 @@ module("Integration | Component | env-tab", function (hooks) {
       envPosition: 0,
     });
     await render(
-      hbs`{{env-tab message=message envChangedAction=callback currentEnvPosition=envPosition}}`
+      hbs`<EnvTab @message={{this.message}} @envChangedAction={{this.callback}} @currentEnvPosition={{this.envPosition}} />`
     );
     const recreatedEnv = {};
     findAll(".env-table tr").forEach((node) => {

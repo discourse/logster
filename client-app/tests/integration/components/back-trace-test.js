@@ -21,7 +21,7 @@ module("Integration | Component | back-trace", function (hooks) {
 /var/www/discourse/plugins/discourse-prometheus/lib/middleware/metrics.rb:17:in \`call'
 activerecord-6.0.1/lib/active_record/relation/finder_methods.rb:317:in \`exists?'`;
     this.set("backtrace", backtrace);
-    await render(hbs`{{back-trace backtrace=backtrace}}`);
+    await render(hbs`<BackTrace @backtrace={{this.backtrace}} />`);
 
     const [gem, app, plugin, gem2] = findAll("a");
     assert.strictEqual(
@@ -59,7 +59,7 @@ activerecord-6.0.1/lib/active_record/relation/finder_methods.rb:317:in \`exists?
 m@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27560
 string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
     );
-    await render(hbs`{{back-trace backtrace=backtrace}}`);
+    await render(hbs`<BackTrace @backtrace={{this.backtrace}} />`);
     const lines = this.backtrace.split("\n");
     findAll("div.backtrace-line").forEach((node, index) => {
       assert.strictEqual(node.textContent.trim(), lines[index]);
@@ -76,7 +76,9 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
       backtrace,
       env,
     });
-    await render(hbs`{{back-trace backtrace=backtrace env=env}}`);
+    await render(
+      hbs`<BackTrace @backtrace={{this.backtrace}} @env={{this.env}} />`
+    );
     let href = find("a").href;
     assert.strictEqual(
       href,
@@ -86,7 +88,9 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
 
     env = { application_version: "567def" };
     this.set("env", env);
-    await render(hbs`{{back-trace backtrace=backtrace env=env}}`);
+    await render(
+      hbs`<BackTrace @backtrace={{this.backtrace}} @env={{this.env}} />`
+    );
     href = find("a").href;
     assert.strictEqual(
       href,
@@ -95,7 +99,9 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
     );
 
     this.set("env", null);
-    await render(hbs`{{back-trace backtrace=backtrace env=env}}`);
+    await render(
+      hbs`<BackTrace @backtrace={{this.backtrace}} @env={{this.env}} />`
+    );
     href = find("a").href;
     assert.strictEqual(
       href,
@@ -104,7 +110,7 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
     );
 
     mutatePreload("application_version", null);
-    await render(hbs`{{back-trace backtrace=backtrace}}`);
+    await render(hbs`<BackTrace @backtrace={{this.backtrace}} />`);
     href = find("a").href;
     assert.strictEqual(
       href,
