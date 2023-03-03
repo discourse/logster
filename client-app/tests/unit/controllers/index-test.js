@@ -1,6 +1,6 @@
 import { module, test } from "qunit";
 import { setupTest } from "ember-qunit";
-import { default as MessageCollection } from "client-app/models/message-collection";
+import MessageCollection from "client-app/models/message-collection";
 import sinon from "sinon";
 import * as utilities from "client-app/lib/utilities";
 
@@ -17,16 +17,26 @@ module("Unit | Controller | index", function (hooks) {
     messages.rows.addObjects([row1, row2]);
     controller.set("model", messages);
 
-    assert.equal(controller.searchTerm, null, "initial value is null");
+    assert.strictEqual(controller.searchTerm, null, "initial value is null");
     assert.deepEqual(controller.model.rows, [row1, row2], "all rows");
 
-    ajaxStub.callsFake(() =>
-      Promise.resolve({ search: "tomtom", filter: [5], messages: [] })
-    );
+    ajaxStub.callsFake(async () => ({
+      search: "tomtom",
+      filter: [5],
+      messages: [],
+    }));
     controller.set("search", "tomtom");
 
-    assert.equal(controller.searchTerm, "tomtom", "search sets search term");
-    assert.equal(ajaxStub.firstCall.args[0], "/messages.json", "get messages");
+    assert.strictEqual(
+      controller.searchTerm,
+      "tomtom",
+      "search sets search term"
+    );
+    assert.strictEqual(
+      ajaxStub.firstCall.args[0],
+      "/messages.json",
+      "get messages"
+    );
     assert.deepEqual(
       ajaxStub.firstCall.args[1],
       { data: { filter: "5", search: "tomtom" }, method: "POST" },

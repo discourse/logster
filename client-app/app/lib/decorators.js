@@ -3,7 +3,9 @@ export function bound(target, key, desc) {
   const boundKey = `_${key}Bound`;
   return {
     get() {
-      if (this[boundKey]) return this[boundKey];
+      if (this[boundKey]) {
+        return this[boundKey];
+      }
       this.set(boundKey, orig.bind(this));
       return this[boundKey];
     },

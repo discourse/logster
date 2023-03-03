@@ -3,7 +3,7 @@ import { ajax, increaseTitleCount } from "client-app/lib/utilities";
 import Message from "client-app/models/message";
 import Group from "client-app/models/group";
 import { compare } from "@ember/utils";
-import { default as EmberObject, computed } from "@ember/object";
+import EmberObject, { computed } from "@ember/object";
 import { A } from "@ember/array";
 
 const BATCH_SIZE = 50;
@@ -105,8 +105,9 @@ export default class MessageCollection extends EmberObject {
       currentGroupedMessagesPosition,
       currentEnvPosition: 0,
     });
-    if (shouldRefresh)
+    if (shouldRefresh) {
       this.notifyPropertyChange("currentGroupedMessagesPosition");
+    }
     const forceFetchEnv = this.currentMessage && !this.currentMessage.env;
     this.fetchEnv({ force: forceFetchEnv });
   }
@@ -204,33 +205,34 @@ export default class MessageCollection extends EmberObject {
 
     this.set("loading", true);
     return ajax("/messages.json", {
-      data: data,
+      data,
       method: "POST",
     })
-      .then((data) => {
+      .then((response) => {
         // guard against race: ensure the results we're trying to apply
         //                     match the current search terms
-        if (compare(data.filter, this.filter) != 0) {
+        if (compare(response.filter, this.filter) !== 0) {
           return;
         }
-        if (compare(data.search, this.search) != 0) {
+        if (compare(response.search, this.search) !== 0) {
           return;
         }
 
-        if (data.messages.length > 0) {
-          const newRows = this.toObjects(data.messages);
+        if (response.messages.length > 0) {
+          const newRows = this.toObjects(response.messages);
           const rows = this.rows;
           if (opts.before) {
             rows.unshiftObjects(newRows);
           } else {
-            newRows.forEach((nrow) => {
-              rows.forEach((erow) => {
-                if (erow.key === nrow.key) {
-                  rows.removeObject(erow);
-                  if (this.currentRow === erow) {
+            newRows.forEach((newRow) => {
+              rows.forEach((row) => {
+                if (row.key === newRow.key) {
+                  rows.removeObject(row);
+                  if (this.currentRow === row) {
                     // TODO would updateFromJson() work here?
-                    const messageIndex = this.findEquivalentMessageIndex(nrow);
-                    this.selectRow(nrow, { messageIndex });
+                    const messageIndex =
+                      this.findEquivalentMessageIndex(newRow);
+                    this.selectRow(newRow, { messageIndex });
                   }
                 }
               });
@@ -241,8 +243,8 @@ export default class MessageCollection extends EmberObject {
             }
           }
         }
-        this.set("total", data.total);
-        return data;
+        this.set("total", response.total);
+        return response;
       })
       .finally(() => this.set("loading", false));
   }

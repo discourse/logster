@@ -3,6 +3,7 @@ import { computed } from "@ember/object";
 import Component from "@ember/component";
 import { buildHashString, clone } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
+import { htmlSafe } from "@ember/template";
 
 @classic
 export default class EnvTab extends Component {
@@ -23,26 +24,27 @@ export default class EnvTab extends Component {
   @computed("currentEnv", "expanded.[]", "isEnvArray", "message.env")
   get html() {
     if (!this.isEnvArray) {
-      return buildHashString(this.get("message.env"));
-    } else {
-      const currentEnv = clone(this.currentEnv);
-      const expandableKeys = Preload.get("env_expandable_keys") || [];
-      expandableKeys.forEach((key) => {
-        if (
-          Object.prototype.hasOwnProperty.call(currentEnv, key) &&
-          !Array.isArray(currentEnv[key])
-        ) {
-          const list = [currentEnv[key]];
-          this.message.env.forEach((env) => {
-            if (env[key] && list.indexOf(env[key]) === -1) {
-              list.push(env[key]);
-            }
-          });
-          currentEnv[key] = list.length > 1 ? list : list[0];
-        }
-      });
-      return buildHashString(currentEnv, false, this.expanded || []);
+      return htmlSafe(buildHashString(this.get("message.env")));
     }
+
+    const currentEnv = clone(this.currentEnv);
+    const expandableKeys = Preload.get("env_expandable_keys") || [];
+    expandableKeys.forEach((key) => {
+      if (
+        Object.prototype.hasOwnProperty.call(currentEnv, key) &&
+        !Array.isArray(currentEnv[key])
+      ) {
+        const list = [currentEnv[key]];
+        this.message.env.forEach((env) => {
+          if (env[key] && list.indexOf(env[key]) === -1) {
+            list.push(env[key]);
+          }
+        });
+        currentEnv[key] = list.length > 1 ? list : list[0];
+      }
+    });
+
+    return htmlSafe(buildHashString(currentEnv, false, this.expanded || []));
   }
 
   click(e) {

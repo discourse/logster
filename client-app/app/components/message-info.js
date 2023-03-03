@@ -76,7 +76,9 @@ export default class MessageInfo extends Component {
 
   @computed("showSolveAllButton", "currentMessage.{canSolve,env}")
   get showSolveButton() {
-    if (this.showSolveAllButton) return false;
+    if (this.showSolveAllButton) {
+      return false;
+    }
     // env isn't loaded until you switch to the env tab
     // so if we don't have env we show the button if
     // application_version is provided in the config

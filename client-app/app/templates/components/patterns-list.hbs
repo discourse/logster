@@ -17,19 +17,40 @@
 
     {{#if @mutable}}
       {{#if pattern.hasBuffer}}
-        <button disabled={{pattern.saving}} class="btn ok no-text save shrink" type="button" {{on "click" (fn this.save pattern)}}>
+        <button
+          disabled={{pattern.saving}}
+          class="btn ok no-text save shrink"
+          type="button"
+          {{on "click" (fn this.save pattern)}}
+        >
           <FaIcon @icon="check" />
         </button>
       {{/if}}
 
-      <button disabled={{pattern.saving}} class="btn no-text trash shrink" type="button" {{on "click" (fn this.trash pattern)}}>
+      <button
+        disabled={{pattern.saving}}
+        class="btn no-text trash shrink"
+        type="button"
+        {{on "click" (fn this.trash pattern)}}
+      >
         <FaIcon @icon="trash-alt" />
       </button>
     {{/if}}
 
     {{#if this.showCounter}}
-      <input disabled="true" title="Number of logs that have been suppressed by this pattern" class="count shrink" value={{pattern.count}}>
-      <button class="btn no-text reset shrink" title="Reset count of suppressed logs" disabled={{pattern.zeroCount}} type="button" {{on "click" (fn this.resetCount pattern)}}>
+      <input
+        disabled="true"
+        title="Number of logs that have been suppressed by this pattern"
+        class="count shrink"
+        value={{pattern.count}}
+      />
+      <button
+        class="btn no-text reset shrink"
+        title="Reset count of suppressed logs"
+        disabled={{pattern.zeroCount}}
+        type="button"
+        {{on "click" (fn this.resetCount pattern)}}
+      >
         <FaIcon @icon="redo-alt" />
       </button>
     {{/if}}
@@ -38,7 +59,12 @@
   {{#if @applyRetroactivelyCheckbox}}
     {{#if pattern.isNew}}
       <div class="retro-checkbox">
-        <input checked={{pattern.retroactive}} type="checkbox" class="checkbox" onclick={{fn this.checkboxChanged pattern}}>
+        <input
+          checked={{pattern.retroactive}}
+          type="checkbox"
+          class="checkbox"
+          onclick={{fn this.checkboxChanged pattern}}
+        />
         Apply retroactively
       </div>
     {{/if}}

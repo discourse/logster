@@ -9,7 +9,8 @@
       {{#if @showTitle}}
         <h3>Message
           {{#if @currentMessage.showCount}}
-            ({{@currentMessage.count}} copies reported)
+            ({{@currentMessage.count}}
+            copies reported)
           {{/if}}
         </h3>
       {{/if}}
@@ -29,10 +30,10 @@
       {{/if}}
 
       <pre><BackTrace
-        class="backtrace"
-        @backtrace={{@currentMessage.backtrace}}
-        @env={{@currentMessage.env}}
-      /></pre>
+          class="backtrace"
+          @backtrace={{@currentMessage.backtrace}}
+          @env={{@currentMessage.env}}
+        /></pre>
     </TabContents>
 
     <TabContents
@@ -63,10 +64,18 @@
   </TabbedSection>
 
   {{#if @currentMessage}}
-    <div class='message-actions'>
-      <ActionsMenu @actionsInMenu={{@actionsInMenu}} @showShare={{@showShare}} @share={{this.share}}>
+    <div class="message-actions">
+      <ActionsMenu
+        @actionsInMenu={{@actionsInMenu}}
+        @showShare={{@showShare}}
+        @share={{this.share}}
+      >
         {{#each this.buttons as |btn|}}
-          <button class="{{btn.klass}} btn {{if btn.danger 'danger' ''}}" type="button" {{on "click" btn.action}}>
+          <button
+            class="{{btn.klass}} btn {{if btn.danger 'danger' ''}}"
+            type="button"
+            {{on "click" btn.action}}
+          >
             <FaIcon @icon={{btn.icon}} @prefix={{btn.prefix}} />
             <span>{{btn.label}}</span>
           </button>

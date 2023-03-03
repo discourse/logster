@@ -1,8 +1,8 @@
 import { module, test } from "qunit";
 import { setupRenderingTest } from "ember-qunit";
-import { render, find, findAll } from "@ember/test-helpers";
+import { find, findAll, render } from "@ember/test-helpers";
 import hbs from "htmlbars-inline-precompile";
-import { uninitialize, mutatePreload } from "client-app/lib/preload";
+import { mutatePreload, uninitialize } from "client-app/lib/preload";
 
 module("Integration | Component | back-trace", function (hooks) {
   setupRenderingTest(hooks);
@@ -24,28 +24,28 @@ activerecord-6.0.1/lib/active_record/relation/finder_methods.rb:317:in \`exists?
     await render(hbs`{{back-trace backtrace=backtrace}}`);
 
     const [gem, app, plugin, gem2] = findAll("a");
-    assert.equal(
+    assert.strictEqual(
       gem.href,
       "https://github.com/rails/rails/tree/v6.0.1/activerecord/lib/active_record/relation/finder_methods.rb#L317"
     );
 
-    assert.equal(
+    assert.strictEqual(
       app.href,
       "https://github.com/discourse/discourse/blob/ce512452b512b909c38e9c63f2a0e1f8c17a2399/lib/permalink_constraint.rb#L6"
     );
 
-    assert.equal(
+    assert.strictEqual(
       plugin.href,
       "https://github.com/discourse/discourse-prometheus/blob/master/lib/middleware/metrics.rb#L17"
     );
 
-    assert.equal(
+    assert.strictEqual(
       gem2.href,
       "https://github.com/rails/rails/tree/v6.0.1/activerecord/lib/active_record/relation/finder_methods.rb#L317"
     );
 
     let gemLine = find("div.backtrace-line");
-    assert.equal(
+    assert.strictEqual(
       gemLine.textContent.trim(),
       "activerecord-6.0.1/lib/active_record/relation/finder_methods.rb:317:in `exists?'",
       "gem lines are truncated"
@@ -62,7 +62,7 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
     await render(hbs`{{back-trace backtrace=backtrace}}`);
     const lines = this.backtrace.split("\n");
     findAll("div.backtrace-line").forEach((node, index) => {
-      assert.equal(node.textContent.trim(), lines[index]);
+      assert.strictEqual(node.textContent.trim(), lines[index]);
     });
   });
 
@@ -78,7 +78,7 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
     });
     await render(hbs`{{back-trace backtrace=backtrace env=env}}`);
     let href = find("a").href;
-    assert.equal(
+    assert.strictEqual(
       href,
       "https://github.com/discourse/discourse/blob/123abc/lib/permalink_constraint.rb#L6",
       "uses the first application_version if there are multiple versions"
@@ -88,7 +88,7 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
     this.set("env", env);
     await render(hbs`{{back-trace backtrace=backtrace env=env}}`);
     href = find("a").href;
-    assert.equal(
+    assert.strictEqual(
       href,
       "https://github.com/discourse/discourse/blob/567def/lib/permalink_constraint.rb#L6",
       "uses application_version when env is only a hash"
@@ -97,7 +97,7 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
     this.set("env", null);
     await render(hbs`{{back-trace backtrace=backtrace env=env}}`);
     href = find("a").href;
-    assert.equal(
+    assert.strictEqual(
       href,
       "https://github.com/discourse/discourse/blob/ce512452b512b909c38e9c63f2a0e1f8c17a2399/lib/permalink_constraint.rb#L6",
       "falls back to preload if env doesn't contain application_version"
@@ -106,7 +106,7 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
     mutatePreload("application_version", null);
     await render(hbs`{{back-trace backtrace=backtrace}}`);
     href = find("a").href;
-    assert.equal(
+    assert.strictEqual(
       href,
       "https://github.com/discourse/discourse/blob/master/lib/permalink_constraint.rb#L6",
       "falls back to master branch when neither preload nor application_version in env are available"

@@ -1,5 +1,4 @@
-import { default as Preload, getRootPath } from "client-app/lib/preload";
-import { Promise, resolve } from "rsvp";
+import Preload, { getRootPath } from "client-app/lib/preload";
 
 const entityMap = {
   "&": "&amp;",
@@ -15,24 +14,28 @@ export function escapeHtml(string) {
 }
 
 export function ajax(url, settings) {
+  // eslint-disable-next-line no-restricted-globals
   return new Promise((resolve, reject) => {
-    settings = settings || {};
+    settings ||= {};
     const xhr = new XMLHttpRequest();
     url = getRootPath() + url;
+
     if (settings.data) {
-      for (let param in settings.data) {
-        const prefix = url.indexOf("?") === -1 ? "?" : "&";
-        url += prefix;
-        url += `${param}=${encodeURIComponent(settings.data[param])}`;
+      for (const [param, value] of Object.entries(settings.data)) {
+        url += url.includes("?") ? "&" : "?";
+        url += `${param}=${encodeURIComponent(value)}`;
       }
     }
+
     xhr.open(settings.method || settings.type || "GET", url);
     xhr.setRequestHeader("X-SILENCE-LOGGER", true);
+
     if (settings.headers) {
-      for (let header in settings.headers) {
-        xhr.setRequestHeader(header, settings.headers[header]);
+      for (const [header, value] of Object.entries(settings.headers)) {
+        xhr.setRequestHeader(header, value);
       }
     }
+
     xhr.onreadystatechange = () => {
       if (xhr.readyState === 4) {
         let status = xhr.status;
@@ -48,16 +51,17 @@ export function ajax(url, settings) {
         }
       }
     };
+
     xhr.send();
   });
 }
 
-export function preloadOrAjax(url, settings) {
+export async function preloadOrAjax(url, settings) {
   const preloaded = Preload.get(url.replace(".json", ""));
   if (preloaded) {
-    return resolve(preloaded);
+    return preloaded;
   } else {
-    return ajax(url, settings);
+    return await ajax(url, settings);
   }
 }
 
@@ -81,8 +85,9 @@ export function increaseTitleCount(increment) {
   if (!isHidden()) {
     return;
   }
-  TITLE = TITLE || document.title;
-  TITLE_COUNT = TITLE_COUNT || 0;
+
+  TITLE ||= document.title;
+  TITLE_COUNT ||= 0;
   TITLE_COUNT += increment;
   document.title = `${TITLE} (${TITLE_COUNT})`;
 }
@@ -93,25 +98,18 @@ export function resetTitleCount() {
 }
 
 export function formatTime(timestamp) {
-  let formatted;
   const time = moment(timestamp);
   const now = moment();
 
   if (time.diff(now.startOf("day")) > 0) {
-    formatted = time.format("h:mm a");
+    return time.format("h:mm a");
+  } else if (time.diff(now.startOf("week")) > 0) {
+    return time.format("dd h:mm a");
+  } else if (time.diff(now.startOf("year")) > 0) {
+    return time.format("D MMM h:mm a");
   } else {
-    if (time.diff(now.startOf("week")) > 0) {
-      formatted = time.format("dd h:mm a");
-    } else {
-      if (time.diff(now.startOf("year")) > 0) {
-        formatted = time.format("D MMM h:mm a");
-      } else {
-        formatted = time.format("D MMM YY");
-      }
-    }
+    return time.format("D MMM YY");
   }
-
-  return formatted;
 }
 
 export function buildArrayString(array) {
@@ -129,13 +127,15 @@ export function buildArrayString(array) {
 }
 
 export function buildHashString(hash, recurse, expanded = []) {
-  if (!hash) return "";
+  if (!hash) {
+    return "";
+  }
 
   const buffer = [];
   const hashes = [];
   const expandableKeys = Preload.get("env_expandable_keys") || [];
-  Object.keys(hash).forEach((k) => {
-    const v = hash[k];
+
+  for (const [k, v] of Object.entries(hash)) {
     if (v === null) {
       buffer.push("null");
     } else if (Object.prototype.toString.call(v) === "[object Array]") {
@@ -168,7 +168,7 @@ export function buildHashString(hash, recurse, expanded = []) {
         );
       }
     }
-  });
+  }
 
   if (hashes.length > 0) {
     hashes.forEach((k1) => {
@@ -180,6 +180,7 @@ export function buildHashString(hash, recurse, expanded = []) {
       buffer.push("</table></td></tr>");
     });
   }
+
   const className = recurse ? "" : "env-table";
   return `<table class='${className}'>${buffer.join("\n")}</table>`;
 }

@@ -1,9 +1,8 @@
 import classic from "ember-classic-decorator";
 import { gt } from "@ember/object/computed";
-import EmberObject from "@ember/object";
+import EmberObject, { computed } from "@ember/object";
 import { ajax } from "client-app/lib/utilities";
 import { getRootPath } from "client-app/lib/preload";
-import { computed } from "@ember/object";
 
 @classic
 export default class Message extends EmberObject {

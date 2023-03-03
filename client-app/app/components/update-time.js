@@ -13,14 +13,18 @@ export default class UpdateTime extends Component {
   updateTimes() {
     Array.from(document.querySelectorAll(".auto-update-time")).forEach(
       (node) => {
-        const timestamp = parseInt(node.dataset.timestamp);
-        if (!timestamp) return;
+        const timestamp = parseInt(node.dataset.timestamp, 10);
+        if (!timestamp) {
+          return;
+        }
+
         const formatted = formatTime(timestamp);
         if (formatted !== node.innerText) {
           node.innerText = formatted;
         }
       }
     );
+
     later(this, this.updateTimes, 60000);
   }
 }

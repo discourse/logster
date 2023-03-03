@@ -1,6 +1,6 @@
 import { module, test } from "qunit";
 import { setupRenderingTest } from "ember-qunit";
-import { render, find, findAll, click } from "@ember/test-helpers";
+import { click, find, findAll, render } from "@ember/test-helpers";
 import hbs from "htmlbars-inline-precompile";
 import Message from "client-app/models/message";
 
@@ -37,19 +37,19 @@ module("Integration | Component | message-info", function (hooks) {
             actionsInMenu=actionsInMenu}}`
     );
     let activeTab = find(".message-info .content.active pre");
-    assert.equal(
+    assert.strictEqual(
       activeTab.textContent.trim(),
       backtrace,
       "default active tab is backtrace"
     );
     assert.dom(".message-info .content h3").doesNotExist("no titles are shown");
-    assert.equal(findAll(".tabs a").length, 3, "3 tabs shown");
-    assert.equal(
+    assert.strictEqual(findAll(".tabs a").length, 3, "3 tabs shown");
+    assert.strictEqual(
       find(".tabs a.active").textContent.trim(),
       "backtrace",
       "default active tab is backtrace"
     );
-    assert.equal(
+    assert.strictEqual(
       findAll(".message-actions button").length,
       2,
       "2 buttons shown when `actionsInMenu` is true"
@@ -60,7 +60,7 @@ module("Integration | Component | message-info", function (hooks) {
     assert.dom(".message-actions button.share").exists("share button is shown");
 
     await click(find(".message-actions button.expand.no-text"));
-    assert.equal(
+    assert.strictEqual(
       findAll(".actions-menu button").length,
       3,
       "extra buttons shown inside a menu"
@@ -77,7 +77,7 @@ module("Integration | Component | message-info", function (hooks) {
       actionsInMenu: false,
     });
 
-    assert.equal(
+    assert.strictEqual(
       findAll(".message-info .content h3").length,
       3,
       "titles are shown"
@@ -85,7 +85,7 @@ module("Integration | Component | message-info", function (hooks) {
     assert
       .dom(".message-actions button.expand.no-text")
       .doesNotExist("menu expand button is not shown");
-    assert.equal(
+    assert.strictEqual(
       findAll(".message-actions button").length,
       4,
       "all actions buttons are shown inline when `actionsInMenu` is false"
@@ -93,7 +93,7 @@ module("Integration | Component | message-info", function (hooks) {
 
     await click(findAll(".tabs a")[0]);
     activeTab = find(".message-info .content.active pre");
-    assert.equal(activeTab.textContent, messageTitle, "can switch tabs");
+    assert.strictEqual(activeTab.textContent, messageTitle, "can switch tabs");
 
     assert
       .dom(".message-actions button.solve")

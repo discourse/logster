@@ -1,25 +1,24 @@
-<div id='top-panel'>
+<div id="top-panel">
   <div id="log-table">
     {{#if this.model.moreBefore}}
       <div {{on "click" this.showMoreBefore}} class="show-more">
         {{#if this.model.hideCountInLoadMore}}
           Load more
         {{else}}
-          Select to see {{this.model.totalBefore}} more
+          Select to see
+          {{this.model.totalBefore}}
+          more
         {{/if}}
       </div>
     {{/if}}
 
     {{#each this.model.rows as |row|}}
-      <MessageRow
-        @model={{row}}
-        @selectRow={{fn this.selectRowAction row}}
-      />
+      <MessageRow @model={{row}} @selectRow={{fn this.selectRowAction row}} />
     {{/each}}
   </div>
 </div>
 
-<div id="bottom-panel" class="{{if this.model.currentRow.group "group-view"}}">
+<div id="bottom-panel" class={{if this.model.currentRow.group "group-view"}}>
   {{#if this.model.currentRow.group}}
     <PageNav
       @list={{this.model.currentRow.messages}}
@@ -49,7 +48,7 @@
           <input
             type="checkbox"
             checked={{this.showDebug}}
-            onchange={{fn this.updateFilter 'showDebug'}}
+            onchange={{fn this.updateFilter "showDebug"}}
           />
           <span>Debug</span>
         </label>
@@ -58,7 +57,7 @@
           <input
             type="checkbox"
             checked={{this.showInfo}}
-            onchange={{fn this.updateFilter 'showInfo'}}
+            onchange={{fn this.updateFilter "showInfo"}}
           />
           <span>Info</span>
         </label>
@@ -67,7 +66,7 @@
           <input
             type="checkbox"
             checked={{this.showWarn}}
-            onchange={{fn this.updateFilter 'showWarn'}}
+            onchange={{fn this.updateFilter "showWarn"}}
           />
           <FaIcon @icon="exclamation-circle" class="warning" />
           <span>Warning</span>
@@ -77,7 +76,7 @@
           <input
             type="checkbox"
             checked={{this.showErr}}
-            onchange={{fn this.updateFilter 'showErr'}}
+            onchange={{fn this.updateFilter "showErr"}}
           />
           <FaIcon @icon="times-circle" class="error" />
           <span>Error</span>
@@ -87,7 +86,7 @@
           <input
             type="checkbox"
             checked={{this.showFatal}}
-            onchange={{fn this.updateFilter 'showFatal'}}
+            onchange={{fn this.updateFilter "showFatal"}}
           />
           <FaIcon @icon="times-circle" class="fatal" />
           <span>Fatal</span>
@@ -111,7 +110,11 @@
           </LinkTo>
         {{/if}}
 
-        <button class="clear btn danger" type="button" {{on "click" this.clear}}>
+        <button
+          class="clear btn danger"
+          type="button"
+          {{on "click" this.clear}}
+        >
           <FaIcon @icon="trash-alt" prefix="far" />
           <span>Clear logs</span>
         </button>
