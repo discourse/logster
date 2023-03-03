@@ -6,19 +6,17 @@ import Preload from "client-app/lib/preload";
 
 @classic
 export default class MessageInfo extends Component {
-  @bool("currentRow.group")
-  showSolveAllButton;
+  @bool("currentRow.group") showSolveAllButton;
 
   @computed("currentMessage.protected", "showSolveAllButton", "showSolveButton")
   get buttons() {
     const protect = this.get("currentMessage.protected");
     const buttons = [];
-    const prefix = "fas";
 
     if (!protect && this.showSolveButton) {
       buttons.push({
         klass: "solve",
-        action: "solve",
+        action: this.solve,
         icon: "check-square",
         label: "Solve",
         prefix: "far",
@@ -29,7 +27,7 @@ export default class MessageInfo extends Component {
     if (this.showSolveAllButton) {
       buttons.push({
         klass: "solve-all",
-        action: "solveAll",
+        action: this.solveAll,
         icon: "check-square",
         label: "Solve All",
         prefix: "far",
@@ -41,7 +39,7 @@ export default class MessageInfo extends Component {
       buttons.push(
         {
           klass: "remove",
-          action: "remove",
+          action: this.remove,
           icon: "trash-alt",
           label: "Remove",
           prefix: "far",
@@ -49,29 +47,30 @@ export default class MessageInfo extends Component {
         },
         {
           klass: "protect",
-          action: "protect",
+          action: this.protect,
           icon: "lock",
-          prefix,
+          prefix: "fas",
           label: "Protect",
         }
       );
     } else {
       buttons.push({
         klass: "unprotect",
-        action: "unprotect",
+        action: this.unprotect,
         icon: "unlock",
-        prefix,
+        prefix: "fas",
         label: "Unprotect",
       });
     }
 
     buttons.push({
       klass: "copy",
-      action: "copyAction",
+      action: this.copy,
       icon: "copy",
       prefix: "far",
       label: "Copy",
     });
+
     return buttons;
   }
 
@@ -86,6 +85,7 @@ export default class MessageInfo extends Component {
       : !!Preload.get("application_version");
   }
 
+  @action
   copy() {
     const temp = document.createElement("TEXTAREA");
     document.body.appendChild(temp);
@@ -116,9 +116,7 @@ export default class MessageInfo extends Component {
 
   @action
   tabChanged(newTab) {
-    if (this.onTabChange) {
-      this.onTabChange(newTab);
-    }
+    this.onTabChange?.(newTab);
   }
 
   @action
@@ -149,10 +147,5 @@ export default class MessageInfo extends Component {
   @action
   share() {
     window.location.pathname = this.get("currentMessage.shareUrl");
-  }
-
-  @action
-  copyAction() {
-    this.copy();
   }
 }

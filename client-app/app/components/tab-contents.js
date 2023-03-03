@@ -9,24 +9,15 @@ export default class TabContents extends Component {
 
   didInsertElement() {
     super.didInsertElement(...arguments);
-    this.invokeParent("addTab");
+    this.tabActions.addTab(this);
+
     if (this.defaultTab) {
-      this.invokeParent("selectTab");
+      this.tabActions.selectTab(this);
     }
   }
 
   willDestroyElement() {
     super.willDestroyElement(...arguments);
-    this.invokeParent("removeTab");
-  }
-
-  invokeParent(name) {
-    let current = this.parentView;
-    while (current && !current[name]) {
-      current = current.get("parentView");
-    }
-    if (current) {
-      current[name](this);
-    }
+    this.tabActions.removeTab(this);
   }
 }
