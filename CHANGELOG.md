@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2023-03-03: 2.12.0
+
+  - DEV: Upgrade to Ember 3.28
+
 - 2023-01-30: 2.11.4
 
   - DEV: Various dependencies upgrade
