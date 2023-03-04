@@ -29,6 +29,19 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: client-app/yarn.lock
+
+      - name: Yarn install
+        working-directory: client-app
+        run: yarn install
+
+      - name: Build JS app
+        run: bash build_client_app.sh
+
       - name: Tests
         run: bundle exec rake test
 
@@ -91,6 +104,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: client-app/yarn.lock
+
+      - name: Yarn install
+        working-directory: client-app
+        run: yarn install
+
+      - name: Build JS app
+        run: bash build_client_app.sh
 
       - name: Release Gem
         uses: discourse/publish-rubygems-action@v2
