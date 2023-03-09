@@ -13,13 +13,13 @@ const browsers = [
 //
 // If you need IE11 support on a version of Ember that still offers support
 // for it, uncomment the code block below.
-//
-// const isCI = Boolean(process.env.CI);
-// const isProduction = process.env.EMBER_ENV === 'production';
-//
-// if (isCI || isProduction) {
-//   browsers.push('ie 11');
-// }
+
+const isCI = Boolean(process.env.CI);
+const isProduction = process.env.EMBER_ENV === "production";
+
+if (isCI || isProduction) {
+  browsers.push("ie 11");
+}
 
 module.exports = {
   browsers,
