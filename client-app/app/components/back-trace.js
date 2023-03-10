@@ -76,6 +76,10 @@ export default class BackTrace extends Component {
 
     const regexResults = line.match(/([^/]+)\/(.+\/)(.+):(\d+):.*/);
     const [, gemWithVersion, path, filename, lineNumber] = regexResults || [];
+    if (!gemWithVersion) {
+      return null;
+    }
+
     const gemsData = Preloaded.get("gems_data");
     const match = gemsData
       .filter((g) => gemWithVersion.startsWith(`${g.name}-`))
