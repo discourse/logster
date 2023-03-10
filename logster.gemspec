@@ -17,9 +17,12 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 2.5.0"
 
-  spec.files = `git ls-files -z`.split("\x0").reject do |f|
-    f.start_with?("website") || f.start_with?("bin")
-  end
+  files =
+    `git ls-files -z`.split("\x0").reject { |f| f.start_with?(/website|bin/) }
+  files += Dir.glob("assets/javascript/*")
+  files += Dir.glob("assets/stylesheets/*")
+  spec.files = files
+
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
