@@ -66,6 +66,23 @@ string@https://discourse-cdn.com/assets/application-f59d2.br.js:1:27869`
     });
   });
 
+  test("non-gem backtraces don't break things", async function (assert) {
+    this.set(
+      "backtrace",
+      `/ruby/gems/activesupport-7.0.4.1/lib/active_support/deprecation/behaviors.rb:33:in \`block in <class:Deprecation>'
+/ruby/gems/activesupport-7.0.4.1/lib/active_support/deprecation/reporting.rb:26:in \`block (2 levels) in warn'
+/ruby/gems/activesupport-7.0.4.1/lib/active_support/deprecation/reporting.rb:26:in \`each'
+/ruby/gems/activesupport-7.0.4.1/lib/active_support/deprecation/reporting.rb:26:in \`block in warn'
+<internal:kernel>:90:in \`tap'
+/ruby/gems/activesupport-7.0.4.1/lib/active_support/deprecation/reporting.rb:22:in \`warn'`
+    );
+    await render(hbs`<BackTrace @backtrace={{this.backtrace}} />`);
+    const lines = this.backtrace.split("\n");
+    findAll("div.backtrace-line").forEach((node, index) => {
+      assert.strictEqual(node.textContent.trim(), lines[index]);
+    });
+  });
+
   test("Github links use commit sha", async function (assert) {
     const backtrace = `/var/www/discourse/lib/permalink_constraint.rb:6:in \`matches?'`;
     let env = [

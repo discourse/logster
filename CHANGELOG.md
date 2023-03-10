@@ -1,6 +1,11 @@
 # CHANGELOG
 
-- 2023-03-03: 2.12.0
+- 2023-03-03: 2.12.2
+
+  - FIX: Don't throw on non-gem backtrace lines
+
+- 2023-03-03: 2.12.1
+  Note: 2.12.0 was yanked due to a release process error
 
   - DEV: Upgrade to Ember 3.28
 
