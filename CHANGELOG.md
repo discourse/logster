@@ -1,6 +1,6 @@
 # CHANGELOG
 
-- UNRELEASED
+- 2023-10-03: 2.13.0
 
   - FEATURE: Format messages with Logster::Logger#formatter before storing
 
