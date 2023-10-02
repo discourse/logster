@@ -19,7 +19,7 @@ module Logster
       :max_env_bytes,
       :max_env_count_per_message,
       :maximum_message_length,
-      :use_full_hostname
+      :use_full_hostname,
     )
 
     attr_writer :subdirectory
@@ -27,7 +27,7 @@ module Logster
     def initialize
       # lambda |env,block|
       @current_context = lambda { |_, &block| block.call }
-      @environments = [:development, :production]
+      @environments = %i[development production]
       @subdirectory = nil
       @env_expandable_keys = []
       @enable_custom_patterns_via_ui = false
@@ -50,7 +50,7 @@ module Logster
     end
 
     def subdirectory
-      @subdirectory || '/logs'
+      @subdirectory || "/logs"
     end
   end
 end

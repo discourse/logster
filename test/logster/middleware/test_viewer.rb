@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
-require_relative '../../test_helper'
-require 'rack'
-require 'logster/redis_store'
-require 'logster/middleware/viewer'
+require_relative "../../test_helper"
+require "rack"
+require "logster/redis_store"
+require "logster/middleware/viewer"
 
 class TestViewer < Minitest::Test
-
   class BrokenApp
     def call(env)
       [500, {}, ["broken"]]
@@ -43,21 +42,21 @@ class TestViewer < Minitest::Test
   end
 
   def test_search_raceguard_s
-    response = request.post('/logsie/messages.json?search=searchkey')
+    response = request.post("/logsie/messages.json?search=searchkey")
     result = JSON.parse(response.body)
-    assert_equal('searchkey', result['search'])
+    assert_equal("searchkey", result["search"])
   end
 
   def test_search_raceguard_sr
-    response = request.post('/logsie/messages.json?search=/regex/&regex_search=true')
+    response = request.post("/logsie/messages.json?search=/regex/&regex_search=true")
     result = JSON.parse(response.body)
-    assert_equal('/regex/', result['search'])
+    assert_equal("/regex/", result["search"])
   end
 
   def test_search_raceguard_f
     response = request.post("/logsie/messages.json?filter=0_1_2_3_4")
     result = JSON.parse(response.body)
-    assert_equal([0, 1, 2, 3, 4], result['filter'])
+    assert_equal([0, 1, 2, 3, 4], result["filter"])
   end
 
   def test_search_does_not_respond_to_get_requests
@@ -67,7 +66,7 @@ class TestViewer < Minitest::Test
   end
 
   def test_regex_parse
-    assert_equal(/hello/i, viewer.send(:parse_regex, '/hello/i'))
+    assert_equal(/hello/i, viewer.send(:parse_regex, "/hello/i"))
   end
 
   def test_settings_page_responds_with_json
@@ -108,9 +107,8 @@ class TestViewer < Minitest::Test
   def test_patterns_endpoint_doesnt_accept_GETs
     Logster.config.enable_custom_patterns_via_ui = true
 
-    response = request.get("/logsie/patterns/suppression.json",
-      params: { pattern: "patternfromuser" }
-    )
+    response =
+      request.get("/logsie/patterns/suppression.json", params: { pattern: "patternfromuser" })
     assert_equal(405, response.status)
     assert_equal(0, Logster::SuppressionPattern.find_all.size)
   ensure
@@ -120,9 +118,8 @@ class TestViewer < Minitest::Test
   def test_patterns_endpoint_doesnt_work_when_its_disabled_from_config
     Logster.config.enable_custom_patterns_via_ui = false
 
-    response = request.post("/logsie/patterns/suppression.json",
-      params: { pattern: "patternfromuser" }
-    )
+    response =
+      request.post("/logsie/patterns/suppression.json", params: { pattern: "patternfromuser" })
     assert_equal(403, response.status)
     assert_equal(0, Logster::SuppressionPattern.find_all.size)
   end
@@ -130,13 +127,10 @@ class TestViewer < Minitest::Test
   def test_patterns_endpoint_doesnt_work_with_undefined_set
     Logster.config.enable_custom_patterns_via_ui = true
 
-    response = request.post("/logsie/patterns/weirdset.json",
-      params: { pattern: "disallowedpattern" }
-    )
+    response =
+      request.post("/logsie/patterns/weirdset.json", params: { pattern: "disallowedpattern" })
     assert_equal(404, response.status)
-    Logster::Pattern.child_classes.each do |klass|
-      assert_equal(0, klass.find_all.size)
-    end
+    Logster::Pattern.child_classes.each { |klass| assert_equal(0, klass.find_all.size) }
   ensure
     Logster.config.enable_custom_patterns_via_ui = false
   end
@@ -144,9 +138,7 @@ class TestViewer < Minitest::Test
   def test_creating_patterns_works
     Logster.config.enable_custom_patterns_via_ui = true
 
-    response = request.post("/logsie/patterns/suppression.json",
-      params: { pattern: "newpattern" }
-    )
+    response = request.post("/logsie/patterns/suppression.json", params: { pattern: "newpattern" })
     assert_equal(200, response.status)
     assert_equal(/newpattern/, Logster::SuppressionPattern.find_all.first)
 
@@ -163,24 +155,31 @@ class TestViewer < Minitest::Test
     Logster.store.report(Logger::INFO, "test", "apple orange")
     Logster.store.report(Logger::INFO, "test", "apples oranges")
 
-    request.post("/logsie/patterns/suppression.json",
-      params: { pattern: "apple" }
-    )
+    request.post("/logsie/patterns/suppression.json", params: { pattern: "apple" })
     messages = Logster.store.latest
     assert_includes(messages.map(&:message), "apple orange")
     assert_includes(messages.map(&:message), "apples oranges")
     assert_includes(messages.map(&:message), "non-matching message")
 
-    request.post("/logsie/patterns/suppression.json",
-      params: { pattern: "orange", retroactive: true }
+    request.post(
+      "/logsie/patterns/suppression.json",
+      params: {
+        pattern: "orange",
+        retroactive: true,
+      },
     )
     messages = Logster.store.latest
     assert_equal(1, messages.size)
     assert_equal("non-matching message", messages.first.message)
 
-    response = request.post("/logsie/patterns/suppression.json",
-      params: { pattern: "doesntmatchanything", retroactive: true }
-    )
+    response =
+      request.post(
+        "/logsie/patterns/suppression.json",
+        params: {
+          pattern: "doesntmatchanything",
+          retroactive: true,
+        },
+      )
     # assert no error occures if it doesn't delete anything retroactively
     assert_equal(200, response.status)
   ensure
@@ -190,9 +189,14 @@ class TestViewer < Minitest::Test
   def test_modifying_patterns_returns_404_for_non_existing_patterns
     Logster.config.enable_custom_patterns_via_ui = true
 
-    response = request.put("/logsie/patterns/suppression.json",
-      params: { new_pattern: "doesntexists", pattern: "doesntexisttoo" }
-    )
+    response =
+      request.put(
+        "/logsie/patterns/suppression.json",
+        params: {
+          new_pattern: "doesntexists",
+          pattern: "doesntexisttoo",
+        },
+      )
 
     assert_equal(404, response.status)
     assert_equal(0, Logster::SuppressionPattern.find_all.size)
@@ -204,9 +208,14 @@ class TestViewer < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = true
     Logster::SuppressionPattern.new("goodcitizen").save
 
-    response = request.put("/logsie/patterns/suppression.json",
-      params: { new_pattern: "", pattern: "goodcitizen" }
-    )
+    response =
+      request.put(
+        "/logsie/patterns/suppression.json",
+        params: {
+          new_pattern: "",
+          pattern: "goodcitizen",
+        },
+      )
 
     assert_equal(400, response.status)
     patterns = Logster::SuppressionPattern.find_all
@@ -221,9 +230,14 @@ class TestViewer < Minitest::Test
     Logster::SuppressionPattern.new("oldpattern").save
     Logster::SuppressionPattern.new("notgoinganywhere").save
 
-    response = request.put("/logsie/patterns/suppression.json",
-      params: { pattern: "oldpattern", new_pattern: "brandnewpattern" }
-    )
+    response =
+      request.put(
+        "/logsie/patterns/suppression.json",
+        params: {
+          pattern: "oldpattern",
+          new_pattern: "brandnewpattern",
+        },
+      )
 
     assert_equal(200, response.status)
     patterns = Logster::SuppressionPattern.find_all
@@ -242,14 +256,12 @@ class TestViewer < Minitest::Test
     Logster::SuppressionPattern.new("tobedeleted").save
     Logster::SuppressionPattern.new("notgoinganywhere").save
 
-    response = request.delete("/logsie/patterns/suppression.json",
-      params: { pattern: "tobedeleted" }
-    )
+    response =
+      request.delete("/logsie/patterns/suppression.json", params: { pattern: "tobedeleted" })
     assert_equal(200, response.status)
 
-    response = request.delete("/logsie/patterns/suppression.json",
-      params: { pattern: "doesntexistanymore" }
-    )
+    response =
+      request.delete("/logsie/patterns/suppression.json", params: { pattern: "doesntexistanymore" })
     assert_equal(404, response.status)
 
     patterns = Logster::SuppressionPattern.find_all
@@ -289,14 +301,12 @@ class TestViewer < Minitest::Test
     assert_equal("1", suppression.find { |p| p["value"] == "/whatever store/" }["count"])
     assert_equal("1", suppression.find { |p| p["value"] == "/custom pattern/" }["count"])
 
-    response = request.put("/logsie/reset-count.json",
-      params: { pattern: "/whatever store/", hard: true }
-    )
+    response =
+      request.put("/logsie/reset-count.json", params: { pattern: "/whatever store/", hard: true })
     assert_equal(200, response.status)
 
-    response = request.put("/logsie/reset-count.json",
-      params: { pattern: "/custom pattern/", hard: false }
-    )
+    response =
+      request.put("/logsie/reset-count.json", params: { pattern: "/custom pattern/", hard: false })
     assert_equal(200, response.status)
 
     hash = Logster.store.get_all_ignore_count
@@ -304,34 +314,28 @@ class TestViewer < Minitest::Test
   end
 
   def test_linking_to_a_valid_js_files
-    %w(
-      /logsie/javascript/client-app.js
-      /logsie/javascript/vendor.js
-    ).each do |path|
+    %w[/logsie/javascript/client-app.js /logsie/javascript/vendor.js].each do |path|
       response = request.get(path)
       assert_equal(200, response.status)
-      assert_equal('application/javascript', response.headers['content-type'])
+      assert_equal("application/javascript", response.headers["content-type"])
     end
   end
 
   def test_linking_to_a_valid_css_files
-    %w(
-      /logsie/stylesheets/client-app.css
-      /logsie/stylesheets/vendor.css
-    ).each do |path|
+    %w[/logsie/stylesheets/client-app.css /logsie/stylesheets/vendor.css].each do |path|
       response = request.get(path)
       assert_equal(200, response.status)
-      assert_equal('text/css', response.headers['content-type'])
+      assert_equal("text/css", response.headers["content-type"])
     end
   end
 
   def test_linking_to_an_invalid_ember_component_or_template
-    %w(
+    %w[
       /logsie/javascript/templates/application.hbs
       /logsie/javascript/templates/does_not_exist.js
       /logsie/javascript/components/does_not_exist.js
       /logsie/javascript/templates/../../app.js
-    ).each do |path|
+    ].each do |path|
       response = request.get(path)
       assert_equal(404, response.status, "#{path} should have 404'ed")
     end
@@ -380,13 +384,16 @@ class TestViewer < Minitest::Test
   def test_solve_group_api_requires_post_request
     Logster.config.enable_custom_patterns_via_ui = true
     Logster::GroupingPattern.new(/gotta be post/).save
-    msg = Logster.store.report(
-      Logger::WARN,
-      '',
-      'gotta be post 22',
-      env: { "application_version" => "abc" },
-      backtrace: "aa"
-    )
+    msg =
+      Logster.store.report(
+        Logger::WARN,
+        "",
+        "gotta be post 22",
+        env: {
+          "application_version" => "abc",
+        },
+        backtrace: "aa",
+      )
     latest = Logster.store.latest
     assert_equal(1, latest.size)
     assert_equal(msg.key, latest.first["messages"].first.key)
@@ -405,13 +412,16 @@ class TestViewer < Minitest::Test
   def test_solve_group_returns_404_when_pattern_doesnt_exist
     Logster.config.enable_custom_patterns_via_ui = true
     Logster::GroupingPattern.new(/some pattern/).save
-    msg = Logster.store.report(
-      Logger::WARN,
-      '',
-      'some pattern 22',
-      env: { "application_version" => "abc" },
-      backtrace: "aa"
-    )
+    msg =
+      Logster.store.report(
+        Logger::WARN,
+        "",
+        "some pattern 22",
+        env: {
+          "application_version" => "abc",
+        },
+        backtrace: "aa",
+      )
     latest = Logster.store.latest
     assert_equal(1, latest.size)
     assert_equal(msg.key, latest.first["messages"].first.key)
@@ -428,21 +438,25 @@ class TestViewer < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = true
     backtrace = "a b c d"
     Logster::GroupingPattern.new(/test pattern/).save
-    msg1 = Logster.store.report(Logger::WARN, '', 'test pattern 1', backtrace: backtrace)
-    msg2 = Logster.store.report(
-      Logger::WARN,
-      '',
-      'test pattern 2',
-      env: { "application_version" => "abc" },
-      backtrace: backtrace
-    )
-    msg3 = Logster.store.report(
-      Logger::WARN,
-      '',
-      'test pattern 3',
-      env: [{ "application_version" => "def" }, { "application_version" => "ghi" }],
-      backtrace: backtrace
-    )
+    msg1 = Logster.store.report(Logger::WARN, "", "test pattern 1", backtrace: backtrace)
+    msg2 =
+      Logster.store.report(
+        Logger::WARN,
+        "",
+        "test pattern 2",
+        env: {
+          "application_version" => "abc",
+        },
+        backtrace: backtrace,
+      )
+    msg3 =
+      Logster.store.report(
+        Logger::WARN,
+        "",
+        "test pattern 3",
+        env: [{ "application_version" => "def" }, { "application_version" => "ghi" }],
+        backtrace: backtrace,
+      )
     group = Logster.store.find_pattern_groups { |p| p == /test pattern/ }.first
     assert_equal([msg3, msg2, msg1].map(&:key), group.messages_keys)
 
@@ -460,14 +474,16 @@ class TestViewer < Minitest::Test
     assert_equal([msg1.key], latest.first["messages"].map(&:key))
     assert_equal(1, latest.size)
 
-    msg4 = Logster.store.report(Logger::WARN, '', 'test pattern 4', backtrace: backtrace)
+    msg4 = Logster.store.report(Logger::WARN, "", "test pattern 4", backtrace: backtrace)
     %w[abc def ghi].each do |version|
       Logster.store.report(
         Logger::WARN,
-        '',
-        'test pattern 5',
-        env: { "application_version" => version },
-        backtrace: backtrace
+        "",
+        "test pattern 5",
+        env: {
+          "application_version" => version,
+        },
+        backtrace: backtrace,
       )
     end
     latest = Logster.store.latest

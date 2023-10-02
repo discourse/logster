@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'logster/middleware/viewer'
+require "logster/middleware/viewer"
 
 class Logster::Web
   class FourOhFour

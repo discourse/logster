@@ -4,7 +4,8 @@ module Logster
   class Pattern
     @child_classes = []
 
-    class PatternError < StandardError; end
+    class PatternError < StandardError
+    end
 
     def self.inherited(subclass)
       @child_classes << subclass
@@ -23,7 +24,7 @@ module Logster
       return string if Regexp === string
       return unless String === string
       if string[0] == "/"
-        return unless string =~ /\/(.+)\/(.*)/
+        return unless string =~ %r{/(.+)/(.*)}
         string = $1
         flag = Regexp::IGNORECASE if $2 && $2.include?("i")
       end
@@ -34,11 +35,7 @@ module Logster
 
     def self.find_all(raw: false, store: Logster.store)
       patterns = store.get_patterns(set_name) || []
-      unless raw
-        patterns.map! do |p|
-          parse_pattern(p)
-        end
-      end
+      patterns.map! { |p| parse_pattern(p) } unless raw
       patterns.compact!
       patterns
     end

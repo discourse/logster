@@ -3,13 +3,12 @@
 module Logster
   module Middleware
     class Reporter
-
       PATH_INFO = "PATH_INFO"
       SCRIPT_NAME = "SCRIPT_NAME"
 
       def initialize(app, config = {})
         @app = app
-        @error_path = Logster.config.subdirectory + '/report_js_error'
+        @error_path = Logster.config.subdirectory + "/report_js_error"
       end
 
       def call(env)
@@ -18,26 +17,24 @@ module Logster
         path = env[PATH_INFO]
         script_name = env[SCRIPT_NAME]
 
-        if script_name && script_name.length > 0
-          path = script_name + path
-        end
+        path = script_name + path if script_name && script_name.length > 0
 
         if path == @error_path
+          return 403, {}, ["Access Denied"] if !Logster.config.enable_js_error_reporting
 
-          if !Logster.config.enable_js_error_reporting
-            return [403, {}, ["Access Denied"]]
-          end
-
-          Logster.config.current_context.call(env) do
-            if Logster.config.rate_limit_error_reporting
-              req = Rack::Request.new(env)
-              if Logster.store.rate_limited?(req.ip, perform: true)
-                return [429, {}, ["Rate Limited"]]
+          Logster
+            .config
+            .current_context
+            .call(env) do
+              if Logster.config.rate_limit_error_reporting
+                req = Rack::Request.new(env)
+                if Logster.store.rate_limited?(req.ip, perform: true)
+                  return 429, {}, ["Rate Limited"]
+                end
               end
+              report_js_error(env)
             end
-            report_js_error(env)
-          end
-          return [200, {}, ["OK"]]
+          return 200, {}, ["OK"]
         end
 
         @app.call(env)
@@ -59,20 +56,14 @@ module Logster
         backtrace = params["stacktrace"] || ""
 
         severity = ::Logger::Severity::WARN
-        if params["severity"] &&
-           ::Logger::Severity.const_defined?(params["severity"].upcase)
+        if params["severity"] && ::Logger::Severity.const_defined?(params["severity"].upcase)
           severity = ::Logger::Severity.const_get(params["severity"].upcase)
         end
 
-        Logster.store.report(severity,
-                            "javascript",
-                            message,
-                            backtrace: backtrace,
-                            env: env)
+        Logster.store.report(severity, "javascript", message, backtrace: backtrace, env: env)
 
         true
       end
-
     end
   end
 end

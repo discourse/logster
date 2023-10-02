@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'json'
-require 'set'
-require 'logster/base_store'
-require 'logster/redis_rate_limiter'
+require "json"
+require "set"
+require "logster/base_store"
+require "logster/redis_rate_limiter"
 
 module Logster
   class RedisStore < BaseStore
@@ -22,9 +22,7 @@ module Logster
 
     def save(message)
       if keys = message.solved_keys
-        keys.each do |solved|
-          return false if @redis.hget(solved_key, solved)
-        end
+        keys.each { |solved| return false if @redis.hget(solved_key, solved) }
       end
 
       @redis.multi do |pipeline|
@@ -97,9 +95,7 @@ module Logster
     def solve(message_key)
       if (message = get(message_key)) && (keys = message.solved_keys)
         # add a time so we can expire it
-        keys.each do |s_key|
-          @redis.hset(solved_key, s_key, Time.now.to_f.to_i)
-        end
+        keys.each { |s_key| @redis.hset(solved_key, s_key, Time.now.to_f.to_i) }
       end
       clear_solved
     end
@@ -179,19 +175,22 @@ module Logster
         @redis.mapped_hmset(hash_key, protected_messages)
         (all_keys - protected_keys).each { |k| delete_env(k) }
 
-        sorted = protected_messages
-          .values
-          .map { |string|
-            Message.from_json(string) rescue nil
-          }
-          .compact
-          .sort
-          .map(&:key)
+        sorted =
+          protected_messages
+            .values
+            .map do |string|
+              begin
+                Message.from_json(string)
+              rescue StandardError
+                nil
+              end
+            end
+            .compact
+            .sort
+            .map(&:key)
 
         @redis.pipelined do |pipeline|
-          sorted.each do |message_key|
-            pipeline.rpush(list_key, message_key)
-          end
+          sorted.each { |message_key| pipeline.rpush(list_key, message_key) }
         end
 
         find_pattern_groups(load_messages: true).each do |group|
@@ -212,9 +211,7 @@ module Logster
       @redis.del(solved_key)
       @redis.del(ignored_logs_count_key)
       @redis.del(pattern_groups_key)
-      Logster::Pattern.child_classes.each do |klass|
-        @redis.del(klass.set_name)
-      end
+      Logster::Pattern.child_classes.each { |klass| @redis.del(klass.set_name) }
       @redis.keys.each do |key|
         @redis.del(key) if key.include?(Logster::RedisRateLimiter::PREFIX)
         @redis.del(key) if key.start_with?(ip_rate_limit_key(""))
@@ -226,9 +223,7 @@ module Logster
       return nil unless json
 
       message = Message.from_json(json)
-      if load_env
-        message.env = get_env(message_key) || {}
-      end
+      message.env = get_env(message_key) || {} if load_env
       message
     end
 
@@ -249,26 +244,30 @@ module Logster
       envs = nil
       if with_env
         envs = {}
-        @redis.eval(
-          BULK_ENV_GET_LUA,
-          keys: message_keys.map { |k| env_prefix(k, with_namespace: true) }
-        ).to_h.each do |k, v|
-          next if v.size == 0
-          parsed = v.size == 1 ? JSON.parse(v[0]) : v.map { |e| JSON.parse(e) }
-          envs[env_unprefix(k, with_namespace: true)] = parsed
-        end
-      end
-      messages = @redis.hmget(hash_key, message_keys).map! do |json|
-        next if !json || json.size == 0
-        message = Message.from_json(json)
-        if with_env && envs
-          env = envs[message.key]
-          if !message.env || message.env.size == 0
-            message.env = env || {}
+        @redis
+          .eval(
+            BULK_ENV_GET_LUA,
+            keys: message_keys.map { |k| env_prefix(k, with_namespace: true) },
+          )
+          .to_h
+          .each do |k, v|
+            next if v.size == 0
+            parsed = v.size == 1 ? JSON.parse(v[0]) : v.map { |e| JSON.parse(e) }
+            envs[env_unprefix(k, with_namespace: true)] = parsed
           end
-        end
-        message
       end
+      messages =
+        @redis
+          .hmget(hash_key, message_keys)
+          .map! do |json|
+            next if !json || json.size == 0
+            message = Message.from_json(json)
+            if with_env && envs
+              env = envs[message.key]
+              message.env = env || {} if !message.env || message.env.size == 0
+            end
+            message
+          end
       messages.compact!
       messages
     end
@@ -308,7 +307,7 @@ module Logster
     end
 
     def redis_prefix
-      return 'default'.freeze if !@redis_prefix
+      return "default".freeze if !@redis_prefix
       @prefix_is_proc ||= @redis_prefix.respond_to?(:call)
       @prefix_is_proc ? @redis_prefix.call : @redis_prefix
     end
@@ -345,28 +344,26 @@ module Logster
       key = ip_rate_limit_key(ip_address)
 
       limited = @redis.call([:exists, key])
-      if Integer === limited
-        limited = limited != 0
-      end
+      limited = limited != 0 if Integer === limited
 
-      if perform && !limited
-        @redis.setex key, limit, ""
-      end
+      @redis.setex key, limit, "" if perform && !limited
 
       limited
     end
 
     def find_pattern_groups(load_messages: false)
-      patterns = @patterns_cache.fetch(Logster::GroupingPattern::CACHE_KEY) do
-        Logster::GroupingPattern.find_all(store: self)
-      end
-      patterns = patterns.select do |pattern|
-        if block_given?
-          yield(pattern)
-        else
-          true
+      patterns =
+        @patterns_cache.fetch(Logster::GroupingPattern::CACHE_KEY) do
+          Logster::GroupingPattern.find_all(store: self)
         end
-      end
+      patterns =
+        patterns.select do |pattern|
+          if block_given?
+            yield(pattern)
+          else
+            true
+          end
+        end
       return [] if patterns.size == 0
       mapped = patterns.map(&:inspect)
       jsons = @redis.hmget(pattern_groups_key, mapped)
@@ -374,9 +371,7 @@ module Logster
         if json && json.size > 0
           group = Logster::Group.from_json(json)
           group.pattern = patterns[mapped.index(group.key)]
-          if load_messages
-            group.messages = bulk_get(group.messages_keys, with_env: false)
-          end
+          group.messages = bulk_get(group.messages_keys, with_env: false) if load_messages
           group
         end
       end
@@ -405,9 +400,7 @@ module Logster
         message_keys = @redis.lrange(list_key, 0, -1) || []
 
         bulk_get(message_keys).each do |message|
-          unless (ignores & (message.solved_keys || [])).empty?
-            delete message
-          end
+          delete message unless (ignores & (message.solved_keys || [])).empty?
         end
       end
     end
@@ -424,9 +417,7 @@ module Logster
             removed_keys << removed_key
           end
         end
-        removed_keys.reverse.each do |key|
-          @redis.lpush(list_key, key)
-        end
+        removed_keys.reverse.each { |key| @redis.lpush(list_key, key) }
       end
     end
 
@@ -465,7 +456,7 @@ module Logster
       start = -limit
       finish = -1
 
-      return [start, finish] unless before || after
+      return start, finish unless before || after
 
       found = nil
       find = before || after
@@ -527,11 +518,7 @@ module Logster
       if Array === message.env
         array_env_matches?(message, search, exclude)
       else
-        if exclude
-          !env_matches?(message.env, search)
-        else
-          env_matches?(message.env, search)
-        end
+        exclude ? !env_matches?(message.env, search) : env_matches?(message.env, search)
       end
     end
 
@@ -547,7 +534,7 @@ module Logster
             value.to_s =~ search
           when String
             value.to_s =~ Regexp.new(search, Regexp::IGNORECASE)
-            else
+          else
             false
           end
         end
@@ -555,13 +542,10 @@ module Logster
     end
 
     def array_env_matches?(message, search, exclude)
-      matches = message.env.select do |env|
-        if exclude
-          !env_matches?(env, search)
-        else
-          env_matches?(env, search)
+      matches =
+        message.env.select do |env|
+          exclude ? !env_matches?(env, search) : env_matches?(env, search)
         end
-      end
       return false if matches.empty?
       message.env = matches
       message.count = matches.size
@@ -619,22 +603,22 @@ module Logster
       # when you hit load more and the first row is a group.
       # The server uses this info (row_id) to know where it needs to
       # start scanning messages when looking up older messages.
-      Logster::Group::GroupWeb.new(
-        group.key,
-        group.count,
-        group.timestamp,
-        group.messages,
-        row_id
-      )
+      Logster::Group::GroupWeb.new(group.key, group.count, group.timestamp, group.messages, row_id)
     end
 
     def register_rate_limit(severities, limit, duration, callback)
       severities = [severities] unless severities.is_a?(Array)
       redis = (@redis_raw_connection && @redis_prefix) ? @redis_raw_connection : @redis
 
-      rate_limiter = RedisRateLimiter.new(
-        redis, severities, limit, duration, Proc.new { redis_prefix }, callback
-      )
+      rate_limiter =
+        RedisRateLimiter.new(
+          redis,
+          severities,
+          limit,
+          duration,
+          Proc.new { redis_prefix },
+          callback,
+        )
 
       rate_limits[self.redis_prefix] ||= []
       rate_limits[self.redis_prefix] << rate_limiter
@@ -654,17 +638,13 @@ module Logster
 
     def env_unprefix(key, with_namespace: false)
       prefix = ENV_PREFIX
-      if with_namespace && namespace
-        prefix = "#{namespace}:#{prefix}"
-      end
+      prefix = "#{namespace}:#{prefix}" if with_namespace && namespace
       key.sub(prefix, "")
     end
 
     def env_prefix(key, with_namespace: false)
       prefix = ENV_PREFIX
-      if with_namespace && namespace
-        prefix = "#{namespace}:#{prefix}"
-      end
+      prefix = "#{namespace}:#{prefix}" if with_namespace && namespace
       prefix + key
     end
 

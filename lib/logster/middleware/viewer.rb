@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
-require 'json'
+require "json"
 
 module Logster
   module Middleware
     class Viewer
-
       PATH_INFO = "PATH_INFO".freeze
       SCRIPT_NAME = "SCRIPT_NAME".freeze
       REQUEST_METHOD = "REQUEST_METHOD".freeze
@@ -25,39 +24,29 @@ module Logster
         path = env[PATH_INFO]
         script_name = env[SCRIPT_NAME]
 
-        if script_name && script_name.length > 0
-          path = script_name + path
-        end
+        path = script_name + path if script_name && script_name.length > 0
 
         if resource = resolve_path(path)
-          if resource =~ /\.ico$|\.js$|\.png|\.handlebars$|\.css$|\.woff$|\.ttf$|\.woff2$|\.svg$|\.otf$|\.eot$/
+          if resource =~
+               /\.ico$|\.js$|\.png|\.handlebars$|\.css$|\.woff$|\.ttf$|\.woff2$|\.svg$|\.otf$|\.eot$/
             serve_file(env, resource)
-
           elsif resource.start_with?("/messages.json") && env[REQUEST_METHOD] == "POST"
             serve_messages(Rack::Request.new(env))
-
-          elsif resource =~ /\/message\/([0-9a-f]+)$/
-            if env[REQUEST_METHOD] != "DELETE"
-              return method_not_allowed("DELETE")
-            end
+          elsif resource =~ %r{/message/([0-9a-f]+)$}
+            return method_not_allowed("DELETE") if env[REQUEST_METHOD] != "DELETE"
 
             key = $1
             message = Logster.store.get(key)
-            unless message
-              return [404, {}, ["Message not found"]]
-            end
+            return 404, {}, ["Message not found"] unless message
 
             Logster.store.delete(message)
             [301, { "Location" => "#{@logs_path}/" }, []]
-
-          elsif resource =~ /\/(un)?protect\/([0-9a-f]+)$/
+          elsif resource =~ %r{/(un)?protect/([0-9a-f]+)$}
             off = $1 == "un"
             key = $2
 
             message = Logster.store.get(key)
-            unless message
-              return [404, {}, ["Message not found"]]
-            end
+            return 404, {}, ["Message not found"] unless message
 
             if off
               if Logster.store.unprotect(key)
@@ -72,34 +61,25 @@ module Logster
                 [500, {}, ["Failed"]]
               end
             end
-
-          elsif resource =~ /\/solve\/([0-9a-f]+)$/
+          elsif resource =~ %r{/solve/([0-9a-f]+)$}
             key = $1
 
             message = Logster.store.get(key)
-            unless message
-              return [404, {}, ["Message not found"]]
-            end
+            return 404, {}, ["Message not found"] unless message
 
             Logster.store.solve(key)
 
             [301, { "Location" => "#{@logs_path}" }, []]
-
-          elsif resource =~ /\/clear$/
-            if env[REQUEST_METHOD] != "POST"
-              return method_not_allowed("POST")
-            end
+          elsif resource =~ %r{/clear$}
+            return method_not_allowed("POST") if env[REQUEST_METHOD] != "POST"
             Logster.store.clear
             [200, {}, ["Messages cleared"]]
-
-          elsif resource =~ /\/show\/([0-9a-f]+)(\.json)?$/
+          elsif resource =~ %r{/show/([0-9a-f]+)(\.json)?$}
             key = $1
             json = $2 == ".json"
 
             message = Logster.store.get(key)
-            unless message
-              return [404, {}, ["Message not found"]]
-            end
+            return 404, {}, ["Message not found"] unless message
 
             if json
               [200, { "content-type" => "application/json; charset=utf-8" }, [message.to_json]]
@@ -107,8 +87,7 @@ module Logster
               preload = { "/show/#{key}" => message }
               [200, { "content-type" => "text/html; charset=utf-8" }, [body(preload)]]
             end
-
-          elsif resource =~ /\/settings(\.json)?$/
+          elsif resource =~ %r{/settings(\.json)?$}
             json = $1 == ".json"
             if json
               ignore_count = Logster.store.get_all_ignore_count
@@ -120,21 +99,30 @@ module Logster
                 suppression << { value: string_pattern, count: count, hard: true }
               end
 
-              Logster::SuppressionPattern.find_all(raw: true).each do |pattern|
-                count = ignore_count[pattern] || 0
-                suppression << { value: pattern, count: count }
-              end
+              Logster::SuppressionPattern
+                .find_all(raw: true)
+                .each do |pattern|
+                  count = ignore_count[pattern] || 0
+                  suppression << { value: pattern, count: count }
+                end
 
-              grouping = Logster::GroupingPattern.find_all(raw: true).map do |pattern|
-                { value: pattern }
-              end
-              [200, { "content-type" => "application/json; charset=utf-8" }, [JSON.generate(suppression: suppression, grouping: grouping)]]
+              grouping =
+                Logster::GroupingPattern.find_all(raw: true).map { |pattern| { value: pattern } }
+              [
+                200,
+                { "content-type" => "application/json; charset=utf-8" },
+                [JSON.generate(suppression: suppression, grouping: grouping)],
+              ]
             else
               [200, { "content-type" => "text/html; charset=utf-8" }, [body]]
             end
-          elsif resource =~ /\/patterns\/([a-zA-Z0-9_]+)\.json$/
+          elsif resource =~ %r{/patterns/([a-zA-Z0-9_]+)\.json$}
             unless Logster.config.enable_custom_patterns_via_ui
-              return not_allowed("Custom patterns via the UI is disabled. You can enable it by committing this line to your app source code:\nLogster.config.enable_custom_patterns_via_ui = true")
+              return(
+                not_allowed(
+                  "Custom patterns via the UI is disabled. You can enable it by committing this line to your app source code:\nLogster.config.enable_custom_patterns_via_ui = true",
+                )
+              )
             end
 
             set_name = $1
@@ -147,14 +135,16 @@ module Logster
             return method_not_allowed("PUT") if req.request_method != "PUT"
             pattern = nil
             if [true, "true"].include?(req.params["hard"])
-              pattern = Logster.store.ignore.find do |patt|
-                str = Regexp === patt ? patt.inspect : patt.to_s
-                str == req.params["pattern"]
-              end
+              pattern =
+                Logster.store.ignore.find do |patt|
+                  str = Regexp === patt ? patt.inspect : patt.to_s
+                  str == req.params["pattern"]
+                end
             else
-              pattern = Logster::SuppressionPattern.find_all(raw: true).find do |patt|
-                patt == req.params["pattern"]
-              end
+              pattern =
+                Logster::SuppressionPattern
+                  .find_all(raw: true)
+                  .find { |patt| patt == req.params["pattern"] }
             end
             return not_found("Pattern not found") unless pattern
             pattern = Regexp === pattern ? pattern.inspect : pattern.to_s
@@ -162,7 +152,7 @@ module Logster
             [200, {}, ["OK"]]
           elsif resource == "/"
             [200, { "content-type" => "text/html; charset=utf-8" }, [body]]
-          elsif resource =~ /\/fetch-env\/([0-9a-f]+)\.json$/
+          elsif resource =~ %r{/fetch-env/([0-9a-f]+)\.json$}
             key = $1
             env = Logster.store.get_env(key)
             if env
@@ -170,18 +160,21 @@ module Logster
             else
               not_found
             end
-          elsif resource == '/solve-group'
+          elsif resource == "/solve-group"
             return not_allowed unless Logster.config.enable_custom_patterns_via_ui
             req = Rack::Request.new(env)
             return method_not_allowed("POST") if req.request_method != "POST"
-            group = Logster.store.find_pattern_groups do |patt|
-              patt.inspect == req.params["regex"]
-            end.first
+            group =
+              Logster.store.find_pattern_groups { |patt| patt.inspect == req.params["regex"] }.first
             return not_found("No such pattern group exists") if !group
             group.messages_keys.each { |k| Logster.store.solve(k) }
             [200, {}, []]
-          elsif resource == '/development-preload.json' && ENV["LOGSTER_ENV"] == "development"
-            [200, { "content-type" => "application/json; charset=utf-8" }, [JSON.generate(preloaded_data)]]
+          elsif resource == "/development-preload.json" && ENV["LOGSTER_ENV"] == "development"
+            [
+              200,
+              { "content-type" => "application/json; charset=utf-8" },
+              [JSON.generate(preloaded_data)],
+            ]
           else
             not_found
           end
@@ -195,17 +188,14 @@ module Logster
       def serve_file(env, path)
         env[PATH_INFO] = path
         # accl redirect is going to be trouble, ensure its bypassed
-        env['sendfile.type'] = ''
+        env["sendfile.type"] = ""
         @fileserver.call(env)
       end
 
       def serve_messages(req)
         params = req.params
 
-        opts = {
-          before: params["before"],
-          after: params["after"]
-        }
+        opts = { before: params["before"], after: params["after"] }
 
         if (filter = params["filter"])
           filter = filter.split("_").map { |s| s.to_i }
@@ -217,16 +207,14 @@ module Logster
           opts[:search] = search
         end
         search = opts[:search]
-        if params["known_groups"]
-          opts[:known_groups] = params["known_groups"]
-        end
+        opts[:known_groups] = params["known_groups"] if params["known_groups"]
         opts[:with_env] = (String === search && search.size > 0) || Regexp === search
 
         payload = {
           messages: @store.latest(opts),
           total: @store.count,
-          search: params['search'] || '',
-          filter: filter || '',
+          search: params["search"] || "",
+          filter: filter || "",
         }
 
         json = JSON.generate(payload)
@@ -246,7 +234,8 @@ module Logster
         case request_method
         when "POST"
           args = {}
-          if Logster::SuppressionPattern === record && [true, "true"].include?(req.params["retroactive"])
+          if Logster::SuppressionPattern === record &&
+               [true, "true"].include?(req.params["retroactive"])
             args[:retroactive] = true
           end
           record.save(args)
@@ -264,7 +253,7 @@ module Logster
 
         unless Logster::Pattern::PatternError === err # likely a bug, give us the backtrace
           error_message += "\n\n#{err.backtrace.join("\n")}"
-          return [500, {}, [error_message]]
+          return 500, {}, [error_message]
         end
 
         [400, {}, [error_message]]
@@ -290,36 +279,34 @@ module Logster
       end
 
       def method_not_allowed(allowed_methods)
-        if Array === allowed_methods
-          allowed_methods = allowed_methods.join(", ")
-        end
+        allowed_methods = allowed_methods.join(", ") if Array === allowed_methods
         [405, { "allow" => allowed_methods }, []]
       end
 
       def parse_regex(string)
-        if string =~ /\/(.+)\/(.*)/
+        if string =~ %r{/(.+)/(.*)}
           s = $1
           flags = Regexp::IGNORECASE if $2 && $2.include?("i")
-          Regexp.new(s, flags) rescue nil
+          begin
+            Regexp.new(s, flags)
+          rescue StandardError
+            nil
+          end
         end
       end
 
       def resolve_path(path)
-        if path =~ @path_regex
-          $3 || "/"
-        end
+        $3 || "/" if path =~ @path_regex
       end
 
       def css(name, attrs = {})
-        attrs = attrs.map do |k, v|
-          "#{k}='#{v}'"
-        end.join(" ")
+        attrs = attrs.map { |k, v| "#{k}='#{v}'" }.join(" ")
 
         "<link rel='stylesheet' type='text/css' href='#{@logs_path}/stylesheets/#{name}' #{attrs}>"
       end
 
       def script(prod, dev = nil)
-        name = ENV['DEBUG_JS'] == "1" && dev ? dev : prod
+        name = ENV["DEBUG_JS"] == "1" && dev ? dev : prod
         "<script src='#{@logs_path}/javascript/#{name}'></script>"
       end
 
@@ -331,30 +318,23 @@ module Logster
         gems_data = []
         Gem::Specification.find_all do |gem|
           url = gem.metadata["source_code_uri"] || gem.homepage
-          if url && url.match(/^https?:\/\/github.com\//)
-            gems_data << { name: gem.name, url: url }
-          end
+          gems_data << { name: gem.name, url: url } if url && url.match(%r{^https?://github.com/})
         end
-        {
-          gems_data: gems_data,
-          directories: Logster.config.project_directories
-        }
+        { gems_data: gems_data, directories: Logster.config.project_directories }
       end
 
       def preloaded_data
         preload = {
           env_expandable_keys: Logster.config.env_expandable_keys,
           patterns_enabled: Logster.config.enable_custom_patterns_via_ui,
-          application_version: Logster.config.application_version
+          application_version: Logster.config.application_version,
         }
         backtrace_links_enabled = Logster.config.enable_backtrace_links
         gems_dir = Logster.config.gems_dir
         gems_dir += "/" if gems_dir[-1] != "/"
         preload.merge!(gems_dir: gems_dir, backtrace_links_enabled: backtrace_links_enabled)
 
-        if backtrace_links_enabled
-          preload.merge!(preload_backtrace_data)
-        end
+        preload.merge!(preload_backtrace_data) if backtrace_links_enabled
         preload
       end
 

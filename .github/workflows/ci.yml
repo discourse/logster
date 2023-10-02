@@ -92,6 +92,11 @@ jobs:
         working-directory: client-app
         run: yarn install
 
+      - name: Syntax Tree
+        if: ${{ !cancelled() }}
+        run: |
+            bundle exec stree check Gemfile $(git ls-files '*.rb') $(git ls-files '*.rake') $(git ls-files '*.thor')
+
       - name: JS linting
         if: ${{ !cancelled() }}
         working-directory: client-app

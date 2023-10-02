@@ -31,11 +31,7 @@ module Logster
     private
 
     def start_thread
-      @mutex.synchronize do
-        if !@thread&.alive?
-          @thread = Thread.new { do_work }
-        end
-      end
+      @mutex.synchronize { @thread = Thread.new { do_work } if !@thread&.alive? }
     end
 
     def do_work

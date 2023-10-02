@@ -2,7 +2,6 @@
 
 module Logster
   class BaseStore
-
     attr_accessor :level, :max_retention, :skip_empty, :ignore, :allow_custom_patterns
 
     def initialize
@@ -166,31 +165,35 @@ module Logster
       message.populate_from_env(env)
 
       if backtrace
-        if backtrace.respond_to? :join
-          backtrace = backtrace.join("\n")
-        end
+        backtrace = backtrace.join("\n") if backtrace.respond_to? :join
         message.backtrace = backtrace
       else
         message.backtrace = caller.join("\n")
       end
 
-      return if ignore && ignore.any? do |pattern|
-        if message =~ pattern
-          val = Regexp === pattern ? pattern.inspect : pattern.to_s
-          increment_ignore_count(val)
-          true
-        end
+      if ignore &&
+           ignore.any? { |pattern|
+             if message =~ pattern
+               val = Regexp === pattern ? pattern.inspect : pattern.to_s
+               increment_ignore_count(val)
+               true
+             end
+           }
+        return
       end
 
       if Logster.config.enable_custom_patterns_via_ui || allow_custom_patterns
-        custom_ignore = @patterns_cache.fetch(Logster::SuppressionPattern::CACHE_KEY) do
-          Logster::SuppressionPattern.find_all(store: self)
-        end
-        return if custom_ignore.any? do |pattern|
-          if message =~ pattern
-            increment_ignore_count(pattern.inspect)
-            true
+        custom_ignore =
+          @patterns_cache.fetch(Logster::SuppressionPattern::CACHE_KEY) do
+            Logster::SuppressionPattern.find_all(store: self)
           end
+        if custom_ignore.any? { |pattern|
+             if message =~ pattern
+               increment_ignore_count(pattern.inspect)
+               true
+             end
+           }
+          return
         end
       end
 
@@ -199,7 +202,7 @@ module Logster
       if Logster.config.allow_grouping
         message.apply_message_size_limit(
           Logster.config.maximum_message_size_bytes,
-          gems_dir: Logster.config.gems_dir
+          gems_dir: Logster.config.gems_dir,
         )
         key = self.similar_key(message)
         similar = get(key, load_env: false) if key
@@ -215,7 +218,7 @@ module Logster
       else
         message.apply_message_size_limit(
           Logster.config.maximum_message_size_bytes,
-          gems_dir: Logster.config.gems_dir
+          gems_dir: Logster.config.gems_dir,
         )
         saved = save(message)
         message
@@ -224,9 +227,10 @@ module Logster
       message = similar || message
 
       if (Logster.config.enable_custom_patterns_via_ui || allow_custom_patterns) && saved
-        grouping_patterns = @patterns_cache.fetch(Logster::GroupingPattern::CACHE_KEY) do
-          Logster::GroupingPattern.find_all(store: self)
-        end
+        grouping_patterns =
+          @patterns_cache.fetch(Logster::GroupingPattern::CACHE_KEY) do
+            Logster::GroupingPattern.find_all(store: self)
+          end
 
         grouping_patterns.each do |pattern|
           if message =~ pattern

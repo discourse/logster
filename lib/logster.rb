@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
-require 'logster/version'
-require 'logster/logger'
-require 'logster/message'
-require 'logster/configuration'
-require 'logster/web'
-require 'logster/ignore_pattern'
-require 'logster/pattern'
-require 'logster/suppression_pattern'
-require 'logster/grouping_pattern'
-require 'logster/group'
-require 'logster/cache'
+require "logster/version"
+require "logster/logger"
+require "logster/message"
+require "logster/configuration"
+require "logster/web"
+require "logster/ignore_pattern"
+require "logster/pattern"
+require "logster/suppression_pattern"
+require "logster/grouping_pattern"
+require "logster/group"
+require "logster/cache"
 
-if defined? Redis
-  require 'logster/redis_store'
+if defined?(Redis)
+  require "logster/redis_store"
 else
   STDERR.puts "ERROR: Redis is not loaded, ensure redis gem is required before logster"
   exit
@@ -57,6 +57,4 @@ end
 # check logster/configuration.rb for config options
 # Logster.config.environments << :staging
 
-if defined?(::Rails) && ::Rails::VERSION::MAJOR.to_i >= 3
-  require 'logster/rails/railtie'
-end
+require "logster/rails/railtie" if defined?(::Rails) && ::Rails::VERSION::MAJOR.to_i >= 3

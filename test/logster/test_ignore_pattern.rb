@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
-require 'logster/ignore_pattern'
+require_relative "../test_helper"
+require "logster/ignore_pattern"
 
 class TestIgnorePattern < Minitest::Test
-
   def test_string_message_pattern
     msg = Logster::Message.new(Logger::WARN, "test", "my error (oh no!)")
     msg_frog = Logster::Message.new(Logger::WARN, "test", "a frog")

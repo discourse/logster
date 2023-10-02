@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 module Logster::Rails
-
   # this magically registers logster.js in the asset pipeline
   class Engine < Rails::Engine
   end
@@ -9,14 +8,14 @@ module Logster::Rails
   def self.set_logger(config)
     return unless Logster.config.environments.include?(Rails.env.to_sym)
 
-    require 'logster/middleware/debug_exceptions'
-    require 'logster/middleware/reporter'
+    require "logster/middleware/debug_exceptions"
+    require "logster/middleware/reporter"
 
     store = Logster.store ||= Logster::RedisStore.new
     store.level = Logger::Severity::WARN if Rails.env.production?
 
     if Rails.env.development?
-      require 'logster/defer_logger'
+      require "logster/defer_logger"
       logger = Logster::DeferLogger.new(store)
     else
       logger = Logster::Logger.new(store)
@@ -37,9 +36,12 @@ module Logster::Rails
       end
 
       if Rails::VERSION::MAJOR == 3
-        app.middleware.insert_before ActionDispatch::DebugExceptions, Logster::Middleware::DebugExceptions
+        app.middleware.insert_before ActionDispatch::DebugExceptions,
+                                     Logster::Middleware::DebugExceptions
       else
-        app.middleware.insert_before ActionDispatch::DebugExceptions, Logster::Middleware::DebugExceptions, Rails.application
+        app.middleware.insert_before ActionDispatch::DebugExceptions,
+                                     Logster::Middleware::DebugExceptions,
+                                     Rails.application
       end
 
       app.middleware.delete ActionDispatch::DebugExceptions
@@ -47,18 +49,13 @@ module Logster::Rails
 
       unless Logster.config.application_version
         git_version = `cd #{Rails.root} && git rev-parse --short HEAD 2> /dev/null`
-        if git_version.present?
-          Logster.config.application_version = git_version.strip
-        end
+        Logster.config.application_version = git_version.strip if git_version.present?
       end
     end
   end
 
   class Railtie < ::Rails::Railtie
-
-    config.before_initialize do
-      Logster::Rails.set_logger(config)
-    end
+    config.before_initialize { Logster::Rails.set_logger(config) }
 
     initializer "logster.configure_rails_initialization" do |app|
       Logster::Rails.initialize!(app)

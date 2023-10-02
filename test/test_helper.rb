@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require 'minitest'
-require 'minitest/unit'
-require 'minitest/autorun'
-require 'minitest/pride'
-require 'redis'
-require 'logster'
-require 'logster/base_store'
-require 'timecop'
-require 'byebug'
+require "minitest"
+require "minitest/unit"
+require "minitest/autorun"
+require "minitest/pride"
+require "redis"
+require "logster"
+require "logster/base_store"
+require "timecop"
+require "byebug"
 
 class Logster::TestStore < Logster::BaseStore
   attr_accessor :reported

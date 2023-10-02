@@ -8,7 +8,8 @@ module Logster
     end
 
     def fetch(key)
-      if !@hash.key?(key) || @hash[key][:created_at] + @age < Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      if !@hash.key?(key) ||
+           @hash[key][:created_at] + @age < Process.clock_gettime(Process::CLOCK_MONOTONIC)
         @hash[key] = { data: yield, created_at: Process.clock_gettime(Process::CLOCK_MONOTONIC) }
       end
       @hash[key][:data]
