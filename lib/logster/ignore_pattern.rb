@@ -2,7 +2,6 @@
 
 module Logster
   class IgnorePattern
-
     def initialize(message_pattern = nil, env_patterns = nil)
       @msg_match = message_pattern
       @env_match = env_patterns
@@ -44,7 +43,7 @@ module Logster
         else
           false
         end
-        else
+      else
         false
       end
     end

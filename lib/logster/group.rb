@@ -17,12 +17,13 @@ module Logster
 
     def self.from_json(json)
       hash = JSON.parse(json)
-      group = new(
-        hash["key"],
-        hash["messages_keys"],
-        timestamp: hash["timestamp"] || 0,
-        count: hash["count"] || 0
-      )
+      group =
+        new(
+          hash["key"],
+          hash["messages_keys"],
+          timestamp: hash["timestamp"] || 0,
+          count: hash["count"] || 0,
+        )
       group.changed = false
       group
     end
@@ -32,12 +33,7 @@ module Logster
     end
 
     def to_h
-      {
-        key: @key,
-        messages_keys: @messages_keys,
-        timestamp: @timestamp,
-        count: @count
-      }
+      { key: @key, messages_keys: @messages_keys, timestamp: @timestamp, count: @count }
     end
 
     def to_h_web
@@ -47,7 +43,7 @@ module Logster
         timestamp: @timestamp,
         messages: @messages,
         severity: -1,
-        group: true
+        group: true,
       }
     end
 
@@ -111,14 +107,15 @@ module Logster
       self.class.max_size
     end
 
-    GroupWeb = Struct.new(*%i[regex count timestamp messages row_id]) do
-      def to_json(opts = nil)
-        JSON.fast_generate(self.to_h.merge(severity: -1, group: true), opts)
-      end
+    GroupWeb =
+      Struct.new(*%i[regex count timestamp messages row_id]) do
+        def to_json(opts = nil)
+          JSON.fast_generate(self.to_h.merge(severity: -1, group: true), opts)
+        end
 
-      def key
-        self.regex # alias for testing convenience
+        def key
+          self.regex # alias for testing convenience
+        end
       end
-    end
   end
 end

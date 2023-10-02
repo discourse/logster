@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
-require 'logster/group'
-require 'logster/message'
+require_relative "../test_helper"
+require "logster/group"
+require "logster/message"
 
 class TestGroup < MiniTest::Test
   def test_changed_is_true_for_new_instances
@@ -11,12 +11,13 @@ class TestGroup < MiniTest::Test
 
   def test_from_json_works_correctly
     time = (Time.now.to_f * 1000).to_i - 5000
-    json = JSON.generate(
-      key: '/somekey/',
-      messages_keys: [111, 222, 333].map(&:to_s),
-      timestamp: time,
-      count: 3
-    )
+    json =
+      JSON.generate(
+        key: "/somekey/",
+        messages_keys: [111, 222, 333].map(&:to_s),
+        timestamp: time,
+        count: 3,
+      )
     group = Logster::Group.from_json(json)
     refute group.changed?
     assert_equal 3, group.count
@@ -34,7 +35,7 @@ class TestGroup < MiniTest::Test
     assert_equal 1, group.count
 
     msg2 = get_message
-    msg2.timestamp -= 10000
+    msg2.timestamp -= 10_000
     group.add_message(msg2)
     assert_equal 2, group.count
     assert_equal msg1.timestamp, group.timestamp
@@ -42,12 +43,7 @@ class TestGroup < MiniTest::Test
 
   def test_adding_multiple_messages_works_correctly
     group = get_group
-    messages = [
-      get_message(10),
-      get_message(5),
-      get_message(74),
-      get_message(26)
-    ]
+    messages = [get_message(10), get_message(5), get_message(74), get_message(26)]
     messages << messages[0]
     group.messages = messages
     group.count = 4
@@ -66,7 +62,7 @@ class TestGroup < MiniTest::Test
       get_message(74),
       get_message(26),
       get_message(44),
-      get_message(390)
+      get_message(390),
     ]
     messages.each { |m| group.add_message(m) }
     # the count attr keeps track of the number of messages
@@ -91,6 +87,6 @@ class TestGroup < MiniTest::Test
   end
 
   def get_message(timestamp = nil)
-    Logster::Message.new(0, '', 'testmessage', timestamp)
+    Logster::Message.new(0, "", "testmessage", timestamp)
   end
 end

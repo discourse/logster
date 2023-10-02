@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
-require 'logster/redis_store'
-require 'rack'
+require_relative "../test_helper"
+require "logster/redis_store"
+require "rack"
 
 class TestRedisRateLimiter < Minitest::Test
   def setup
@@ -19,13 +19,17 @@ class TestRedisRateLimiter < Minitest::Test
 
     @redis.set("dont_nuke", "1")
 
-    @rate_limiter = Logster::RedisRateLimiter.new(
-      @redis, [Logger::WARN], 8, 60, Proc.new { "prefix" }, Proc.new { called += 1 }
-    )
+    @rate_limiter =
+      Logster::RedisRateLimiter.new(
+        @redis,
+        [Logger::WARN],
+        8,
+        60,
+        Proc.new { "prefix" },
+        Proc.new { called += 1 },
+      )
 
-    9.times do
-      @rate_limiter.check(Logger::WARN)
-    end
+    9.times { @rate_limiter.check(Logger::WARN) }
 
     assert_equal 10, @rate_limiter.check(Logger::WARN)
 
@@ -40,7 +44,6 @@ class TestRedisRateLimiter < Minitest::Test
 
     assert_equal "1", @redis.get("dont_nuke")
     @redis.del("dont_nuke")
-
   end
 
   def test_check
@@ -48,9 +51,8 @@ class TestRedisRateLimiter < Minitest::Test
     Timecop.freeze(time)
     called = 0
 
-    @rate_limiter = Logster::RedisRateLimiter.new(
-      @redis, [Logger::WARN], 8, 60, nil, Proc.new { called += 1 }
-    )
+    @rate_limiter =
+      Logster::RedisRateLimiter.new(@redis, [Logger::WARN], 8, 60, nil, Proc.new { called += 1 })
 
     assert_equal(1, @rate_limiter.check(Logger::WARN))
     assert_redis_key(60, 0)
@@ -113,9 +115,15 @@ class TestRedisRateLimiter < Minitest::Test
     Timecop.freeze(time)
     called = 0
 
-    @rate_limiter = Logster::RedisRateLimiter.new(
-      @redis, [Logger::WARN, Logger::ERROR], 4, 60, nil, Proc.new { called += 1 }
-    )
+    @rate_limiter =
+      Logster::RedisRateLimiter.new(
+        @redis,
+        [Logger::WARN, Logger::ERROR],
+        4,
+        60,
+        nil,
+        Proc.new { called += 1 },
+      )
 
     assert_equal(1, @rate_limiter.check(Logger::WARN))
     assert_equal(2, @rate_limiter.check(Logger::ERROR))
@@ -170,16 +178,22 @@ class TestRedisRateLimiter < Minitest::Test
   def test_raw_connection
     time = Time.new(2015, 1, 1, 1, 1)
     Timecop.freeze(time)
-    @rate_limiter = Logster::RedisRateLimiter.new(@redis, [Logger::WARN], 1, 60, Proc.new { "lobster" })
+    @rate_limiter =
+      Logster::RedisRateLimiter.new(@redis, [Logger::WARN], 1, 60, Proc.new { "lobster" })
 
     assert_equal(1, @rate_limiter.check(Logger::WARN))
     assert_redis_key(60, 0)
 
     toggle = true
 
-    @rate_limiter = Logster::RedisRateLimiter.new(
-      @redis, [Logger::WARN], 1, 60, Proc.new { toggle ? 'lobster1' : 'lobster2' }
-    )
+    @rate_limiter =
+      Logster::RedisRateLimiter.new(
+        @redis,
+        [Logger::WARN],
+        1,
+        60,
+        Proc.new { toggle ? "lobster1" : "lobster2" },
+      )
 
     assert_includes(key, "lobster1")
 
@@ -188,7 +202,7 @@ class TestRedisRateLimiter < Minitest::Test
   end
 
   def test_retrieve_rate
-    time = Time.new(2015, 1, 1, 1 , 1)
+    time = Time.new(2015, 1, 1, 1, 1)
     Timecop.freeze(time)
 
     @rate_limiter = Logster::RedisRateLimiter.new(@redis, [Logger::WARN], 1, 60)

@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require 'digest/sha1'
-require 'securerandom'
+require "digest/sha1"
+require "securerandom"
 
 module Logster
   class Message
     LOGSTER_ENV = "_logster_env".freeze
-    ALLOWED_ENV = %w{
+    ALLOWED_ENV = %w[
       HTTP_HOST
       REQUEST_URI
       REQUEST_METHOD
@@ -19,9 +19,17 @@ module Logster
       process_id
       application_version
       time
-    }
+    ]
 
-    attr_accessor :timestamp, :severity, :progname, :key, :backtrace, :count, :protected, :first_timestamp, :env_buffer
+    attr_accessor :timestamp,
+                  :severity,
+                  :progname,
+                  :key,
+                  :backtrace,
+                  :count,
+                  :protected,
+                  :first_timestamp,
+                  :env_buffer
     attr_reader :message, :env
 
     def initialize(severity, progname, message, timestamp = nil, key = nil, count: 1)
@@ -46,7 +54,7 @@ module Logster
         key: @key,
         backtrace: @backtrace,
         count: @count,
-        protected: @protected
+        protected: @protected,
       }
 
       h[:first_timestamp] = @first_timestamp if @first_timestamp
@@ -62,11 +70,14 @@ module Logster
 
     def self.from_json(json)
       parsed = ::JSON.parse(json)
-      msg = new(parsed["severity"],
-            parsed["progname"],
-            parsed["message"],
-            parsed["timestamp"],
-            parsed["key"])
+      msg =
+        new(
+          parsed["severity"],
+          parsed["progname"],
+          parsed["message"],
+          parsed["timestamp"],
+          parsed["key"],
+        )
       msg.backtrace = parsed["backtrace"]
       msg.env = parsed["env"]
       msg.count = parsed["count"]
@@ -80,40 +91,39 @@ module Logster
     end
 
     def self.hostname
-      @hostname ||= begin
-        command = Logster.config.use_full_hostname ? `hostname -f` : `hostname`
-        command.strip!
-        command
-      rescue
-        "<unknown>"
-      end
+      @hostname ||=
+        begin
+          command = Logster.config.use_full_hostname ? `hostname -f` : `hostname`
+          command.strip!
+          command
+        rescue StandardError
+          "<unknown>"
+        end
     end
 
     def populate_from_env(env)
       env ||= {}
       if Array === env
-        env = env.map do |single_env|
-          single_env = self.class.default_env.merge(single_env)
-          if !single_env.key?("time") && !single_env.key?(:time)
-            single_env["time"] = @timestamp || get_timestamp
+        env =
+          env.map do |single_env|
+            single_env = self.class.default_env.merge(single_env)
+            if !single_env.key?("time") && !single_env.key?(:time)
+              single_env["time"] = @timestamp || get_timestamp
+            end
+            single_env
           end
-          single_env
-        end
       else
         env = self.class.default_env.merge(env)
-        if !env.key?("time") && !env.key?(:time)
-          env["time"] = @timestamp || get_timestamp
-        end
+        env["time"] = @timestamp || get_timestamp if !env.key?("time") && !env.key?(:time)
       end
       self.env = Message.populate_from_env(env)
     end
 
     def self.default_env
-      env = {
-        "hostname" => hostname,
-        "process_id" => Process.pid
-      }
-      env["application_version"] = Logster.config.application_version if Logster.config.application_version
+      env = { "hostname" => hostname, "process_id" => Process.pid }
+      env[
+        "application_version"
+      ] = Logster.config.application_version if Logster.config.application_version
       env
     end
 
@@ -138,9 +148,7 @@ module Logster
       versions.compact!
 
       if backtrace && backtrace.length > 0
-        versions.map do |version|
-          Digest::SHA1.hexdigest "#{version} #{backtrace}"
-        end
+        versions.map { |version| Digest::SHA1.hexdigest "#{version} #{backtrace}" }
       end
     end
 
@@ -167,9 +175,7 @@ module Logster
 
     def self.populate_from_env(env)
       if Array === env
-        env.map do |single_env|
-          self.populate_env_helper(single_env)
-        end
+        env.map { |single_env| self.populate_env_helper(single_env) }
       else
         self.populate_env_helper(env)
       end
@@ -194,9 +200,7 @@ module Logster
           end
         end
         scrubbed["params"] = params if params.length > 0
-        ALLOWED_ENV.map { |k|
-          scrubbed[k] = env[k] if env[k]
-        }
+        ALLOWED_ENV.map { |k| scrubbed[k] = env[k] if env[k] }
         scrubbed
       end
     end
@@ -218,7 +222,7 @@ module Logster
         IgnorePattern.new(pattern, nil).matches? self
       when IgnorePattern
         pattern.matches? self
-        else
+      else
         nil
       end
     end
@@ -228,9 +232,7 @@ module Logster
         params.map! { |p| scrub_params(p) }
         params
       elsif Hash === params
-        params.each do |k, v|
-          params[k] = scrub_params(v)
-        end
+        params.each { |k, v| params[k] = scrub_params(v) }
         params
       elsif String === params
         scrubbed = params.scrub if !params.valid_encoding?
@@ -241,9 +243,7 @@ module Logster
     end
 
     def drop_redundant_envs(limit)
-      if Array === env
-        env.slice!(limit..-1)
-      end
+      env.slice!(limit..-1) if Array === env
     end
 
     def apply_env_size_limit(size_limit)
@@ -268,9 +268,7 @@ module Logster
 
     def truncate_backtrace(bytes_limit)
       @backtrace = @backtrace.byteslice(0...bytes_limit)
-      while !@backtrace[-1].valid_encoding? && @backtrace.size > 1
-        @backtrace.slice!(-1)
-      end
+      @backtrace.slice!(-1) while !@backtrace[-1].valid_encoding? && @backtrace.size > 1
     end
 
     protected
@@ -278,10 +276,8 @@ module Logster
     def truncate_env(env, limit)
       if JSON.fast_generate(env).bytesize > limit
         sizes = {}
-        braces = '{}'.bytesize
-        env.each do |k, v|
-          sizes[k] = JSON.fast_generate(k => v).bytesize - braces
-        end
+        braces = "{}".bytesize
+        env.each { |k, v| sizes[k] = JSON.fast_generate(k => v).bytesize - braces }
         sorted = env.keys.sort { |a, b| sizes[a] <=> sizes[b] }
 
         kept_keys = []
@@ -296,7 +292,7 @@ module Logster
           sum += sizes[time_key]
           sorted.delete(time_key)
         end
-        comma = ','.bytesize
+        comma = ",".bytesize
 
         sorted.each do |k|
           extra = kept_keys.size == 0 ? 0 : comma

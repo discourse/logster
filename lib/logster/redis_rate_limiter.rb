@@ -81,12 +81,7 @@ module Logster
     private
 
     def self.key_prefix(redis_prefix)
-      if redis_prefix
-        "#{redis_prefix.call}:#{PREFIX}"
-      else
-        PREFIX
-      end
-
+      redis_prefix ? "#{redis_prefix.call}:#{PREFIX}" : PREFIX
     end
 
     def key_prefix
@@ -96,7 +91,7 @@ module Logster
     def mget_keys(bucket_num)
       keys = @mget_keys.dup
       keys.delete_at(bucket_num)
-      keys.map { |key| "'#{key}'" }.join(', ')
+      keys.map { |key| "'#{key}'" }.join(", ")
     end
 
     def bucket_number(time)

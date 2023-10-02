@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'logster/scheduler'
+require "logster/scheduler"
 
 module Logster
   class DeferLogger < ::Logster::Logger
@@ -8,9 +8,7 @@ module Logster
 
     def report_to_store(severity, progname, message, opts = {})
       opts[:backtrace] ||= caller.join("\n")
-      Logster::Scheduler.schedule do
-        super(severity, progname, message, opts)
-      end
+      Logster::Scheduler.schedule { super(severity, progname, message, opts) }
     end
   end
 end

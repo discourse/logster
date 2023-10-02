@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
-require 'logster/logger'
-require 'logger'
+require_relative "../test_helper"
+require "logster/logger"
+require "logger"
 
 class TestStore < Logster::BaseStore
   attr_accessor :calls
@@ -13,7 +13,6 @@ class TestStore < Logster::BaseStore
 end
 
 class TestLogger < Minitest::Test
-
   def setup
     @store = TestStore.new
     @logger = Logster::Logger.new(@store)
@@ -35,9 +34,7 @@ class TestLogger < Minitest::Test
     @logger.override_level = 2
 
     @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
-    Thread.new do
-      @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
-    end.join
+    Thread.new { @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" }) }.join
 
     @logger.override_level = nil
     @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
@@ -64,9 +61,7 @@ class TestLogger < Minitest::Test
 
     @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
 
-    [@store, @other_store].each do |store|
-      assert_equal "backtrace", store.calls[0][3][:backtrace]
-    end
+    [@store, @other_store].each { |store| assert_equal "backtrace", store.calls[0][3][:backtrace] }
   end
 
   def test_add_with_one_argument
@@ -76,7 +71,8 @@ class TestLogger < Minitest::Test
     assert_equal "test", @store.calls.first[2]
   end
 
-  class NewLogger < Logster::Logger; end
+  class NewLogger < Logster::Logger
+  end
 
   def test_inherited_logger_backtrace_with_chain
     @other_store = TestStore.new
@@ -85,9 +81,7 @@ class TestLogger < Minitest::Test
 
     @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
 
-    [@store, @other_store].each do |store|
-      assert_equal "backtrace", store.calls[0][3][:backtrace]
-    end
+    [@store, @other_store].each { |store| assert_equal "backtrace", store.calls[0][3][:backtrace] }
   end
 
   def test_progname_parameter

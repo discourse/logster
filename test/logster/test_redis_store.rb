@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
-require 'logster/redis_store'
-require 'rack'
+require_relative "../test_helper"
+require "logster/redis_store"
+require "rack"
 
 class TestRedisStore < Minitest::Test
-
   def setup
     @store = Logster::RedisStore.new(Redis.new)
     @store.clear_all
@@ -28,8 +27,8 @@ class TestRedisStore < Minitest::Test
   def test_delete_with_custom_grouping_patterns
     Logster.config.enable_custom_patterns_via_ui = true
     Logster::GroupingPattern.new(/delete/, store: @store).save
-    msg1 = @store.report(Logger::WARN, '', 'this will be deleted')
-    msg2 = @store.report(Logger::WARN, '', 'delete this plz')
+    msg1 = @store.report(Logger::WARN, "", "this will be deleted")
+    msg2 = @store.report(Logger::WARN, "", "delete this plz")
 
     groups = @store.find_pattern_groups
     assert_equal 1, groups.size
@@ -53,7 +52,7 @@ class TestRedisStore < Minitest::Test
     keys = []
     gkeys = []
     6.times do |n|
-      m = @store.report(Logger::WARN, '', "#{n} delete")
+      m = @store.report(Logger::WARN, "", "#{n} delete")
       keys << m.key
       gkeys << m.grouping_key
     end
@@ -90,15 +89,11 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_latest_after
-    10.times do |i|
-      @store.report(Logger::WARN, "test", "A#{i}")
-    end
+    10.times { |i| @store.report(Logger::WARN, "test", "A#{i}") }
 
     message = @store.latest[-1]
 
-    3.times do |i|
-      @store.report(Logger::WARN, "test", i.to_s)
-    end
+    3.times { |i| @store.report(Logger::WARN, "test", i.to_s) }
 
     message = @store.latest(after: message.key, limit: 3)[0]
 
@@ -106,15 +101,9 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_latest_before
-    10.times do
-      @store.report(Logger::WARN, "test", "A")
-    end
-    10.times do
-      @store.report(Logger::WARN, "test", "B")
-    end
-    10.times do
-      @store.report(Logger::WARN, "test", "C")
-    end
+    10.times { @store.report(Logger::WARN, "test", "A") }
+    10.times { @store.report(Logger::WARN, "test", "B") }
+    10.times { @store.report(Logger::WARN, "test", "C") }
 
     messages = @store.latest(limit: 10)
     assert_equal("C", messages[0].message)
@@ -133,23 +122,21 @@ class TestRedisStore < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = true
     Logster::GroupingPattern.new(/group 1/, store: @store).save
     Logster::GroupingPattern.new(/group 2/, store: @store).save
-    msg1 = @store.report(Logger::WARN, '', 'first message')
+    msg1 = @store.report(Logger::WARN, "", "first message")
     group_1_keys = []
-    3.times { |n| group_1_keys << @store.report(Logger::WARN, '', "group 1 #{n}").key }
-    msg2 = @store.report(Logger::WARN, '', 'second message')
-    group_1_keys << @store.report(Logger::WARN, '', "group 1 3").key
-    msg3 = @store.report(Logger::WARN, '', 'third message')
+    3.times { |n| group_1_keys << @store.report(Logger::WARN, "", "group 1 #{n}").key }
+    msg2 = @store.report(Logger::WARN, "", "second message")
+    group_1_keys << @store.report(Logger::WARN, "", "group 1 3").key
+    msg3 = @store.report(Logger::WARN, "", "third message")
     group_2_keys = []
-    3.times { |n| group_2_keys << @store.report(Logger::WARN, '', "group 2 #{n}").key }
-    msg4 = @store.report(Logger::WARN, '', 'fourth message')
+    3.times { |n| group_2_keys << @store.report(Logger::WARN, "", "group 2 #{n}").key }
+    msg4 = @store.report(Logger::WARN, "", "fourth message")
 
     results = @store.latest
-    assert_equal [msg1.key, msg2.key, "/group 1/", msg3.key, "/group 2/", msg4.key], results.map(&:key)
+    assert_equal [msg1.key, msg2.key, "/group 1/", msg3.key, "/group 2/", msg4.key],
+                 results.map(&:key)
     groups = results.select { |r| r.class == Logster::Group::GroupWeb }
-    assert_equal(
-      [group_1_keys.last, group_2_keys.last],
-      groups.map(&:row_id)
-    )
+    assert_equal([group_1_keys.last, group_2_keys.last], groups.map(&:row_id))
     assert_equal 4, groups[0].messages.size
     assert_equal 3, groups[1].messages.size
 
@@ -172,7 +159,7 @@ class TestRedisStore < Minitest::Test
     results = @store.latest(after: msg4.key)
     assert_equal 0, results.size
 
-    group_2_keys << @store.report(Logger::WARN, '', "group 2 3").key
+    group_2_keys << @store.report(Logger::WARN, "", "group 2 3").key
     results = @store.latest(after: msg4.key)
     assert_equal ["/group 2/"], results.map(&:key)
     assert_equal group_2_keys.last, results[0].row_id
@@ -243,7 +230,7 @@ class TestRedisStore < Minitest::Test
     message = @store.report(Logger::WARN, "test", "A", env: old_env)
 
     extra_env = { "saved_env" => "saved value!" }
-    similar = @store.report(Logger::WARN, 'test', 'A', env: extra_env)
+    similar = @store.report(Logger::WARN, "test", "A", env: extra_env)
     message.merge_similar_message(similar)
 
     @store.replace_and_bump(message)
@@ -256,9 +243,7 @@ class TestRedisStore < Minitest::Test
   def test_ensure_env_doesnt_exceed_50_item
     Logster.config.allow_grouping = true
     message = nil
-    52.times do |n|
-      message = @store.report(Logger::WARN, "", "mssage", env: { a: n })
-    end
+    52.times { |n| message = @store.report(Logger::WARN, "", "mssage", env: { a: n }) }
     message = @store.get(message.key)
     assert_equal(52, message.count)
     assert_equal(50, message.env.size)
@@ -337,17 +322,15 @@ class TestRedisStore < Minitest::Test
   def test_clear
     env = { "clear_env" => "cllleear" }
     @store.max_backlog = 25
-    a_message = @store.report(Logger::WARN, "test", "A", timestamp: Time.now - (24 * 60 * 60), env: env)
+    a_message =
+      @store.report(Logger::WARN, "test", "A", timestamp: Time.now - (24 * 60 * 60), env: env)
     @store.protect a_message.key
-    20.times do
-      @store.report(Logger::WARN, "test", "B", env: env)
-    end
-    c_message = @store.report(Logger::WARN, "test", "C", timestamp: Time.now + (24 * 60 * 60), env: env)
+    20.times { @store.report(Logger::WARN, "test", "B", env: env) }
+    c_message =
+      @store.report(Logger::WARN, "test", "C", timestamp: Time.now + (24 * 60 * 60), env: env)
     @store.protect c_message.key
     d_message = @store.report(Logger::WARN, "test", "D", env: env)
-    10.times do
-      @store.report(Logger::WARN, "test", "E", env: env)
-    end
+    10.times { @store.report(Logger::WARN, "test", "E", env: env) }
 
     latest = @store.latest
     assert_equal(25, latest.length)
@@ -376,9 +359,9 @@ class TestRedisStore < Minitest::Test
     Logster.config.allow_grouping = true
     Logster::GroupingPattern.new(/discourse/, store: @store).save
     Logster::GroupingPattern.new(/logster/, store: @store).save
-    msg = @store.report(Logger::WARN, '', 'discourse')
+    msg = @store.report(Logger::WARN, "", "discourse")
     @store.protect(msg.key)
-    @store.report(Logger::WARN, '', 'logster')
+    @store.report(Logger::WARN, "", "logster")
     groups = @store.find_pattern_groups
     assert_equal 2, groups.size
 
@@ -386,7 +369,7 @@ class TestRedisStore < Minitest::Test
     groups = @store.find_pattern_groups
     assert_equal 1, groups.size
     assert_equal msg.key, groups[0].messages_keys[0]
-    assert_equal '/discourse/', groups[0].key
+    assert_equal "/discourse/", groups[0].key
 
     @store.unprotect(msg.key)
     @store.clear
@@ -416,13 +399,9 @@ class TestRedisStore < Minitest::Test
     messages = @store.latest(after: messages.last.key)
     assert_equal(0, messages.length)
 
-    10.times do
-      @store.report(Logger::INFO, "test", "A")
-    end
+    10.times { @store.report(Logger::INFO, "test", "A") }
     @store.report(Logger::ERROR, "test", "C")
-    10.times do
-      @store.report(Logger::INFO, "test", "A")
-    end
+    10.times { @store.report(Logger::INFO, "test", "A") }
 
     latest = @store.latest(severity: [Logger::ERROR, Logger::WARN], limit: 2)
 
@@ -524,8 +503,8 @@ class TestRedisStore < Minitest::Test
     m1 = @store.get(m1_key)
     m2 = @store.get(m2_key)
     # original env should preserved in redis memory
-    assert_equal(["business5", "standard3"], m1.env.map { |env| env["cluster"] })
-    assert_equal(["business2", "standard7"], m2.env.map { |env| env["cluster"] })
+    assert_equal(%w[business5 standard3], m1.env.map { |env| env["cluster"] })
+    assert_equal(%w[business2 standard7], m2.env.map { |env| env["cluster"] })
   end
 
   def test_both_env_and_title_match_search
@@ -543,12 +522,27 @@ class TestRedisStore < Minitest::Test
     begin
       Logster.config.allow_grouping = true
       backtrace = caller
-      message = @store.report(Logger::WARN, "", "my error", env: { whatever: "something", backtrace: backtrace })
+      message =
+        @store.report(
+          Logger::WARN,
+          "",
+          "my error",
+          env: {
+            whatever: "something",
+            backtrace: backtrace,
+          },
+        )
 
-      @store.ignore = [
-          Logster::IgnorePattern.new("business")
-      ]
-      @store.report(Logger::WARN, "", "my error", env: { cluster: "business17", backtrace: backtrace })
+      @store.ignore = [Logster::IgnorePattern.new("business")]
+      @store.report(
+        Logger::WARN,
+        "",
+        "my error",
+        env: {
+          cluster: "business17",
+          backtrace: backtrace,
+        },
+      )
 
       message = @store.get(message.key)
       assert(Array === message.env)
@@ -565,8 +559,20 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_array_env_negative_search
-    @store.report(Logger::INFO, "test", "message ABCD", env: [{ cluster: "business5" }, { cluster: "standard3" }], count: 2)
-    @store.report(Logger::INFO, "test", "message WXYZ", env: [{ cluster: "business2" }, { cluster: "standard7" }], count: 2)
+    @store.report(
+      Logger::INFO,
+      "test",
+      "message ABCD",
+      env: [{ cluster: "business5" }, { cluster: "standard3" }],
+      count: 2,
+    )
+    @store.report(
+      Logger::INFO,
+      "test",
+      "message WXYZ",
+      env: [{ cluster: "business2" }, { cluster: "standard7" }],
+      count: 2,
+    )
 
     messages = @store.latest
     assert_equal(2, messages.length)
@@ -581,14 +587,26 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_negative_search_MUST_not_match_title_in_order_to_include_message
-    @store.report(Logger::INFO, "test", "message ABCD", env: [{ cluster: "business5" }, { cluster: "standard3" }], count: 2)
+    @store.report(
+      Logger::INFO,
+      "test",
+      "message ABCD",
+      env: [{ cluster: "business5" }, { cluster: "standard3" }],
+      count: 2,
+    )
 
     messages = @store.latest(search: "-ABCD")
     assert_equal(0, messages.size) # cause title has ABCD
   end
 
   def test_positive_search_looks_at_title_OR_env
-    @store.report(Logger::INFO, "test", "message", env: [{ cluster: "business5 ABCDEFG" }, { cluster: "standard3" }], count: 2)
+    @store.report(
+      Logger::INFO,
+      "test",
+      "message",
+      env: [{ cluster: "business5 ABCDEFG" }, { cluster: "standard3" }],
+      count: 2,
+    )
 
     messages = @store.latest(search: "ABCDEFG")
     assert_equal(1, messages.size)
@@ -624,34 +642,82 @@ class TestRedisStore < Minitest::Test
     assert_equal(1, @store.latest.count)
 
     @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1")
-    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz" })
+    @store.report(
+      Logger::WARN,
+      "application",
+      "test error1",
+      backtrace: "backtrace1",
+      env: {
+        "application_version" => "xyz",
+      },
+    )
 
     assert_equal(2, @store.latest.count)
-
   ensure
     Logster.config.application_version = nil
   end
 
   def test_solve_grouped
     Logster.config.allow_grouping = true
-    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz" })
-    m = @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "efg" })
+    @store.report(
+      Logger::WARN,
+      "application",
+      "test error1",
+      backtrace: "backtrace1",
+      env: {
+        "application_version" => "xyz",
+      },
+    )
+    m =
+      @store.report(
+        Logger::WARN,
+        "application",
+        "test error1",
+        backtrace: "backtrace1",
+        env: {
+          "application_version" => "efg",
+        },
+      )
 
     assert_equal(1, @store.latest.count)
 
     @store.solve(m.key)
 
-    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz" })
-    @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "efg" })
+    @store.report(
+      Logger::WARN,
+      "application",
+      "test error1",
+      backtrace: "backtrace1",
+      env: {
+        "application_version" => "xyz",
+      },
+    )
+    @store.report(
+      Logger::WARN,
+      "application",
+      "test error1",
+      backtrace: "backtrace1",
+      env: {
+        "application_version" => "efg",
+      },
+    )
 
     assert_equal(0, @store.latest.count)
-
   ensure
     Logster.config.allow_grouping = false
   end
 
   def test_clears_solved
-    m = @store.report(Logger::WARN, "application", "test error2", backtrace: "backtrace1", env: { "application_version" => "abc" })
+    m =
+      @store.report(
+        Logger::WARN,
+        "application",
+        "test error2",
+        backtrace: "backtrace1",
+        env: {
+          "application_version" => "abc",
+        },
+      )
     @store.solve(m.key)
 
     assert_equal(1, @store.solved.length)
@@ -661,8 +727,16 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_solving_with_some_missing_version
-
-    m = @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1", env: { "application_version" => "xyz" })
+    m =
+      @store.report(
+        Logger::WARN,
+        "application",
+        "test error1",
+        backtrace: "backtrace1",
+        env: {
+          "application_version" => "xyz",
+        },
+      )
     @store.report(Logger::WARN, "application", "test error1", backtrace: "backtrace1")
 
     @store.solve(m.key)
@@ -671,27 +745,20 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_env
-    env = Rack::MockRequest.env_for("/test").merge(
-      "HTTP_HOST" => "www.site.com",
-      "HTTP_USER_AGENT" => "SOME WHERE"
-    )
+    env =
+      Rack::MockRequest.env_for("/test").merge(
+        "HTTP_HOST" => "www.site.com",
+        "HTTP_USER_AGENT" => "SOME WHERE",
+      )
     orig = env.dup
     orig["test"] = "tests"
     orig["test1"] = "tests1"
     Logster.add_to_env(env, "test", "tests")
     Logster.add_to_env(env, "test1", "tests1")
 
-    orig.delete_if do |k, v|
-      !%w{
-        HTTP_HOST
-        REQUEST_METHOD
-        HTTP_USER_AGENT
-        test
-        test1
-      }.include? k
-    end
+    orig.delete_if { |k, v| !%w[HTTP_HOST REQUEST_METHOD HTTP_USER_AGENT test test1].include? k }
 
-    @store.report(Logger::INFO, "test", "test",  env: env)
+    @store.report(Logger::INFO, "test", "test", env: env)
 
     env = @store.latest.last.env
 
@@ -717,7 +784,11 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_suppressed_logs_are_counted
-    @store.ignore = [/store ignore/, Logster::IgnorePattern.new(/ignore pattern/), "an ignore string"]
+    @store.ignore = [
+      /store ignore/,
+      Logster::IgnorePattern.new(/ignore pattern/),
+      "an ignore string",
+    ]
     @store.allow_custom_patterns = true
     Logster::SuppressionPattern.new(/sup pattern/, store: @store).save
 
@@ -741,7 +812,7 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_rate_limits
-    %w{minute hour}.each do |duration|
+    %w[minute hour].each do |duration|
       begin
         called = false
 
@@ -749,7 +820,7 @@ class TestRedisStore < Minitest::Test
           Logster::RedisRateLimiter,
           @store.public_send("register_rate_limit_per_#{duration}", Logger::WARN, 0) do
             called = true
-          end
+          end,
         )
 
         @store.report(Logger::WARN, "test", "test")
@@ -762,25 +833,25 @@ class TestRedisStore < Minitest::Test
 
   def test_rate_limits_only_checks_when_message_is_bumped_or_saved
     Logster.config.allow_grouping = true
-    Logster.config.application_version = 'abc'
+    Logster.config.application_version = "abc"
 
     @store.ignore = [/^ActiveRecord::RecordNotFound/]
     rate_limit = @store.register_rate_limit_per_minute(Logger::WARN, 0)
 
-    message = @store.report(Logger::WARN, 'message 1', "Error!", backtrace: 'here')
+    message = @store.report(Logger::WARN, "message 1", "Error!", backtrace: "here")
     assert_equal(1, rate_limit.retrieve_rate)
 
-    @store.report(Logger::WARN, 'message 1', "Error!", backtrace: 'here')
+    @store.report(Logger::WARN, "message 1", "Error!", backtrace: "here")
     assert_equal(2, rate_limit.retrieve_rate)
 
     @store.solve(message.key)
-    @store.report(Logger::WARN, 'message 1', "Error!", backtrace: 'here')
+    @store.report(Logger::WARN, "message 1", "Error!", backtrace: "here")
     assert_equal(2, rate_limit.retrieve_rate)
 
-    @store.report(Logger::WARN, 'message 2', "Error!")
+    @store.report(Logger::WARN, "message 2", "Error!")
     assert_equal(3, rate_limit.retrieve_rate)
 
-    @store.report(Logger::WARN, 'message 3', "ActiveRecord::RecordNotFound")
+    @store.report(Logger::WARN, "message 3", "ActiveRecord::RecordNotFound")
     assert_equal(3, rate_limit.retrieve_rate)
   ensure
     Logster.config.allow_grouping = false
@@ -792,7 +863,7 @@ class TestRedisStore < Minitest::Test
     begin
       time = Time.now
       Timecop.freeze(time)
-      current_namespace = 'first'
+      current_namespace = "first"
       @store.redis_prefix = Proc.new { current_namespace }
 
       called_first = 0
@@ -802,14 +873,14 @@ class TestRedisStore < Minitest::Test
       @store.report(Logger::WARN, "test", "test")
       assert_equal(1, called_first)
 
-      current_namespace = 'second'
+      current_namespace = "second"
       @store.register_rate_limit_per_minute(Logger::WARN, 0) { called_second += 1 }
       @store.report(Logger::WARN, "test", "test")
       assert_equal(1, called_first)
       assert_equal(1, called_second)
 
       Timecop.freeze(time + 10) do
-        current_namespace = 'first'
+        current_namespace = "first"
         @store.report(Logger::WARN, "test", "test")
 
         assert_equal(2, called_first)
@@ -845,10 +916,18 @@ class TestRedisStore < Minitest::Test
     config_reset(
       maximum_message_size_bytes: 300,
       max_env_bytes: 30,
-      max_env_count_per_message: 5
+      max_env_count_per_message: 5,
     ) do
       env = [{ aaa: 111, bbb: 222, ccc: 333, ddd: 444 }] * 7
-      message = @store.report(Logger::WARN, '', 'test', backtrace: "aa\n" * 100, env: env.dup, timestamp: 777)
+      message =
+        @store.report(
+          Logger::WARN,
+          "",
+          "test",
+          backtrace: "aa\n" * 100,
+          env: env.dup,
+          timestamp: 777,
+        )
       message = @store.get(message.key)
       assert_operator(message.to_json(exclude_env: true).bytesize, :<, 300)
       assert_equal(5, message.env.size)
@@ -860,34 +939,43 @@ class TestRedisStore < Minitest::Test
   end
 
   def test_ensure_messages_meet_config_size_limits_when_merged_together
-
-    config_reset(
-      max_env_bytes: 30,
-      max_env_count_per_message: 5,
-      allow_grouping: true
-    ) do
+    config_reset(max_env_bytes: 30, max_env_count_per_message: 5, allow_grouping: true) do
       env = [{ a: 1, aa: 22, aaa: 333, aaaa: 4444 }] * 3
       env_2 = [{ b: 1, bb: 22, bbb: 333, bbbb: 4444 }] * 3
-      @store.report(Logger::WARN, '', 'test', backtrace: "aa\n" * 100, env: env.dup, timestamp: 777)
-      message = @store.report(Logger::WARN, '', 'test', backtrace: "aa\n" * 100, env: env_2.dup, timestamp: 777)
+      @store.report(Logger::WARN, "", "test", backtrace: "aa\n" * 100, env: env.dup, timestamp: 777)
+      message =
+        @store.report(
+          Logger::WARN,
+          "",
+          "test",
+          backtrace: "aa\n" * 100,
+          env: env_2.dup,
+          timestamp: 777,
+        )
       message = @store.get(message.key)
       assert_equal(5, message.env.size)
-      message.env.first(3).each do |e|
-        assert_operator(e.to_json.bytesize, :<=, 30)
-        assert_equal({ "b" => 1, "bb" => 22, "time" => 777 }, e)
-      end
-      message.env.last(2).each do |e|
-        assert_operator(e.to_json.bytesize, :<=, 30)
-        assert_equal({ "a" => 1, "aa" => 22, "time" => 777 }, e)
-      end
+      message
+        .env
+        .first(3)
+        .each do |e|
+          assert_operator(e.to_json.bytesize, :<=, 30)
+          assert_equal({ "b" => 1, "bb" => 22, "time" => 777 }, e)
+        end
+      message
+        .env
+        .last(2)
+        .each do |e|
+          assert_operator(e.to_json.bytesize, :<=, 30)
+          assert_equal({ "a" => 1, "aa" => 22, "time" => 777 }, e)
+        end
     end
   end
 
   def test_custom_grouping_patterns
     Logster.config.enable_custom_patterns_via_ui = true
     Logster::GroupingPattern.new(/delete/, store: @store).save
-    msg1 = @store.report(Logger::WARN, '', 'delete this plz', timestamp: 1)
-    msg2 = @store.report(Logger::WARN, '', 'delete that plz', timestamp: 2)
+    msg1 = @store.report(Logger::WARN, "", "delete this plz", timestamp: 1)
+    msg2 = @store.report(Logger::WARN, "", "delete that plz", timestamp: 2)
     group = @store.find_pattern_groups(load_messages: true)[0]
     assert_equal 2, group.count
     assert_equal "/delete/", group.key
@@ -902,9 +990,9 @@ class TestRedisStore < Minitest::Test
     Logster.config.allow_grouping = true
     Logster::GroupingPattern.new(/delete/, store: @store).save
     backtrace = caller
-    @store.report(Logger::WARN, '', 'delete this plz', backtrace: backtrace, timestamp: 1)
-    msg2 = @store.report(Logger::WARN, '', 'delete that plz', backtrace: backtrace, timestamp: 2)
-    msg3 = @store.report(Logger::WARN, '', 'delete this plz', backtrace: backtrace, timestamp: 3)
+    @store.report(Logger::WARN, "", "delete this plz", backtrace: backtrace, timestamp: 1)
+    msg2 = @store.report(Logger::WARN, "", "delete that plz", backtrace: backtrace, timestamp: 2)
+    msg3 = @store.report(Logger::WARN, "", "delete this plz", backtrace: backtrace, timestamp: 3)
     group = @store.find_pattern_groups(load_messages: false)[0]
     assert_equal 2, group.count
     assert_equal [msg3.key, msg2.key], group.messages_keys
@@ -918,10 +1006,10 @@ class TestRedisStore < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = true
     Logster::GroupingPattern.new(/delete/, store: @store).save
     Logster::GroupingPattern.new(/env/, store: @store).save
-    @store.report(Logger::WARN, '', 'delete and env')
+    @store.report(Logger::WARN, "", "delete and env")
     groups = @store.find_pattern_groups
     assert_equal 1, groups.size
-    assert_includes ["/delete/", "/env/"], groups[0].key
+    assert_includes %w[/delete/ /env/], groups[0].key
   ensure
     Logster.config.enable_custom_patterns_via_ui = false
   end
@@ -936,8 +1024,8 @@ class TestRedisStore < Minitest::Test
     assert_equal 0, groups.size # because there are no messages yet
 
     2.times do |n|
-      @store.report(Logger::WARN, '', "with search #{n}")
-      @store.report(Logger::WARN, '', "pattern group #{n}")
+      @store.report(Logger::WARN, "", "with search #{n}")
+      @store.report(Logger::WARN, "", "pattern group #{n}")
     end
     groups = @store.find_pattern_groups
     assert_equal 2, groups.size
@@ -968,9 +1056,7 @@ class TestRedisStore < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = true
     Logster::GroupingPattern.new(/trim/, store: @store).save
     keys = []
-    5.times do |n|
-      keys << @store.report(Logger::WARN, '', "trim backlog #{n}").key
-    end
+    5.times { |n| keys << @store.report(Logger::WARN, "", "trim backlog #{n}").key }
     groups = @store.find_pattern_groups
     assert_equal 1, groups.size
     assert_equal 4, groups[0].messages_keys.size
@@ -983,14 +1069,14 @@ class TestRedisStore < Minitest::Test
 
   def test_adding_grouping_pattern_works_retroactively
     Logster.config.enable_custom_patterns_via_ui = true
-    @store.report(Logger::WARN, '', 'trim this plz')
-    @store.report(Logger::WARN, '', 'trim that plz')
+    @store.report(Logger::WARN, "", "trim this plz")
+    @store.report(Logger::WARN, "", "trim that plz")
     Logster::GroupingPattern.new(/trim/, store: @store).save
     results = @store.latest
     assert_equal 1, results.size
     assert_equal 2, results[0].messages.size
 
-    @store.report(Logger::WARN, '', 'trim this more plz')
+    @store.report(Logger::WARN, "", "trim this more plz")
     results = @store.latest
     assert_equal 1, results.size
     assert_equal 3, results[0].messages.size
@@ -1000,8 +1086,8 @@ class TestRedisStore < Minitest::Test
 
   def test_adding_grouping_pattern_doesnt_add_a_message_to_more_than_one_group
     Logster.config.enable_custom_patterns_via_ui = true
-    @store.report(Logger::WARN, '', 'trim this plz')
-    @store.report(Logger::WARN, '', 'trim this plz 2')
+    @store.report(Logger::WARN, "", "trim this plz")
+    @store.report(Logger::WARN, "", "trim this plz 2")
     Logster::GroupingPattern.new(/trim/, store: @store).save
     Logster::GroupingPattern.new(/this/, store: @store).save
     groups = @store.find_pattern_groups
@@ -1014,18 +1100,18 @@ class TestRedisStore < Minitest::Test
   def test_latest_doesnt_include_rows_that_are_removed_from_grouping_patterns_due_to_max_size
     Logster.config.enable_custom_patterns_via_ui = true
     Logster::Group.instance_variable_set(:@max_size, 5)
-    msg1 = @store.report(Logger::WARN, '', 'first message')
-    msg2 = @store.report(Logger::WARN, '', 'second message')
+    msg1 = @store.report(Logger::WARN, "", "first message")
+    msg2 = @store.report(Logger::WARN, "", "second message")
     Logster::GroupingPattern.new(/noisy/, store: @store).save
 
     grouped = []
     7.times do |n|
-      grouped << @store.report(Logger::WARN, '', "noisy message #{n}", timestamp: n).key
+      grouped << @store.report(Logger::WARN, "", "noisy message #{n}", timestamp: n).key
     end
-    msg3 = @store.report(Logger::WARN, '', 'third message')
+    msg3 = @store.report(Logger::WARN, "", "third message")
     results = @store.latest
 
-    assert_equal [msg1.key, msg2.key, '/noisy/', msg3.key], results.map(&:key)
+    assert_equal [msg1.key, msg2.key, "/noisy/", msg3.key], results.map(&:key)
     assert_equal grouped.reverse.first(5), results[2].messages.map(&:key)
   ensure
     Logster.config.enable_custom_patterns_via_ui = false
@@ -1036,10 +1122,14 @@ class TestRedisStore < Minitest::Test
     config_reset(allow_grouping: true) do
       backtrace = "a" * Logster.config.maximum_message_size_bytes
       title = "sasasas"
-      msg = @store.report(Logger::WARN, '', title, backtrace: backtrace.dup)
-      msg2 = @store.report(Logger::WARN, '', title, backtrace: backtrace.dup)
+      msg = @store.report(Logger::WARN, "", title, backtrace: backtrace.dup)
+      msg2 = @store.report(Logger::WARN, "", title, backtrace: backtrace.dup)
       assert_equal(msg.key, msg2.key)
-      assert_operator(msg.to_json(exclude_env: true).bytesize, :<=, Logster.config.maximum_message_size_bytes)
+      assert_operator(
+        msg.to_json(exclude_env: true).bytesize,
+        :<=,
+        Logster.config.maximum_message_size_bytes,
+      )
       assert_operator(msg.backtrace.size, :<, backtrace.size)
     end
   end
@@ -1050,13 +1140,13 @@ class TestRedisStore < Minitest::Test
         DistributedMutex("download_20450e291e8f1e5ba03ca7f20fb7d9da570c94a6"):
         held for too long, expected max: 60 secs, took an extra 73 secs
       TEXT
-      msg = @store.report(Logger::WARN, '', first_message, backtrace: caller)
+      msg = @store.report(Logger::WARN, "", first_message, backtrace: caller)
 
       second_message = <<~TEXT
         DistributedMutex("download_e09ae082c60a351dedec67ed869652862b232a0b"):
         held for too long, expected max: 60 secs, took an extra 287 secs
       TEXT
-      msg2 = @store.report(Logger::WARN, '', second_message, backtrace: caller)
+      msg2 = @store.report(Logger::WARN, "", second_message, backtrace: caller)
 
       assert_equal(msg.key, msg2.key)
     end
@@ -1072,9 +1162,7 @@ class TestRedisStore < Minitest::Test
     end
     yield
   ensure
-    defaults.each do |k, v|
-      Logster.config.public_send("#{k}=", v)
-    end
+    defaults.each { |k, v| Logster.config.public_send("#{k}=", v) }
   end
 
   def reset_redis

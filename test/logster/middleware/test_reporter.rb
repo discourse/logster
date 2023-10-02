@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
-require_relative '../../test_helper'
-require 'rack'
-require 'logster/redis_store'
-require 'logster/middleware/reporter'
+require_relative "../../test_helper"
+require "rack"
+require "logster/redis_store"
+require "logster/middleware/reporter"
 
 class TestReporter < Minitest::Test
-
   def setup
     Logster.store = Logster::RedisStore.new
     Logster.store.clear_all
@@ -72,11 +71,14 @@ class TestReporter < Minitest::Test
     assert_equal(1, Logster.store.count)
 
     reporter = Logster::Middleware::Reporter.new(nil)
-    env = Rack::MockRequest.env_for("/logs/report_js_error?message=hello2", "REMOTE_ADDR" => "100.1.1.2")
+    env =
+      Rack::MockRequest.env_for(
+        "/logs/report_js_error?message=hello2",
+        "REMOTE_ADDR" => "100.1.1.2",
+      )
     status, = reporter.call(env)
 
     assert_equal(200, status)
     assert_equal(2, Logster.store.count)
   end
-
 end

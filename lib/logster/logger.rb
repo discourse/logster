@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'logger'
+require "logger"
 
 module Logster
   class Logger < ::Logger
@@ -41,9 +41,7 @@ module Logster
         logger.add(severity, message, progname, &block)
       end
     ensure
-      if logger.respond_to? :skip_store
-        logger.skip_store = old
-      end
+      logger.skip_store = old if logger.respond_to? :skip_store
     end
 
     def add(*args, &block)
@@ -55,15 +53,11 @@ module Logster
     end
 
     def add_with_opts(severity, message = nil, progname = progname(), opts = nil, &block)
-      if severity < level
-        return true
-      end
+      return true if severity < level
 
       # it is not fun losing messages cause encoding is bad
       # protect all messages by scrubbing if needed
-      if message && !message.valid_encoding?
-        message = message.scrub
-      end
+      message = message.scrub if message && !message.valid_encoding?
 
       # we want to get the backtrace as early as possible so that logster's
       # own methods don't show up as the first few frames in the backtrace
@@ -73,9 +67,7 @@ module Logster
         backtrace ||= progname.backtrace if progname.kind_of?(::Exception)
         if !backtrace
           backtrace = caller_locations
-          while backtrace.first.path.end_with?("/logger.rb")
-            backtrace.shift
-          end
+          backtrace.shift while backtrace.first.path.end_with?("/logger.rb")
         end
         backtrace = backtrace.join("\n")
         opts[:backtrace] = backtrace
@@ -90,7 +82,11 @@ module Logster
             add_to_chained(@chained[i], severity, message, progname, opts, &block)
           rescue => e
             # don't blow up if STDERR is somehow closed
-            STDERR.puts "Failed to report message to chained logger #{e}" rescue nil
+            begin
+              STDERR.puts "Failed to report message to chained logger #{e}"
+            rescue StandardError
+              nil
+            end
           end
           i += 1
         end
@@ -114,7 +110,11 @@ module Logster
       report_to_store(severity, progname, message, opts)
     rescue => e
       # don't blow up if STDERR is somehow closed
-      STDERR.puts "Failed to report error: #{e} #{severity} #{message} #{progname}" rescue nil
+      begin
+        STDERR.puts "Failed to report error: #{e} #{severity} #{message} #{progname}"
+      rescue StandardError
+        nil
+      end
     end
 
     private

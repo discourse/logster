@@ -2,13 +2,13 @@
 
 # Run with 'bundle exec rackup'
 
-require 'redis'
-require 'logster'
-require 'logster/middleware/reporter'
-require 'logster/middleware/viewer'
-require 'json'
-require 'sinatra'
-require 'sinatra/base'
+require "redis"
+require "logster"
+require "logster/middleware/reporter"
+require "logster/middleware/viewer"
+require "json"
+require "sinatra"
+require "sinatra/base"
 
 # log a few errors
 SampleRedis = Redis.new
@@ -18,16 +18,14 @@ Logster.logger = Logster::Logger.new(SampleStore)
 class SampleLoader
   def initialize
     @index = 0
-    @sample_data_key = 'sample_data'
+    @sample_data_key = "sample_data"
   end
 
   def ensure_samples_loaded
     SampleRedis.del @sample_data_key
-    data = File.read('data/data.json')
+    data = File.read("data/data.json")
     parsed = JSON.parse(data)
-    parsed.each do |row|
-      SampleRedis.rpush @sample_data_key, JSON.fast_generate(row)
-    end
+    parsed.each { |row| SampleRedis.rpush @sample_data_key, JSON.fast_generate(row) }
     @length = parsed.length
   end
 
@@ -49,10 +47,13 @@ class SampleLoader
     @index += 1
     @index %= @length
 
-    SampleStore.report(message["severity"], message["progname"], message["message"],
+    SampleStore.report(
+      message["severity"],
+      message["progname"],
+      message["message"],
       backtrace: message["backtrace"],
       env: message["env"],
-      count: message["count"]
+      count: message["count"],
     )
   end
 
@@ -61,16 +62,25 @@ class SampleLoader
     params = {}
     params["always_present"] = "some_value_#{rand(3)}"
     params["key_#{rand(3)}"] = "some_value_#{rand(3)}"
-    SampleStore.report(2, '', "Message message message",
-      backtrace: 'Backtrace backtrace backtrace',
-      env: { something: :foo, random: rand(3), array: [1, 2, 3], rand_array: [10, 11, rand(300)], params: params }
+    SampleStore.report(
+      2,
+      "",
+      "Message message message",
+      backtrace: "Backtrace backtrace backtrace",
+      env: {
+        something: :foo,
+        random: rand(3),
+        array: [1, 2, 3],
+        rand_array: [10, 11, rand(300)],
+        params: params,
+      },
     )
   end
 end
 
 SampleLoaderInstance = SampleLoader.new
 SampleLoaderInstance.ensure_samples_loaded
-SampleLoaderInstance.load_samples unless ENV['NO_DATA']
+SampleLoaderInstance.load_samples unless ENV["NO_DATA"]
 Logster.config.allow_grouping = true
 Logster.config.enable_custom_patterns_via_ui = ENV["LOGSTER_ENABLE_CUSTOM_PATTERNS_VIA_UI"] == "1"
 Logster.config.application_version = "b329e23f8511b7248c0e4aee370a9f8a249e1b84"
@@ -79,16 +89,15 @@ Logster.config.project_directories = [
   {
     path: "/home/sam/Source/discourse",
     url: "https://github.com/discourse/discourse",
-    main_app: true
-  }
+    main_app: true,
+  },
 ]
 
 class Sample < Sinatra::Base
   use Logster::Middleware::Viewer
   use Logster::Middleware::Reporter
 
-  get '/' do
-
+  get "/" do
     <<HTML
 <html>
 <head>
@@ -102,12 +111,10 @@ class Sample < Sinatra::Base
 </body>
 </html>
 HTML
-
   end
 
-  get '/report_error' do
+  get "/report_error" do
     SampleLoaderInstance.load_next_sample
     SampleLoaderInstance.load_error
   end
-
 end

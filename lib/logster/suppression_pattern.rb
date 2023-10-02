@@ -24,12 +24,14 @@ module Logster
     def retro_delete_messages
       keys = []
       grouping_keys = []
-      @store.get_all_messages(with_env: false).each do |message|
-        if message =~ self.pattern
-          keys << message.key
-          grouping_keys << message.grouping_key
+      @store
+        .get_all_messages(with_env: false)
+        .each do |message|
+          if message =~ self.pattern
+            keys << message.key
+            grouping_keys << message.grouping_key
+          end
         end
-      end
       @store.bulk_delete(keys, grouping_keys) if keys.size > 0 && grouping_keys.size > 0
     end
   end

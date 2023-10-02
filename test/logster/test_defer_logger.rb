@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
-require 'logster/defer_logger'
-require 'logster/logger'
+require_relative "../test_helper"
+require "logster/defer_logger"
+require "logster/logger"
 
 class TestDeferLogger < Minitest::Test
   def setup

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
-require 'logster/redis_store'
-require 'logster/pattern'
+require_relative "../test_helper"
+require "logster/redis_store"
+require "logster/pattern"
 
 class TestPattern < Minitest::Test
   class FakePattern < Logster::Pattern
@@ -90,22 +90,16 @@ class TestPattern < Minitest::Test
   def test_save_works_correctly
     bad_patterns = ["/bruken", nil, "[a-z", "/(osa|sss{1/"]
     bad_patterns.each do |p|
-      assert_raises(Logster::Pattern::PatternError) do
-        FakePattern.new(p).save
-      end
+      assert_raises(Logster::Pattern::PatternError) { FakePattern.new(p).save }
     end
     assert_equal(0, FakePattern.find_all.size)
 
     good_patterns = ["/logster/i", /logster/, "sssd", "(ccx|tqe){1,5}", "logster"]
-    good_patterns.each do |p|
-      FakePattern.new(p).save
-    end
+    good_patterns.each { |p| FakePattern.new(p).save }
     results = FakePattern.find_all
     assert_equal(4, results.size) # 4 because /logster/ and logster are the same
     good_patterns_regex = [/logster/i, /logster/, /sssd/, /(ccx|tqe){1,5}/]
-    results.each do |p|
-      assert_includes(good_patterns_regex, p)
-    end
+    results.each { |p| assert_includes(good_patterns_regex, p) }
   end
 
   def test_modify_works_correctly
@@ -123,9 +117,7 @@ class TestPattern < Minitest::Test
     record = FakePattern.new(/LoGsTEr/)
     record.save
 
-    assert_raises(Logster::Pattern::PatternError) do
-      record.modify("/badReg")
-    end
+    assert_raises(Logster::Pattern::PatternError) { record.modify("/badReg") }
     all_patterns = FakePattern.find_all
     assert_equal(1, all_patterns.size)
     assert_equal(/LoGsTEr/, all_patterns.first)
