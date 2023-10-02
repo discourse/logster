@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- UNRELEASED
+
+  - FEATURE: Format messages with Logster::Logger#formatter before storing
+
 - 2023-03-10: 2.12.2
 
   - FIX: Don't throw on non-gem backtrace lines

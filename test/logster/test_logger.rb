@@ -121,6 +121,12 @@ class TestLogger < Minitest::Test
     assert_equal custom_err.backtrace.join("\n"), @store.calls[2][3][:backtrace]
   end
 
+  def test_formatter
+    @logger.formatter = ->(severity, datetime, progname, msg) { "[test] #{msg}" }
+    @logger.add(0, "hello")
+    assert_equal "[test] hello", @store.calls[0][2]
+  end
+
   private
 
   def error_instance(error_class)
