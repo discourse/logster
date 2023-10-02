@@ -92,6 +92,8 @@ module Logster
         end
       end
 
+      return if @skip_store
+
       progname ||= @progname
       if message.nil?
         if block_given?
@@ -102,7 +104,7 @@ module Logster
         end
       end
 
-      return if @skip_store
+      message = formatter.call(severity, Time.now, progname, message) if formatter
 
       opts ||= {}
       opts[:env] ||= Thread.current[LOGSTER_ENV]
