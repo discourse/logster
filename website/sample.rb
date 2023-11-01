@@ -106,7 +106,7 @@ class Sample < Sinatra::Base
 <h3>Welcome to logster:</h3>
 <ul>
   <li><a href='https://github.com/SamSaffron/logster'>Learn about logster</a></li>
-  <li><a href='/logs'>View sample dev logs</a></li>
+  <li><a href='/logs/'>View sample dev logs</a></li>
 </ul>
 </body>
 </html>
