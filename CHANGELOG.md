@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2023-11-01: 2.13.1
+
+  - FIX: Solve/remove buttons on 'share' page
+
 - 2023-10-03: 2.13.0
 
   - FEATURE: Format messages with Logster::Logger#formatter before storing
