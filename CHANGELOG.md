@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2024-01-15: 2.14.0
+
+  - FEATURE: Stop grouping logs with different messages
+
 - 2023-11-01: 2.13.1
 
   - FIX: Solve/remove buttons on 'share' page
