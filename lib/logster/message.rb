@@ -129,7 +129,6 @@ module Logster
 
     # in its own method so it can be overridden
     def grouping_hash
-      message = self.message.gsub(/[0-9a-f]+/i, "X")
       { message: message, severity: self.severity, backtrace: self.backtrace }
     end
 
