@@ -212,6 +212,7 @@ export default class IndexController extends Controller {
             pattern: match,
           },
         });
+        this.rowMessagesForGroupingRegex = [];
         this.buildingGroupingRegex = false;
         this.model.reload();
       }
