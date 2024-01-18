@@ -9,10 +9,13 @@ import {
 } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
 import { tracked } from "@glimmer/tracking";
+import Pattern from "client-app/models/pattern-item";
 
 @classic
 export default class IndexController extends Controller {
   @tracked loading = false;
+  @tracked buildingGroupingRegex = false;
+  @tracked rowMessagesForGroupingRegex = [];
 
   showDebug = getLocalStorage("showDebug", false);
   showInfo = getLocalStorage("showInfo", false);
@@ -68,6 +71,16 @@ export default class IndexController extends Controller {
   }
 
   @action
+  handleCheckboxChange(row, event) {
+    if (event.target.checked) {
+      this.rowMessagesForGroupingRegex.push(row.message);
+    } else {
+      this.rowMessagesForGroupingRegex =
+        this.rowMessagesForGroupingRegex.filter((i) => i !== row.message);
+    }
+  }
+
+  @action
   tabChangedAction(newTab) {
     this.model.tabChanged(newTab);
   }
@@ -87,7 +100,6 @@ export default class IndexController extends Controller {
     // eslint-disable-next-line no-alert
     if (confirm("Clear the logs?\n\nCancel = No, OK = Clear")) {
       await ajax("/clear", { type: "POST" });
-      this.loading = true;
       this.model.reload();
       this.loading = false;
     }
@@ -170,5 +182,60 @@ export default class IndexController extends Controller {
     }
 
     debounce(this, this.doSearch, term, 250);
+  }
+
+  @action
+  buildGroupingRegexFromSelectedRows() {
+    this.buildingGroupingRegex = true;
+  }
+
+  @action
+  async createGroupingRegexFromSelectedRows() {
+    if (this.rowMessagesForGroupingRegex.length < 2) {
+      return alert(
+        "You must select at least 2 rows to create a grouping regex"
+      );
+    } else {
+      console.log(this.rowMessagesForGroupingRegex);
+      const match = this.findLongestMatchingSubstring(
+        this.rowMessagesForGroupingRegex
+      );
+
+      // eslint-disable-next-line no-alert
+      if (
+        confirm(
+          `Do you want to create the pattern\n\n"${match}"\n\nCancel = No, OK = Create`
+        )
+      ) {
+        await ajax("/patterns/grouping.json", {
+          method: "POST",
+          data: {
+            pattern: match,
+          },
+        });
+        this.buildingGroupingRegex = false;
+        this.model.reload();
+      }
+    }
+  }
+
+  findLongestMatchingSubstring(strings) {
+    const shortestString = strings.reduce(
+      (shortest, str) => (str.length < shortest.length ? str : shortest),
+      strings[0]
+    );
+
+    let longestMatchingSubstring = "";
+    for (let i = 0; i < shortestString.length; i++) {
+      const currentSubstring = shortestString.substring(0, i + 1);
+
+      if (strings.every((str) => str.includes(currentSubstring))) {
+        longestMatchingSubstring = currentSubstring;
+      } else {
+        break;
+      }
+    }
+
+    return longestMatchingSubstring;
   }
 }

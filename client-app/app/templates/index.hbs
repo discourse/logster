@@ -17,7 +17,16 @@
     {{/if}}
 
     {{#each this.model.rows as |row|}}
-      <MessageRow @model={{row}} @selectRow={{fn this.selectRowAction row}} />
+      <div class="message-row-wrapper">
+        {{#if this.buildingGroupingRegex}}
+          <input
+            type="checkbox"
+            class="grouping-checkbox"
+            {{on "change" (fn this.handleCheckboxChange row)}}
+          />
+        {{/if}}
+        <MessageRow @model={{row}} @selectRow={{fn this.selectRowAction row}} />
+      </div>
     {{/each}}
   </div>
 </div>
@@ -112,6 +121,24 @@
           <LinkTo @route="settings" class="settings btn no-text">
             <FaIcon @icon="cog" />
           </LinkTo>
+        {{/if}}
+
+        {{#if this.buildingGroupingRegex}}
+          <button
+            class="settings btn"
+            type="button"
+            {{on "click" this.createGroupingRegexFromSelectedRows}}
+          >
+            <span>Create Grouping Pattern</span>
+          </button>
+        {{else}}
+          <button
+            class="settings btn"
+            type="button"
+            {{on "click" this.buildGroupingRegexFromSelectedRows}}
+          >
+            <span>Build Grouping Pattern</span>
+          </button>
         {{/if}}
 
         <button
