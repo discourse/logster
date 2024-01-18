@@ -9,7 +9,6 @@ import {
 } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
 import { tracked } from "@glimmer/tracking";
-import Pattern from "client-app/models/pattern-item";
 
 @classic
 export default class IndexController extends Controller {
@@ -192,11 +191,11 @@ export default class IndexController extends Controller {
   @action
   async createGroupingRegexFromSelectedRows() {
     if (this.rowMessagesForGroupingRegex.length < 2) {
+      // eslint-disable-next-line no-alert
       return alert(
         "You must select at least 2 rows to create a grouping regex"
       );
     } else {
-      console.log(this.rowMessagesForGroupingRegex);
       const match = this.findLongestMatchingSubstring(
         this.rowMessagesForGroupingRegex
       );
