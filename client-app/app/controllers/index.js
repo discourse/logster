@@ -8,9 +8,12 @@ import {
   setLocalStorage,
 } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
+import { tracked } from "@glimmer/tracking";
 
 @classic
 export default class IndexController extends Controller {
+  @tracked loading = false;
+
   showDebug = getLocalStorage("showDebug", false);
   showInfo = getLocalStorage("showInfo", false);
   showWarn = getLocalStorage("showWarn", true);
@@ -41,7 +44,9 @@ export default class IndexController extends Controller {
 
   async doSearch(term) {
     this.model.set("search", term);
+    this.loading = true;
     await this.model.reload();
+    this.loading = false;
     this.model.updateSelectedRow();
   }
 
@@ -82,7 +87,9 @@ export default class IndexController extends Controller {
     // eslint-disable-next-line no-alert
     if (confirm("Clear the logs?\n\nCancel = No, OK = Clear")) {
       await ajax("/clear", { type: "POST" });
+      this.loading = true;
       this.model.reload();
+      this.loading = false;
     }
   }
 
@@ -144,7 +151,9 @@ export default class IndexController extends Controller {
     this.toggleProperty(name);
     this.model.set(name, this[name]);
     setLocalStorage(name, this[name]);
+    this.loading = true;
     await this.model.reload();
+    this.loading = false;
     this.model.updateSelectedRow();
   }
 

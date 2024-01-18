@@ -12,6 +12,10 @@
       </div>
     {{/if}}
 
+    {{#if this.loading}}
+      <div class="loading"></div>
+    {{/if}}
+
     {{#each this.model.rows as |row|}}
       <MessageRow @model={{row}} @selectRow={{fn this.selectRowAction row}} />
     {{/each}}
