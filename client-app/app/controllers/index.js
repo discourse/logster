@@ -200,8 +200,8 @@ export default class IndexController extends Controller {
         this.rowMessagesForGroupingRegex
       );
 
-      // eslint-disable-next-line no-alert
       if (
+        // eslint-disable-next-line no-alert
         confirm(
           `Do you want to create the pattern\n\n"${match}"\n\nCancel = No, OK = Create`
         )
