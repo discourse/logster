@@ -203,6 +203,7 @@ export default class IndexController extends Controller {
       match = this.escapeRegExp(match);
 
       if (
+        match.trim().length &&
         // eslint-disable-next-line no-alert
         confirm(
           `Do you want to create the grouping pattern\n\n"${match}"\n\nCancel = No, OK = Create`
@@ -217,6 +218,9 @@ export default class IndexController extends Controller {
         this.rowMessagesForGroupingPattern = [];
         this.buildingGroupingPattern = false;
         this.model.reload();
+      } else if (!match.trim().length) {
+        // eslint-disable-next-line no-alert
+        alert("Can not create a grouping pattern with the given rows");
       }
     }
   }
