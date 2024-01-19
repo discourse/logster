@@ -316,7 +316,7 @@ label span {
 }
 
 .severity-filters label {
-  margin-right: 18px;
+  margin-right: 10px;
 }
 
 .search-clear-all .clear {
@@ -484,7 +484,7 @@ label span {
   gap: 0.7em;
 }
 
-@media (min-width: 771px) {
+@media (min-width: 871px) {
   .severity-filters,
   .search-clear-all {
     height: 100%;
@@ -506,7 +506,7 @@ label span {
   }
 }
 
-@media (max-width: 770px) {
+@media (max-width: 870px) {
   .severity-filters {
     padding: 10px;
   }
