@@ -18,7 +18,7 @@
 
     {{#each this.model.rows as |row|}}
       <div class="message-row-wrapper">
-        {{#if this.buildingGroupingRegex}}
+        {{#if this.buildingGroupingPattern}}
           <input
             type="checkbox"
             class="grouping-checkbox"
@@ -121,24 +121,35 @@
           <LinkTo @route="settings" class="settings btn no-text">
             <FaIcon @icon="cog" />
           </LinkTo>
-        {{/if}}
 
-        {{#if this.buildingGroupingRegex}}
-          <button
-            class="settings btn"
-            type="button"
-            {{on "click" this.createGroupingRegexFromSelectedRows}}
-          >
-            <span>Create Grouping Pattern</span>
-          </button>
-        {{else}}
-          <button
-            class="settings btn"
-            type="button"
-            {{on "click" this.buildGroupingRegexFromSelectedRows}}
-          >
-            <span>Build Grouping Pattern</span>
-          </button>
+          {{#if this.buildingGroupingPattern}}
+            <button
+              class="settings btn"
+              type="button"
+              {{on "click" this.createGroupingPatternFromSelectedRows}}
+            >
+              <span>Create Grouping Pattern</span>
+            </button>
+
+            <button
+              class="settings btn danger"
+              type="button"
+              {{on "click" this.toggleGroupingPatternFromSelectedRows}}
+            >
+              <FaIcon @icon="times-circle" />
+              <span>Close</span>
+            </button>
+
+          {{else}}
+            <button
+              class="settings btn"
+              type="button"
+              {{on "click" this.toggleGroupingPatternFromSelectedRows}}
+            >
+              <FaIcon @icon="plus" />
+              <span>Grouping Pattern</span>
+            </button>
+          {{/if}}
         {{/if}}
 
         <button

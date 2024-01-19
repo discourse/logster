@@ -13,8 +13,8 @@ import { tracked } from "@glimmer/tracking";
 @classic
 export default class IndexController extends Controller {
   @tracked loading = false;
-  @tracked buildingGroupingRegex = false;
-  @tracked rowMessagesForGroupingRegex = [];
+  @tracked buildingGroupingPattern = false;
+  @tracked rowMessagesForGroupingPattern = [];
 
   showDebug = getLocalStorage("showDebug", false);
   showInfo = getLocalStorage("showInfo", false);
@@ -72,10 +72,10 @@ export default class IndexController extends Controller {
   @action
   handleCheckboxChange(row, event) {
     if (event.target.checked) {
-      this.rowMessagesForGroupingRegex.push(row.message);
+      this.rowMessagesForGroupingPattern.push(row.message);
     } else {
-      this.rowMessagesForGroupingRegex =
-        this.rowMessagesForGroupingRegex.filter((i) => i !== row.message);
+      this.rowMessagesForGroupingPattern =
+        this.rowMessagesForGroupingPattern.filter((i) => i !== row.message);
     }
   }
 
@@ -184,26 +184,28 @@ export default class IndexController extends Controller {
   }
 
   @action
-  buildGroupingRegexFromSelectedRows() {
-    this.buildingGroupingRegex = true;
+  toggleGroupingPatternFromSelectedRows() {
+    this.buildingGroupingPattern = !this.buildingGroupingPattern;
+    this.rowMessagesForGroupingPattern = [];
   }
 
   @action
-  async createGroupingRegexFromSelectedRows() {
-    if (this.rowMessagesForGroupingRegex.length < 2) {
+  async createGroupingPatternFromSelectedRows() {
+    if (this.rowMessagesForGroupingPattern.length < 2) {
       // eslint-disable-next-line no-alert
       return alert(
-        "You must select at least 2 rows to create a grouping regex"
+        "You must select at least 2 rows to create a grouping pattern"
       );
     } else {
-      const match = this.findLongestMatchingSubstring(
-        this.rowMessagesForGroupingRegex
+      let match = this.findLongestMatchingPrefix(
+        this.rowMessagesForGroupingPattern
       );
+      match = this.escapeRegExp(match);
 
       if (
         // eslint-disable-next-line no-alert
         confirm(
-          `Do you want to create the pattern\n\n"${match}"\n\nCancel = No, OK = Create`
+          `Do you want to create the grouping pattern\n\n"${match}"\n\nCancel = No, OK = Create`
         )
       ) {
         await ajax("/patterns/grouping.json", {
@@ -212,14 +214,14 @@ export default class IndexController extends Controller {
             pattern: match,
           },
         });
-        this.rowMessagesForGroupingRegex = [];
-        this.buildingGroupingRegex = false;
+        this.rowMessagesForGroupingPattern = [];
+        this.buildingGroupingPattern = false;
         this.model.reload();
       }
     }
   }
 
-  findLongestMatchingSubstring(strings) {
+  findLongestMatchingPrefix(strings) {
     const shortestString = strings.reduce(
       (shortest, str) => (str.length < shortest.length ? str : shortest),
       strings[0]
@@ -237,5 +239,9 @@ export default class IndexController extends Controller {
     }
 
     return longestMatchingSubstring;
+  }
+
+  escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
   }
 }
