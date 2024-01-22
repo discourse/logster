@@ -118,11 +118,7 @@
 
       <div class="footer-btns">
         {{#if this.showSettings}}
-          <LinkTo @route="settings" class="settings btn no-text">
-            <FaIcon @icon="cog" />
-          </LinkTo>
-
-          {{#if this.buildingGroupingPattern}}
+          {{#if this.showCreateGroupingPattern}}
             <button
               class="settings btn"
               type="button"
@@ -130,26 +126,19 @@
             >
               <span>Create Grouping Pattern</span>
             </button>
-
-            <button
-              class="settings btn danger"
-              type="button"
-              {{on "click" this.toggleGroupingPatternFromSelectedRows}}
-            >
-              <FaIcon @icon="times-circle" />
-              <span>Close</span>
-            </button>
-
-          {{else}}
-            <button
-              class="settings btn"
-              type="button"
-              {{on "click" this.toggleGroupingPatternFromSelectedRows}}
-            >
-              <FaIcon @icon="plus" />
-              <span>Grouping Pattern</span>
-            </button>
           {{/if}}
+
+          <LinkTo @route="settings" class="settings btn no-text">
+            <FaIcon @icon="cog" />
+          </LinkTo>
+
+          <button
+            class="settings btn no-text"
+            type="button"
+            {{on "click" this.toggleGroupingPatternFromSelectedRows}}
+          >
+            <FaIcon @icon="list" />
+          </button>
         {{/if}}
 
         <button

@@ -35,6 +35,13 @@ export default class IndexController extends Controller {
     );
   }
 
+  get showCreateGroupingPattern() {
+    return (
+      this.buildingGroupingPattern &&
+      this.rowMessagesForGroupingPattern.length > 1
+    );
+  }
+
   @computed("search")
   get searchTerm() {
     if (this.search) {
@@ -72,7 +79,10 @@ export default class IndexController extends Controller {
   @action
   handleCheckboxChange(row, event) {
     if (event.target.checked) {
-      this.rowMessagesForGroupingPattern.push(row.message);
+      this.rowMessagesForGroupingPattern = [
+        ...this.rowMessagesForGroupingPattern,
+        row.message,
+      ];
     } else {
       this.rowMessagesForGroupingPattern =
         this.rowMessagesForGroupingPattern.filter((i) => i !== row.message);
@@ -191,37 +201,30 @@ export default class IndexController extends Controller {
 
   @action
   async createGroupingPatternFromSelectedRows() {
-    if (this.rowMessagesForGroupingPattern.length < 2) {
-      // eslint-disable-next-line no-alert
-      return alert(
-        "You must select at least 2 rows to create a grouping pattern"
-      );
-    } else {
-      let match = this.findLongestMatchingPrefix(
-        this.rowMessagesForGroupingPattern
-      );
-      match = this.escapeRegExp(match);
+    let match = this.findLongestMatchingPrefix(
+      this.rowMessagesForGroupingPattern
+    );
+    match = this.escapeRegExp(match);
 
-      if (
-        match.trim().length &&
-        // eslint-disable-next-line no-alert
-        confirm(
-          `Do you want to create the grouping pattern\n\n"${match}"\n\nCancel = No, OK = Create`
-        )
-      ) {
-        await ajax("/patterns/grouping.json", {
-          method: "POST",
-          data: {
-            pattern: match,
-          },
-        });
-        this.rowMessagesForGroupingPattern = [];
-        this.buildingGroupingPattern = false;
-        this.model.reload();
-      } else if (!match.trim().length) {
-        // eslint-disable-next-line no-alert
-        alert("Can not create a grouping pattern with the given rows");
-      }
+    if (
+      match.trim().length &&
+      // eslint-disable-next-line no-alert
+      confirm(
+        `Do you want to create the grouping pattern\n\n"${match}"\n\nCancel = No, OK = Create`
+      )
+    ) {
+      await ajax("/patterns/grouping.json", {
+        method: "POST",
+        data: {
+          pattern: match,
+        },
+      });
+      this.rowMessagesForGroupingPattern = [];
+      this.buildingGroupingPattern = false;
+      this.model.reload();
+    } else if (!match.trim().length) {
+      // eslint-disable-next-line no-alert
+      alert("Can not create a grouping pattern with the given rows");
     }
   }
 

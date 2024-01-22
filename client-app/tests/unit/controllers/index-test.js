@@ -53,4 +53,25 @@ module("Unit | Controller | index", function (hooks) {
       "error foo "
     );
   });
+
+  test("Creating inline grouping patterns can handle special characters", function (assert) {
+    const controller = this.owner.lookup("controller:index");
+    let messages = [
+      "error foo!/@ tomtom",
+      "error foo!/@ steaky",
+      "error foo!/@ bar",
+    ];
+
+    assert.deepEqual(
+      controller.findLongestMatchingPrefix(messages),
+      "error foo!/@ "
+    );
+
+    messages = ["/$home/sam/.r\benv/", "/$home/sam/.r\benv/"];
+
+    assert.deepEqual(
+      controller.findLongestMatchingPrefix(messages),
+      "/$home/sam/.r\benv/"
+    );
+  });
 });
