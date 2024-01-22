@@ -13,6 +13,8 @@ import { tracked } from "@glimmer/tracking";
 @classic
 export default class IndexController extends Controller {
   @tracked loading = false;
+  @tracked buildingGroupingPattern = false;
+  @tracked rowMessagesForGroupingPattern = [];
 
   showDebug = getLocalStorage("showDebug", false);
   showInfo = getLocalStorage("showInfo", false);
@@ -30,6 +32,13 @@ export default class IndexController extends Controller {
   get actionsInMenu() {
     return (
       /mobile/i.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent)
+    );
+  }
+
+  get showCreateGroupingPattern() {
+    return (
+      this.buildingGroupingPattern &&
+      this.rowMessagesForGroupingPattern.length > 1
     );
   }
 
@@ -68,6 +77,19 @@ export default class IndexController extends Controller {
   }
 
   @action
+  handleCheckboxChange(row, event) {
+    if (event.target.checked) {
+      this.rowMessagesForGroupingPattern = [
+        ...this.rowMessagesForGroupingPattern,
+        row.message,
+      ];
+    } else {
+      this.rowMessagesForGroupingPattern =
+        this.rowMessagesForGroupingPattern.filter((i) => i !== row.message);
+    }
+  }
+
+  @action
   tabChangedAction(newTab) {
     this.model.tabChanged(newTab);
   }
@@ -87,7 +109,6 @@ export default class IndexController extends Controller {
     // eslint-disable-next-line no-alert
     if (confirm("Clear the logs?\n\nCancel = No, OK = Clear")) {
       await ajax("/clear", { type: "POST" });
-      this.loading = true;
       this.model.reload();
       this.loading = false;
     }
@@ -170,5 +191,64 @@ export default class IndexController extends Controller {
     }
 
     debounce(this, this.doSearch, term, 250);
+  }
+
+  @action
+  toggleGroupingPatternFromSelectedRows() {
+    this.buildingGroupingPattern = !this.buildingGroupingPattern;
+    this.rowMessagesForGroupingPattern = [];
+  }
+
+  @action
+  async createGroupingPatternFromSelectedRows() {
+    let match = this.findLongestMatchingPrefix(
+      this.rowMessagesForGroupingPattern
+    );
+    match = this.escapeRegExp(match);
+
+    if (
+      match.trim().length &&
+      // eslint-disable-next-line no-alert
+      confirm(
+        `Do you want to create the grouping pattern\n\n"${match}"\n\nCancel = No, OK = Create`
+      )
+    ) {
+      await ajax("/patterns/grouping.json", {
+        method: "POST",
+        data: {
+          pattern: match,
+        },
+      });
+      this.rowMessagesForGroupingPattern = [];
+      this.buildingGroupingPattern = false;
+      this.model.reload();
+    } else if (!match.trim().length) {
+      // eslint-disable-next-line no-alert
+      alert("Can not create a grouping pattern with the given rows");
+    }
+  }
+
+  findLongestMatchingPrefix(strings) {
+    const shortestString = strings.reduce(
+      (shortest, str) => (str.length < shortest.length ? str : shortest),
+      strings[0]
+    );
+
+    let longestMatchingSubstring = "";
+    for (let i = 0; i < shortestString.length; i++) {
+      const currentSubstring = shortestString.substring(0, i + 1);
+
+      if (strings.every((str) => str.includes(currentSubstring))) {
+        longestMatchingSubstring = currentSubstring;
+      } else {
+        break;
+      }
+    }
+
+    return longestMatchingSubstring;
+  }
+
+  escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
   }
 }

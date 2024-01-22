@@ -17,7 +17,16 @@
     {{/if}}
 
     {{#each this.model.rows as |row|}}
-      <MessageRow @model={{row}} @selectRow={{fn this.selectRowAction row}} />
+      <div class="message-row-wrapper">
+        {{#if this.buildingGroupingPattern}}
+          <input
+            type="checkbox"
+            class="grouping-checkbox"
+            {{on "change" (fn this.handleCheckboxChange row)}}
+          />
+        {{/if}}
+        <MessageRow @model={{row}} @selectRow={{fn this.selectRowAction row}} />
+      </div>
     {{/each}}
   </div>
 </div>
@@ -109,9 +118,27 @@
 
       <div class="footer-btns">
         {{#if this.showSettings}}
+          {{#if this.showCreateGroupingPattern}}
+            <button
+              class="settings btn"
+              type="button"
+              {{on "click" this.createGroupingPatternFromSelectedRows}}
+            >
+              <span>Create Grouping Pattern</span>
+            </button>
+          {{/if}}
+
           <LinkTo @route="settings" class="settings btn no-text">
             <FaIcon @icon="cog" />
           </LinkTo>
+
+          <button
+            class="settings btn no-text"
+            type="button"
+            {{on "click" this.toggleGroupingPatternFromSelectedRows}}
+          >
+            <FaIcon @icon="list" />
+          </button>
         {{/if}}
 
         <button

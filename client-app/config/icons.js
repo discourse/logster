@@ -19,6 +19,7 @@ module.exports = function () {
       "cog",
       "lock",
       "unlock",
+      "list",
     ],
     "free-regular-svg-icons": ["trash-alt", "check-square", "copy", "clone"],
     // "free-brands-svg-icons": []

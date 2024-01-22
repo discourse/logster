@@ -52,9 +52,19 @@ tbody tr {
   margin: 40dvh auto;
 }
 
+.message-row-wrapper {
+  display: flex;
+  width: inherit;
+
+  .grouping-checkbox {
+    margin: 0;
+  }
+}
+
 .message-row {
   font-family: "Roboto";
   display: flex;
+  width: inherit;
 }
 
 .message-row .severity,
@@ -306,7 +316,7 @@ label span {
 }
 
 .severity-filters label {
-  margin-right: 18px;
+  margin-right: 10px;
 }
 
 .search-clear-all .clear {
@@ -396,7 +406,7 @@ label span {
 .btn {
   display: inline-block;
   margin: 0;
-  padding: 5px 12px;
+  padding: 5px 8px;
   font-size: 1em;
   line-height: 0;
   text-align: center;
@@ -455,7 +465,6 @@ label span {
 .search-clear-all .footer-btns .settings {
   height: 100%;
   box-sizing: border-box;
-  margin: 0 7px 0 7px;
   display: inline-flex;
   align-items: center;
 }
@@ -471,11 +480,11 @@ label span {
 }
 
 .footer-btns {
-  flex-grow: 0;
-  flex-shrink: 0;
+  display: flex;
+  gap: 0.7em;
 }
 
-@media (min-width: 771px) {
+@media (min-width: 871px) {
   .severity-filters,
   .search-clear-all {
     height: 100%;
@@ -497,7 +506,7 @@ label span {
   }
 }
 
-@media (max-width: 770px) {
+@media (max-width: 870px) {
   .severity-filters {
     padding: 10px;
   }
