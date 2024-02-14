@@ -20,6 +20,8 @@ module Logster
       :max_env_count_per_message,
       :maximum_message_length,
       :use_full_hostname,
+      :back_to_site_link_text,
+      :back_to_site_link_path,
     )
 
     attr_writer :subdirectory

@@ -29,6 +29,16 @@ export default class IndexController extends Controller {
     return Preload.get("patterns_enabled");
   }
 
+  @computed
+  get backToSiteLinkText() {
+    return Preload.get("back_to_site_link_text");
+  }
+
+  @computed
+  get backToSiteLinkPath() {
+    return Preload.get("back_to_site_link_path");
+  }
+
   get actionsInMenu() {
     return (
       /mobile/i.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent)
