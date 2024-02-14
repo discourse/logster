@@ -1,4 +1,8 @@
 <div id="top-panel">
+  <BackToSiteLink
+    @path={{this.backToSiteLinkPath}}
+    @text={{this.backToSiteLinkText}}
+  />
   <div id="log-table">
     {{#if this.model.moreBefore}}
       <div {{on "click" this.showMoreBefore}} class="show-more">

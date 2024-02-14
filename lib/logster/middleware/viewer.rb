@@ -335,6 +335,12 @@ module Logster
         preload.merge!(gems_dir: gems_dir, backtrace_links_enabled: backtrace_links_enabled)
 
         preload.merge!(preload_backtrace_data) if backtrace_links_enabled
+        if Logster.config.back_to_site_link_text && Logster.config.back_to_site_link_path
+          preload.merge!(
+            back_to_site_link_text: Logster.config.back_to_site_link_text,
+            back_to_site_link_path: Logster.config.back_to_site_link_path,
+          )
+        end
         preload
       end
 

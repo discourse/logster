@@ -278,6 +278,11 @@ tbody tr {
   overflow: auto;
 }
 
+#back-to-site-panel {
+  padding: 10px;
+  background-color: #f1f1f1;
+}
+
 .message-info {
   position: absolute;
   border-bottom: 1px solid #ddd;

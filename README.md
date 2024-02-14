@@ -62,6 +62,10 @@ Logster can be configured using `Logster.config`:
 
 - `Logster.config.gems_dir` : The value of this config is `Gem.dir + "/gems/"` by default. You probably don't need to change this config, but it's available in case your app gems are installed in a different directory. An example where this config is needed is Logster [demo site](http://logster.info/logs/): [https://github.com/discourse/logster/blob/master/website/sample.rb#L77](https://github.com/discourse/logster/blob/master/website/sample.rb#L77).
 
+- `Logster.config.back_to_site_link_path` : Path for the backlink to site.
+
+- `Logster.config.back_to_site_link_text` : Text for the backlink to site.
+
 ### Tracking Error Rate
 
 Logster allows you to register a callback when the rate of errors has exceeded
