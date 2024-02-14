@@ -8,7 +8,7 @@ module("Integration | Component | back-to-site-link", function (hooks) {
 
   test("With path and text paremeter", async function (assert) {
     await render(hbs`<BackToSiteLink @path="/admin" @text="back to site"/>`);
-    assert.dom("#back-to-site-panel a").exists("It shows back link to site");
+    assert.dom("#back-to-site-panel a").exists("It shows back to site link");
   });
 
   test("Without required paremeters", async function (assert) {
