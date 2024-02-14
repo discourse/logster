@@ -1,5 +1,17 @@
 # CHANGELOG
 
+- 2024-02-15: 2.17.0
+
+  - FEATURE: backlink to site
+
+- 2024-01-19: 2.16.0
+
+  - FEATURE: Add inline grouping pattern creation
+
+- 2024-01-16: 2.15.0
+
+  - FEATURE: Add loading spinner
+
 - 2024-01-15: 2.14.0
 
   - FEATURE: Stop grouping logs with different messages
