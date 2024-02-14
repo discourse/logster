@@ -1,6 +1,7 @@
 module.exports = function () {
   return {
     "free-solid-svg-icons": [
+      "arrow-left",
       "check-square",
       "trash-alt",
       "ellipsis-h",
