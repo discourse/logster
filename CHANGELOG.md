@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2024-02-15: 2.18.0
+
+  - FEATURE: Implement a default Content-Security-Policy
+
 - 2024-02-15: 2.17.1
 
   - UX: fixed top menu when backlink to the site exists
