@@ -85,7 +85,7 @@ module Logster
               [200, { "content-type" => "application/json; charset=utf-8" }, [message.to_json]]
             else
               preload = { "/show/#{key}" => message }
-              [200, { "content-type" => "text/html; charset=utf-8" }, [body(preload)]]
+              js_app(preload)
             end
           elsif resource =~ %r{/settings(\.json)?$}
             json = $1 == ".json"
@@ -114,7 +114,7 @@ module Logster
                 [JSON.generate(suppression: suppression, grouping: grouping)],
               ]
             else
-              [200, { "content-type" => "text/html; charset=utf-8" }, [body]]
+              js_app
             end
           elsif resource =~ %r{/patterns/([a-zA-Z0-9_]+)\.json$}
             unless Logster.config.enable_custom_patterns_via_ui
@@ -151,7 +151,7 @@ module Logster
             Logster.store.remove_ignore_count(pattern)
             [200, {}, ["OK"]]
           elsif resource == "/"
-            [200, { "content-type" => "text/html; charset=utf-8" }, [body]]
+            js_app
           elsif resource =~ %r{/fetch-env/([0-9a-f]+)\.json$}
             key = $1
             env = Logster.store.get_env(key)
@@ -299,15 +299,12 @@ module Logster
         $3 || "/" if path =~ @path_regex
       end
 
-      def css(name, attrs = {})
-        attrs = attrs.map { |k, v| "#{k}='#{v}'" }.join(" ")
-
-        "<link rel='stylesheet' type='text/css' href='#{@logs_path}/stylesheets/#{name}' #{attrs}>"
+      def css(name, csp_nonce)
+        "<link rel='stylesheet' type='text/css' href='#{@logs_path}/stylesheets/#{name}' nonce='#{csp_nonce}'>"
       end
 
-      def script(prod, dev = nil)
-        name = ENV["DEBUG_JS"] == "1" && dev ? dev : prod
-        "<script src='#{@logs_path}/javascript/#{name}'></script>"
+      def script(name, csp_nonce)
+        "<script src='#{@logs_path}/javascript/#{name}' nonce='#{csp_nonce}'></script>"
       end
 
       def to_json_and_escape(payload)
@@ -344,32 +341,43 @@ module Logster
         preload
       end
 
-      def body(preload = {})
+      def js_app(preload = {})
+        csp_nonce = SecureRandom.hex
         preload = preloaded_data.merge(preload)
         root_url = @logs_path
         root_url += "/" if root_url[-1] != "/"
-        <<~HTML
+        body = <<~HTML
           <!doctype html>
           <html>
             <head>
               <link rel="shortcut icon" href="#{@logs_path}/images/icon_64x64.png">
               <link rel="apple-touch-icon" href="#{@logs_path}/images/icon_144x144.png" />
               <title>#{Logster.config.web_title || "Logs"}</title>
-              <link href='//fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
-              <link href='//fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+              <link href='//fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css' nonce='#{csp_nonce}'>
+              <link href='//fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css' nonce='#{csp_nonce}'>
               <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=yes">
               <meta name="color-scheme" content="dark light">
-              #{css("vendor.css")}
-              #{css("client-app.css")}
-              #{script("vendor.js")}
+              #{css("vendor.css", csp_nonce)}
+              #{css("client-app.css", csp_nonce)}
+              #{script("vendor.js", csp_nonce)}
               <meta id="preloaded-data" data-root-path="#{@logs_path}" data-preloaded="#{to_json_and_escape(preload)}">
               <meta name="client-app/config/environment" content="%7B%22modulePrefix%22%3A%22client-app%22%2C%22environment%22%3A%22production%22%2C%22rootURL%22%3A%22#{root_url}%22%2C%22locationType%22%3A%22history%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%2C%22EXTEND_PROTOTYPES%22%3A%7B%22Date%22%3Afalse%7D%2C%22_APPLICATION_TEMPLATE_WRAPPER%22%3Afalse%2C%22_DEFAULT_ASYNC_OBSERVERS%22%3Atrue%2C%22_JQUERY_INTEGRATION%22%3Afalse%2C%22_TEMPLATE_ONLY_GLIMMER_COMPONENTS%22%3Atrue%7D%2C%22APP%22%3A%7B%22name%22%3A%22client-app%22%2C%22version%22%3A%220.0.0%2B7a424002%22%7D%2C%22exportApplicationGlobal%22%3Afalse%7D" />
             </head>
             <body>
-              #{script("client-app.js")}
+              #{script("client-app.js", csp_nonce)}
             </body>
           </html>
         HTML
+
+        [
+          200,
+          {
+            "content-type" => "text/html; charset=utf-8",
+            "content-security-policy" =>
+              "script-src 'nonce-#{csp_nonce}'; style-src 'nonce-#{csp_nonce}'; object-src 'none'; base-uri 'none';",
+          },
+          [body],
+        ]
       end
     end
   end
