@@ -39,6 +39,11 @@ export default class IndexController extends Controller {
     return Preload.get("back_to_site_link_path");
   }
 
+  @computed
+  get hasTopMenu() {
+    return this.backToSiteLinkText && this.backToSiteLinkPath;
+  }
+
   get actionsInMenu() {
     return (
       /mobile/i.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent)

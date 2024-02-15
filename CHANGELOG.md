@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2024-02-15: 2.17.1
+
+  - UX: fixed top menu when backlink to the site exists
+
 - 2024-02-15: 2.17.0
 
   - FEATURE: backlink to site
