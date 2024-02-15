@@ -1,8 +1,12 @@
-<div id="top-panel">
-  <BackToSiteLink
-    @path={{this.backToSiteLinkPath}}
-    @text={{this.backToSiteLinkText}}
-  />
+{{#if this.hasTopMenu}}
+  <div id="top-menu">
+    <BackToSiteLink
+      @path={{this.backToSiteLinkPath}}
+      @text={{this.backToSiteLinkText}}
+    />
+  </div>
+{{/if}}
+<div id="top-panel" class={{if this.hasTopMenu "with-top-menu"}}>
   <div id="log-table">
     {{#if this.model.moreBefore}}
       <div {{on "click" this.showMoreBefore}} class="show-more">

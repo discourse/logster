@@ -277,10 +277,22 @@ tbody tr {
   bottom: 320px;
   overflow: auto;
 }
+#top-panel.with-top-menu {
+  top: 35px;
+}
+
+#top-menu {
+  position: fixed;
+  z-index: 900;
+  left: 0;
+  top: 0;
+  width: 100%;
+}
 
 #back-to-site-panel {
   padding: 10px;
   background-color: #f1f1f1;
+  height: 15px;
 }
 
 .message-info {
