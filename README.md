@@ -6,8 +6,6 @@ Logster is an embedded Ruby "exception reporting service" admins can view on liv
 
 ![Screenshot](https://raw.githubusercontent.com/discourse/logster/master/website/images/logster-screenshot.png)
 
-Play with a live demo at [logster.info/logs](http://logster.info/logs).
-
 ## Installation
 
 Add these lines to your application's Gemfile:
