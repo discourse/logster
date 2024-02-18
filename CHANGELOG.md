@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2024002-19: 2.18.1
+
+  - UX: backlink in dark mode has a dark background
+
 - 2024-02-15: 2.18.0
 
   - FEATURE: Implement a default Content-Security-Policy

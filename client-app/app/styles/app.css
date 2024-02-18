@@ -822,4 +822,8 @@ label span {
   .expand-list {
     color: #44f;
   }
+
+  #back-to-site-panel {
+    background-color: #181818;
+  }
 }
