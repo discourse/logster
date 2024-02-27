@@ -57,4 +57,4 @@ end
 # check logster/configuration.rb for config options
 # Logster.config.environments << :staging
 
-require "logster/rails/railtie" if defined?(::Rails) && ::Rails::VERSION::MAJOR.to_i >= 3
+require "logster/rails/railtie" if defined?(::Rails::VERSION) && ::Rails::VERSION::MAJOR.to_i >= 3

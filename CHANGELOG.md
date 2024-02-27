@@ -1,6 +1,10 @@
 # CHANGELOG
 
-- 2024002-19: 2.18.1
+- 2024-02-28: 2.19.0
+
+  - FIX: Add compatibility with Rails 7.1+
+
+- 2024-02-19: 2.18.1
 
   - UX: backlink in dark mode has a dark background
 
