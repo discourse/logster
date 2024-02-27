@@ -5,32 +5,39 @@ module Logster::Rails
   class Engine < Rails::Engine
   end
 
-  def self.set_logger(config)
-    return unless Logster.config.environments.include?(Rails.env.to_sym)
+  class << self
+    def set_logger(config)
+      return unless Logster.config.environments.include?(Rails.env.to_sym)
 
-    require "logster/middleware/debug_exceptions"
-    require "logster/middleware/reporter"
+      require "logster/middleware/debug_exceptions"
+      require "logster/middleware/reporter"
 
-    store = Logster.store ||= Logster::RedisStore.new
-    store.level = Logger::Severity::WARN if Rails.env.production?
+      store = Logster.store ||= Logster::RedisStore.new
+      store.level = Logger::Severity::WARN if Rails.env.production?
 
-    if Rails.env.development?
-      require "logster/defer_logger"
-      logger = Logster::DeferLogger.new(store)
-    else
-      logger = Logster::Logger.new(store)
+      if Rails.env.development?
+        require "logster/defer_logger"
+        logger = Logster::DeferLogger.new(store)
+      else
+        logger = Logster::Logger.new(store)
+      end
+
+      logger.level = ::Rails.logger.level
+
+      Logster.logger = config.logger = logger
+
+      if rails_71?
+        ::Rails.logger.broadcast_to(logger)
+      else
+        logger.chain(::Rails.logger)
+        ::Rails.logger = logger
+      end
     end
 
-    logger.chain(::Rails.logger)
-    logger.level = ::Rails.logger.level
+    def initialize!(app)
+      return unless Logster.config.environments.include?(Rails.env.to_sym)
+      return unless logster_enabled?
 
-    Logster.logger = ::Rails.logger = config.logger = logger
-  end
-
-  def self.initialize!(app)
-    return unless Logster.config.environments.include?(Rails.env.to_sym)
-
-    if Logster::Logger === Rails.logger
       if Logster.config.enable_js_error_reporting
         app.middleware.insert_before ActionDispatch::ShowExceptions, Logster::Middleware::Reporter
       end
@@ -51,6 +58,17 @@ module Logster::Rails
         git_version = `cd #{Rails.root} && git rev-parse --short HEAD 2> /dev/null`
         Logster.config.application_version = git_version.strip if git_version.present?
       end
+    end
+
+    private
+
+    def logster_enabled?
+      return ::Rails.logger == Logster.logger unless rails_71?
+      ::Rails.logger.broadcasts.include?(Logster.logger)
+    end
+
+    def rails_71?
+      ::Rails.version >= "7.1"
     end
   end
 

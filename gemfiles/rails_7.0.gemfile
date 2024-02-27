@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+group :test do
+  gem "rails", "~> 7.0.0"
+end
+
+gemspec path: "../"
