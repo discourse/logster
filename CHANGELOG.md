@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2024-03-12: 2.19.1
+
+  - FIX: Don’t truncate backtrace on copying
+
 - 2024-02-28: 2.19.0
 
   - FIX: Add compatibility with Rails 7.1+
