@@ -94,10 +94,7 @@ export default class MessageInfo extends Component {
       : "Message";
     const message = `${header}\n\n${this.currentMessage.message}`;
 
-    const backtrace = `Backtrace\n\n${this.currentMessage.backtrace
-      .split("\n")
-      .slice(0, 10)
-      .join("\n")}`;
+    const backtrace = `Backtrace\n\n${this.currentMessage.backtrace}`;
 
     const httpHosts = Array.isArray(this.currentMessage.env)
       ? this.currentMessage.env
