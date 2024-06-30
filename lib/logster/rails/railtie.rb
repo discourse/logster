@@ -7,7 +7,7 @@ module Logster::Rails
 
   class << self
     def set_logger(config)
-      return unless Logster.config.environments.include?(Rails.env.to_sym)
+      return if !Logster.config.environments.include?(Rails.env.to_sym)
 
       require "logster/middleware/debug_exceptions"
       require "logster/middleware/reporter"
@@ -35,7 +35,7 @@ module Logster::Rails
     end
 
     def initialize!(app)
-      return unless Logster.config.environments.include?(Rails.env.to_sym)
+      return if !Logster.config.environments.include?(Rails.env.to_sym)
       return unless logster_enabled?
 
       if Logster.config.enable_js_error_reporting

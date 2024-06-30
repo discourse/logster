@@ -11,9 +11,9 @@ require "sinatra"
 require "sinatra/base"
 
 # log a few errors
-SampleRedis = Redis.new
-SampleStore = Logster.store = Logster::RedisStore.new(SampleRedis)
-Logster.logger = Logster::Logger.new(SampleStore)
+sample_redis = Redis.new
+sample_store = Logster.store = Logster::RedisStore.new(sample_redis)
+Logster.logger = Logster::Logger.new(sample_store)
 
 class SampleLoader
   def initialize
@@ -22,10 +22,10 @@ class SampleLoader
   end
 
   def ensure_samples_loaded
-    SampleRedis.del @sample_data_key
+    sample_redis.del @sample_data_key
     data = File.read("data/data.json")
     parsed = JSON.parse(data)
-    parsed.each { |row| SampleRedis.rpush @sample_data_key, JSON.fast_generate(row) }
+    parsed.each { |row| sample_redis.rpush @sample_data_key, JSON.fast_generate(row) }
     @length = parsed.length
   end
 
@@ -36,18 +36,18 @@ class SampleLoader
         begin
           load_next_sample
         rescue => e
-          SampleStore.report(4, "logster", e.to_s)
+          sample_store.report(4, "logster", e.to_s)
         end
       end
     end
   end
 
   def load_next_sample
-    message = JSON.parse(SampleRedis.lindex(@sample_data_key, @index))
+    message = JSON.parse(sample_redis.lindex(@sample_data_key, @index))
     @index += 1
     @index %= @length
 
-    SampleStore.report(
+    sample_store.report(
       message["severity"],
       message["progname"],
       message["message"],
@@ -62,7 +62,7 @@ class SampleLoader
     params = {}
     params["always_present"] = "some_value_#{rand(3)}"
     params["key_#{rand(3)}"] = "some_value_#{rand(3)}"
-    SampleStore.report(
+    sample_store.report(
       2,
       "",
       "Message message message",
@@ -78,9 +78,9 @@ class SampleLoader
   end
 end
 
-SampleLoaderInstance = SampleLoader.new
-SampleLoaderInstance.ensure_samples_loaded
-SampleLoaderInstance.load_samples unless ENV["NO_DATA"]
+sample_loader_instance = SampleLoader.new
+sample_loader_instance.ensure_samples_loaded
+sample_loader_instance.load_samples unless ENV["NO_DATA"]
 Logster.config.allow_grouping = true
 Logster.config.enable_custom_patterns_via_ui = ENV["LOGSTER_ENABLE_CUSTOM_PATTERNS_VIA_UI"] == "1"
 Logster.config.application_version = "b329e23f8511b7248c0e4aee370a9f8a249e1b84"
@@ -114,7 +114,7 @@ HTML
   end
 
   get "/report_error" do
-    SampleLoaderInstance.load_next_sample
-    SampleLoaderInstance.load_error
+    sample_loader_instance.load_next_sample
+    sample_loader_instance.load_error
   end
 end

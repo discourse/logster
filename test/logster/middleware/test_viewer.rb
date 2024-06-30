@@ -317,7 +317,7 @@ class TestViewer < Minitest::Test
     %w[/logsie/javascript/client-app.js /logsie/javascript/vendor.js].each do |path|
       response = request.get(path)
       assert_equal(200, response.status)
-      assert_equal("application/javascript", response.headers["content-type"])
+      assert %w[text/javascript application/javascript].include?(response.headers["content-type"])
     end
   end
 

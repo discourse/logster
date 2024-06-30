@@ -749,7 +749,9 @@ class TestRedisStore < Minitest::Test
       Rack::MockRequest.env_for("/test").merge(
         "HTTP_HOST" => "www.site.com",
         "HTTP_USER_AGENT" => "SOME WHERE",
+        "rack.input" => StringIO.new("test"),
       )
+
     orig = env.dup
     orig["test"] = "tests"
     orig["test1"] = "tests1"
