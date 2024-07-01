@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "json"
+# Disable rubocop because the require is only redundant for Ruby 3.2+ but we still support Ruby 3.1
+require "set" # rubocop:disable Lint/RedundantRequireStatement
 require "logster/base_store"
 require "logster/redis_rate_limiter"
 
