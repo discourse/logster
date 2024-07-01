@@ -34,7 +34,7 @@ module Logster
     end
 
     def check(severity)
-      return unless @severities.include?(severity)
+      return if !@severities.include?(severity)
       time = Time.now.to_i
       num = bucket_number(time)
       redis_key = "#{key}:#{num}"

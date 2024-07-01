@@ -182,7 +182,7 @@ module Logster
 
     def self.populate_env_helper(env)
       env[LOGSTER_ENV] ||= begin
-        unless env.include? "rack.input"
+        if !env.include? "rack.input"
           # Not a web request
           return env
         end

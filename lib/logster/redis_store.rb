@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "json"
-require "set"
 require "logster/base_store"
 require "logster/redis_rate_limiter"
 
@@ -409,12 +408,12 @@ module Logster
       if @redis.llen(list_key) > max_backlog
         removed_keys = []
         while removed_key = @redis.lpop(list_key)
-          unless @redis.sismember(protected_key, removed_key)
+          if @redis.sismember(protected_key, removed_key)
+            removed_keys << removed_key
+          else
             rmsg = get(removed_key, load_env: false)
             delete(rmsg)
             break
-          else
-            removed_keys << removed_key
           end
         end
         removed_keys.reverse.each { |key| @redis.lpush(list_key, key) }

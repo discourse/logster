@@ -94,7 +94,6 @@ module Logster
         @timestamp = 0
         @changed = true
       end
-      @messages
     end
 
     def changed?
