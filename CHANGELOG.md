@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- UNRELEASED
+
+  - Dropped support for Ruby 3.0
+
 - 2024-03-12: 2.19.1
 
   - FIX: Don’t truncate backtrace on copying
