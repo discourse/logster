@@ -71,6 +71,46 @@ class TestLogger < Minitest::Test
     assert_equal "test", @store.calls.first[2]
   end
 
+  def test_subscribing_to_logger_events
+    custom_logger_klass =
+      Class.new do
+        attr_reader :events
+
+        def initialize
+          @events = []
+        end
+
+        def log(severity, message, progname, opts, &block)
+          @events.push({ severity:, message:, progname:, opts:, block: })
+        end
+      end
+
+    custom_logger = custom_logger_klass.new
+
+    @logger.subscribe do |severity, message, progname, opts, &block|
+      custom_logger.log(severity, message, progname, opts, &block)
+    end
+
+    @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
+    @logger.add(1, nil, nil, backtrace: "backtrace") { "yielded message" }
+
+    first_event = custom_logger.events[0]
+
+    assert_equal(0, first_event[:severity])
+    assert_equal("test", first_event[:message])
+    assert_equal("prog", first_event[:progname])
+    assert_equal({ backtrace: "backtrace", env: { a: "x" } }, first_event[:opts])
+    assert_nil first_event[:block]
+
+    second_event = custom_logger.events[1]
+
+    assert_equal(1, second_event[:severity])
+    assert_nil second_event[:message]
+    assert_nil second_event[:progname]
+    assert_equal({ backtrace: "backtrace", env: nil }, second_event[:opts])
+    assert_equal("yielded message", second_event[:block].call)
+  end
+
   class NewLogger < Logster::Logger
   end
 

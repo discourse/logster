@@ -3,6 +3,7 @@
 - UNRELEASED
 
   - Dropped support for Ruby 3.0
+  - Add `Logster::Logger#subscribe` which allows subscribing to log events from `Logster::Logger`.
 
 - 2024-03-12: 2.19.1
 
