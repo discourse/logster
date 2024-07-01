@@ -7,12 +7,11 @@ module Logster
     LOGSTER_ENV = "logster_env"
 
     attr_accessor :store, :skip_store
-    attr_reader :chained
 
     def initialize(store)
       super(nil)
       @store = store
-      @chained = []
+      @chained = {}
       @skip_store = false
       @logster_override_level_key = "logster_override_level_#{object_id}"
     end
@@ -25,17 +24,21 @@ module Logster
       Thread.current[@logster_override_level_key]
     end
 
-    def chain(logger)
-      @chained << logger
+    def chained
+      @chained.keys
     end
 
-    def add_to_chained(logger, severity, message, progname, opts = nil, &block)
+    def chain(logger, with_opts: false)
+      @chained[logger] = with_opts
+    end
+
+    def add_to_chained(logger, severity, message, progname, opts = nil, with_opts: false, &block)
       if logger.respond_to? :skip_store
         old = logger.skip_store
         logger.skip_store = @skip_store
       end
 
-      if logger.is_a?(Logster::Logger)
+      if with_opts || logger.is_a?(Logster::Logger)
         logger.add(severity, message, progname, opts, &block)
       else
         logger.add(severity, message, progname, &block)
@@ -73,13 +76,16 @@ module Logster
         opts[:backtrace] = backtrace
       end
 
-      if @chained
+      chained_loggers = @chained.to_a
+
+      if chained_loggers
         i = 0
         # micro optimise for logging
-        while i < @chained.length
+        while i < chained_loggers.length
           # TODO double yielding blocks
           begin
-            add_to_chained(@chained[i], severity, message, progname, opts, &block)
+            logger, with_opts = chained_loggers[i]
+            add_to_chained(logger, severity, message, progname, opts, with_opts:, &block)
           rescue => e
             # don't blow up if STDERR is somehow closed
             begin

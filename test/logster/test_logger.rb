@@ -84,6 +84,33 @@ class TestLogger < Minitest::Test
     [@store, @other_store].each { |store| assert_equal "backtrace", store.calls[0][3][:backtrace] }
   end
 
+  def test_chain_logger_with_opts_passes_logster_opts_to_chained_logger_add_method
+    some_logger =
+      Class.new do
+        attr_reader :messages
+
+        def initialize
+          @messages = []
+        end
+
+        def add(severity, message, progname, opts, &block)
+          @messages << { severity:, message:, progname:, opts: }
+        end
+      end
+
+    logger = some_logger.new
+    @logger.chain(logger, with_opts: true)
+    @logger.add(0, "test", "prog", backtrace: "backtrace", env: { a: "x" })
+
+    assert_equal 1, logger.messages.length
+
+    message = logger.messages[0]
+
+    assert_equal "test", message[:message]
+    assert_equal "prog", message[:progname]
+    assert_equal({ env: { a: "x" }, backtrace: "backtrace" }, message[:opts])
+  end
+
   def test_progname_parameter
     @logger.add(0, "test")
     progname = @store.calls[0][1]

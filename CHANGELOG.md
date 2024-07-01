@@ -4,6 +4,9 @@
 
   - Dropped support for Ruby 3.0
 
+  - Update `Logster::Logger#chain` to accept a `with_opts` keyword argument. When set to `true`, an instance of `Logster::Logger`
+    will call the chained logger's `add` method with an extra `opts` parameter.
+
 - 2024-03-12: 2.19.1
 
   - FIX: Don’t truncate backtrace on copying
