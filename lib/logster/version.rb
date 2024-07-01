@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 module Logster
-  VERSION = "2.19.1"
+  VERSION = "2.20.0"
 end
