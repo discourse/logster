@@ -13,6 +13,7 @@ module Logster
       super(nil)
       @store = store
       @chained = []
+      @subscribers = []
       @skip_store = false
       @logster_override_level_key = "logster_override_level_#{object_id}"
     end
@@ -27,6 +28,17 @@ module Logster
 
     def chain(logger)
       @chained << logger
+    end
+
+    ##
+    # Subscribe to log events.
+    #
+    # Example:
+    #   logger.subscribe do |severity, message, progname, opts, &block|
+    #     YourCustomLogger.log(severity, message, progname, opts, &block)
+    #   end
+    def subscribe(&block)
+      @subscribers << block
     end
 
     def add_to_chained(logger, severity, message, progname, opts = nil, &block)
@@ -73,24 +85,8 @@ module Logster
         opts[:backtrace] = backtrace
       end
 
-      if @chained
-        i = 0
-        # micro optimise for logging
-        while i < @chained.length
-          # TODO double yielding blocks
-          begin
-            add_to_chained(@chained[i], severity, message, progname, opts, &block)
-          rescue => e
-            # don't blow up if STDERR is somehow closed
-            begin
-              STDERR.puts "Failed to report message to chained logger #{e}"
-            rescue StandardError
-              nil
-            end
-          end
-          i += 1
-        end
-      end
+      notify_subscribers(severity, message, progname, opts, &block)
+      add_to_chained_loggers(severity, message, progname, opts, &block)
 
       return if @skip_store
 
@@ -120,6 +116,52 @@ module Logster
     end
 
     private
+
+    def add_to_chained_loggers(severity, message, progname, opts, &block)
+      chained_length = @chained.length
+
+      if chained_length > 0
+        i = 0
+        # micro optimise for logging since while loop is almost twice as fast
+        while i < chained_length
+          begin
+            add_to_chained(@chained[i], severity, message, progname, opts, &block)
+          rescue => e
+            # don't blow up if STDERR is somehow closed
+            begin
+              STDERR.puts "Failed to report message to chained logger: #{e.class} (#{e.message})\n#{e.backtrace.join("\n")}"
+            rescue StandardError
+              nil
+            end
+          end
+          i += 1
+        end
+      end
+    end
+
+    def notify_subscribers(severity, message, progname, opts, &block)
+      subscribers_length = @subscribers.length
+
+      if subscribers_length > 0
+        i = 0
+
+        # micro optimise for logging since while loop is almost twice as fast
+        while i < subscribers_length
+          begin
+            @subscribers[i].call(severity, message, progname, opts, &block)
+          rescue => e
+            # don't blow up if STDERR is somehow closed
+            begin
+              STDERR.puts "Failed to report message to subscriber: #{e.class} (#{e.message})\n#{e.backtrace.join("\n")}"
+            rescue StandardError
+              nil
+            end
+          end
+
+          i += 1
+        end
+      end
+    end
 
     def report_to_store(severity, progname, message, opts = {})
       @store.report(severity, progname, message, opts)
