@@ -534,7 +534,7 @@ module Logster
           when Regexp
             value.to_s =~ search
           when String
-            value.to_s =~ Regexp.new(search, Regexp::IGNORECASE)
+            value.to_s =~ Regexp.new(Regexp.escape(search), Regexp::IGNORECASE)
           else
             false
           end

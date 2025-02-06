@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2025-02-06: 2.20.1
+
+  - FIX: Don't break search when providing invalid regex characters
+
 - 2024-07-05: 2.20.0
 
   - Dropped support for Ruby 3.0
