@@ -428,6 +428,16 @@ class TestRedisStore < Minitest::Test
     assert_equal("TUVWXYZ", latest[0].message)
   end
 
+  def test_search_works_with_invalid_regex_chars
+    @store.report(Logger::INFO, "test", "ABCDEFG\\")
+    @store.report(Logger::INFO, "test", "TUVWXYZ")
+
+    result = @store.latest(search: "EFG\\")
+
+    assert_equal(1, result.size)
+    assert_equal("ABCDEFG\\", result[0].message)
+  end
+
   def test_search_exclude_results
     @store.report(Logger::INFO, "test", "ABCDEFG")
     @store.report(Logger::INFO, "test", "TUVWXYZ")
