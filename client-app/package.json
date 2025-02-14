@@ -60,6 +60,7 @@
     "sinon": "^15.0.1",
     "webpack": "^5.94.0"
   },
+  "packageManager": "pnpm@9.15.5",
   "engines": {
     "node": "12.* || 14.* || >= 16"
   },
