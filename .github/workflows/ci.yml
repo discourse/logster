@@ -27,7 +27,7 @@ jobs:
       BUNDLE_GEMFILE: ${{ github.workspace }}/gemfiles/rails_${{ matrix.rails }}.gemfile
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
@@ -37,13 +37,15 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          node-version: 22
 
-      - name: Yarn install
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ./client-app/package.json
+
+      - name: Pnpm install
         working-directory: client-app
-        run: yarn install
+        run: pnpm install
 
       - name: Build JS app
         run: bash build_client_app.sh
@@ -58,27 +60,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          node-version: 22
 
-      - name: Yarn install
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ./client-app/package.json
+
+      - name: Pnpm install
         working-directory: client-app
-        run: yarn install
+        run: pnpm install
 
       - name: JS tests
         working-directory: client-app
-        run: yarn test:ember
+        run: pnpm test:ember
 
   linting:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
@@ -92,15 +96,16 @@ jobs:
       - uses: actions/setup-node@v3
         if: ${{ !cancelled() }}
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          node-version: 22
 
-      - name: Yarn install
-        if: ${{ !cancelled() }}
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ./client-app/package.json
+
+      - name: Pnpm install
         working-directory: client-app
-        run: yarn install
-
+        run: pnpm install
+  
       - name: Syntax Tree
         if: ${{ !cancelled() }}
         run: |
@@ -109,7 +114,7 @@ jobs:
       - name: JS linting
         if: ${{ !cancelled() }}
         working-directory: client-app
-        run: yarn lint
+        run: pnpm lint
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -117,17 +122,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          node-version: 22
 
-      - name: Yarn install
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ./client-app/package.json
+  
+      - name: Pnpm install
         working-directory: client-app
-        run: yarn install
+        run: pnpm install
 
       - name: Build JS app
         run: bash build_client_app.sh

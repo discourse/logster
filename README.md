@@ -144,7 +144,7 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 
 1. Fork it ( https://github.com/discourse/logster/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Run `cd client-app && yarn install`
+3. Run `cd client-app && pnpm install`
 4. Run `cd website && bundle install`
 5. In the root directory, run `bundle exec rake client_dev` to start Sinatra server (port 9292) and Ember server (port 4200). Use Ember server for hot reload for client code.
 6. Visit `http://localhost:4200/logs/` (with trailing slash) to test the application. Reload `http://localhost:4200/report_error` to add sample log data.

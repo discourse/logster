@@ -16,7 +16,6 @@
 /coverage/
 /libpeerconnection.log
 /testem.log
-/yarn-error.log
 
 # ember-try
 /.node_modules.ember-try/
