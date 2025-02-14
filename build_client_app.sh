@@ -1,6 +1,6 @@
 #!/bin/bash
 
-(cd client-app && yarn && yarn ember build --environment=${1:-production})
+(cd client-app && pnpm i && pnpm ember build --environment=${1:-production})
 
 rm -f assets/javascript/*
 rm -f assets/stylesheets/client-app.css
