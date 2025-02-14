@@ -6,3 +6,5 @@ inherit_mode:
 AllCops:
   Exclude:
     - 'client-app/**/*'
+Discourse/Plugins/NamespaceConstants:
+  Enabled: false

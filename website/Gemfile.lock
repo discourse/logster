@@ -1,27 +1,40 @@
 PATH
   remote: ..
   specs:
-    logster (2.15.0)
+    logster (2.20.1)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    mustermann (3.0.0)
+    base64 (0.2.0)
+    connection_pool (2.5.0)
+    logger (1.6.6)
+    mustermann (3.0.3)
       ruby2_keywords (~> 0.0.1)
-    nio4r (2.7.0)
-    puma (6.4.2)
+    nio4r (2.7.4)
+    puma (6.6.0)
       nio4r (~> 2.0)
-    rack (2.2.8.1)
-    rack-protection (3.0.5)
-      rack
-    redis (4.1.3)
+    rack (3.1.10)
+    rack-protection (4.1.1)
+      base64 (>= 0.1.0)
+      logger (>= 1.6.0)
+      rack (>= 3.0.0, < 4)
+    rack-session (2.1.0)
+      base64 (>= 0.1.0)
+      rack (>= 3.0.0)
+    redis (5.3.0)
+      redis-client (>= 0.22.0)
+    redis-client (0.23.2)
+      connection_pool
     ruby2_keywords (0.0.5)
-    sinatra (3.0.5)
+    sinatra (4.1.1)
+      logger (>= 1.6.0)
       mustermann (~> 3.0)
-      rack (~> 2.2, >= 2.2.4)
-      rack-protection (= 3.0.5)
+      rack (>= 3.0.0, < 4)
+      rack-protection (= 4.1.1)
+      rack-session (>= 2.0.0, < 3)
       tilt (~> 2.0)
-    tilt (2.0.11)
+    tilt (2.6.0)
 
 PLATFORMS
   ruby
