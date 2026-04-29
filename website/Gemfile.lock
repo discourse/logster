@@ -22,6 +22,8 @@ GEM
     rack-session (2.1.0)
       base64 (>= 0.1.0)
       rack (>= 3.0.0)
+    rackup (2.3.1)
+      rack (>= 3)
     redis (5.3.0)
       redis-client (>= 0.22.0)
     redis-client (0.23.2)
@@ -42,6 +44,7 @@ PLATFORMS
 DEPENDENCIES
   logster!
   puma
+  rackup
   redis
   sinatra
 

@@ -15,6 +15,8 @@ export default class IndexController extends Controller {
   @tracked loading = false;
   @tracked buildingGroupingPattern = false;
   @tracked rowMessagesForGroupingPattern = [];
+  @tracked showGroupingPatternDialog = false;
+  @tracked groupingPatternValue = "";
 
   showDebug = getLocalStorage("showDebug", false);
   showInfo = getLocalStorage("showInfo", false);
@@ -215,32 +217,49 @@ export default class IndexController extends Controller {
   }
 
   @action
-  async createGroupingPatternFromSelectedRows() {
+  createGroupingPatternFromSelectedRows() {
     let match = this.findLongestMatchingPrefix(
       this.rowMessagesForGroupingPattern
     );
     match = this.escapeRegExp(match);
 
-    if (
-      match.trim().length &&
-      // eslint-disable-next-line no-alert
-      confirm(
-        `Do you want to create the grouping pattern\n\n"${match}"\n\nCancel = No, OK = Create`
-      )
-    ) {
-      await ajax("/patterns/grouping.json", {
-        method: "POST",
-        data: {
-          pattern: match,
-        },
-      });
-      this.rowMessagesForGroupingPattern = [];
-      this.buildingGroupingPattern = false;
-      this.model.reload();
-    } else if (!match.trim().length) {
+    if (!match.trim().length) {
       // eslint-disable-next-line no-alert
       alert("Can not create a grouping pattern with the given rows");
+      return;
     }
+
+    this.groupingPatternValue = match;
+    this.showGroupingPatternDialog = true;
+  }
+
+  @action
+  updateGroupingPatternValue(event) {
+    this.groupingPatternValue = event.target.value;
+  }
+
+  @action
+  async confirmGroupingPattern() {
+    const pattern = this.groupingPatternValue.trim();
+    if (!pattern.length) {
+      return;
+    }
+
+    await ajax("/patterns/grouping.json", {
+      method: "POST",
+      data: { pattern },
+    });
+    this.showGroupingPatternDialog = false;
+    this.groupingPatternValue = "";
+    this.rowMessagesForGroupingPattern = [];
+    this.buildingGroupingPattern = false;
+    this.model.reload();
+  }
+
+  @action
+  cancelGroupingPattern() {
+    this.showGroupingPatternDialog = false;
+    this.groupingPatternValue = "";
   }
 
   findLongestMatchingPrefix(strings) {
