@@ -118,7 +118,7 @@ module Logster
             end
           elsif resource =~ %r{/patterns/([a-zA-Z0-9_]+)\.json$}
             unless Logster.config.enable_custom_patterns_via_ui
-              return(
+              return (
                 not_allowed(
                   "Custom patterns via the UI is disabled. You can enable it by committing this line to your app source code:\nLogster.config.enable_custom_patterns_via_ui = true",
                 )
