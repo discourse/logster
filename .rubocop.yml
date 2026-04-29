@@ -8,3 +8,5 @@ AllCops:
     - 'client-app/**/*'
 Discourse/Plugins/NamespaceConstants:
   Enabled: false
+Layout/SpaceAroundKeyword:
+  Enabled: false
