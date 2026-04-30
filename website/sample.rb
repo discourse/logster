@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Run with 'bundle exec rackup'
+# Run with 'bundle exec puma'
 
 require "redis"
 require "logster"
