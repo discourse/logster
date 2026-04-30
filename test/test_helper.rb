@@ -12,8 +12,16 @@ module StubSupport
     end
     yield self
   ensure
-    singleton_class.undef_method(method_name) rescue nil
-    define_singleton_method(method_name, original) rescue nil
+    begin
+      singleton_class.undef_method(method_name)
+    rescue StandardError
+      nil
+    end
+    begin
+      define_singleton_method(method_name, original)
+    rescue StandardError
+      nil
+    end
   end
 end
 
