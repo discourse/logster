@@ -6,5 +6,5 @@ To start it and test your code changes:
 
 ```text
 $ bundle install
-$ bundle exec rackup
+$ bundle exec puma
 ```

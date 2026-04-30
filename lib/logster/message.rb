@@ -65,7 +65,7 @@ module Logster
 
     def to_json(opts = nil)
       exclude_env = Hash === opts && opts.delete(:exclude_env)
-      JSON.fast_generate(to_h(exclude_env: exclude_env), opts)
+      JSON.generate(to_h(exclude_env: exclude_env), opts)
     end
 
     def self.from_json(json)
@@ -134,7 +134,7 @@ module Logster
 
     # todo - memoize?
     def grouping_key
-      Digest::SHA1.hexdigest JSON.fast_generate grouping_hash
+      Digest::SHA1.hexdigest JSON.generate grouping_hash
     end
 
     # todo - memoize?
@@ -273,10 +273,10 @@ module Logster
     protected
 
     def truncate_env(env, limit)
-      if JSON.fast_generate(env).bytesize > limit
+      if JSON.generate(env).bytesize > limit
         sizes = {}
         braces = "{}".bytesize
-        env.each { |k, v| sizes[k] = JSON.fast_generate(k => v).bytesize - braces }
+        env.each { |k, v| sizes[k] = JSON.generate(k => v).bytesize - braces }
         sorted = env.keys.sort { |a, b| sizes[a] <=> sizes[b] }
 
         kept_keys = []

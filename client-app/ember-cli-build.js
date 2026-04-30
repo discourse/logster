@@ -1,5 +1,11 @@
 "use strict";
 
+// clean-css v3 uses util.isRegExp which was removed in Node.js 22+
+const util = require("util");
+if (!util.isRegExp) {
+  util.isRegExp = (value) => value instanceof RegExp;
+}
+
 const EmberApp = require("ember-cli/lib/broccoli/ember-app");
 
 module.exports = function (defaults) {

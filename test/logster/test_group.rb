@@ -4,7 +4,7 @@ require_relative "../test_helper"
 require "logster/group"
 require "logster/message"
 
-class TestGroup < MiniTest::Test
+class TestGroup < Minitest::Test
   def test_changed_is_true_for_new_instances
     assert Logster::Group.new("/somekey/").changed?
   end

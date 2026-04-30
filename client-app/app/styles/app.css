@@ -731,6 +731,60 @@ label span {
   margin-top: 10px;
 }
 
+.grouping-pattern-dialog-overlay {
+  position: fixed;
+  z-index: 100000;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grouping-pattern-dialog {
+  background: #fff;
+  border-radius: 4px;
+  padding: 20px;
+  min-width: 600px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.grouping-pattern-dialog h3 {
+  margin: 0 0 8px 0;
+  font-size: 1em;
+  font-weight: bold;
+}
+
+.grouping-pattern-dialog p {
+  margin: 0 0 10px 0;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.grouping-pattern-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  font-size: 1.1em;
+  font-family: monospace;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  margin-bottom: 14px;
+}
+
+.grouping-pattern-dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.grouping-pattern-dialog .btn {
+  padding: 12px;
+}
+
 .backtrace-line .line-link {
   color: #9e9e9e;
   margin-left: 3px;
@@ -825,5 +879,20 @@ label span {
 
   #back-to-site-panel {
     background-color: #181818;
+  }
+
+  .grouping-pattern-dialog {
+    background: #262626;
+    color: #cecece;
+  }
+
+  .grouping-pattern-dialog p {
+    color: #aaa;
+  }
+
+  .grouping-pattern-input {
+    background: #181818;
+    color: #cecece;
+    border-color: #555;
   }
 }

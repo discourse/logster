@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Run with 'bundle exec rackup'
+# Run with 'bundle exec puma'
 
 require "redis"
 require "logster"
@@ -25,7 +25,7 @@ class SampleLoader
     SAMPLE_REDIS.del @sample_data_key
     data = File.read("data/data.json")
     parsed = JSON.parse(data)
-    parsed.each { |row| SAMPLE_REDIS.rpush @sample_data_key, JSON.fast_generate(row) }
+    parsed.each { |row| SAMPLE_REDIS.rpush @sample_data_key, JSON.generate(row) }
     @length = parsed.length
   end
 

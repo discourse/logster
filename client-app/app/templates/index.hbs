@@ -162,4 +162,31 @@
   </div>
 </div>
 
+{{#if this.showGroupingPatternDialog}}
+  <div class="grouping-pattern-dialog-overlay">
+    <div class="grouping-pattern-dialog">
+      <h3>Create Grouping Pattern</h3>
+      <p>Edit the pattern below before creating:</p>
+      <input
+        type="text"
+        class="grouping-pattern-input"
+        value={{this.groupingPatternValue}}
+        {{on "input" this.updateGroupingPatternValue}}
+      />
+      <div class="grouping-pattern-dialog-buttons">
+        <button
+          class="btn danger"
+          type="button"
+          {{on "click" this.cancelGroupingPattern}}
+        >Cancel</button>
+        <button
+          class="btn"
+          type="button"
+          {{on "click" this.confirmGroupingPattern}}
+        >Create</button>
+      </div>
+    </div>
+  </div>
+{{/if}}
+
 <PanelResizer />
