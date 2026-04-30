@@ -7,5 +7,4 @@ gemspec
 
 group :development, :test do
   gem "rails", ">= 6.1"
-  gem "rubocop-capybara", "< 2.23.0"
 end
