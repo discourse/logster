@@ -3,7 +3,7 @@
 require_relative "../test_helper"
 require "logster/message"
 
-class TestMessage < MiniTest::Test
+class TestMessage < Minitest::Test
   def test_merge_similar
     msg1 = Logster::Message.new(0, "", "test", 10)
     msg1.populate_from_env(a: "1", b: "2")

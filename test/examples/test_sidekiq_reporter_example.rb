@@ -6,7 +6,7 @@ require "logster/redis_store"
 require "logger"
 require "examples/sidekiq_logster_reporter"
 
-class TestSidekiqReporter < MiniTest::Test
+class TestSidekiqReporter < Minitest::Test
   def setup
     Logster.store = @store = Logster::RedisStore.new(Redis.new)
     Logster.logger = @logger = Logster::Logger.new(Logster.store)

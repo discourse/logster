@@ -308,7 +308,7 @@ module Logster
       end
 
       def to_json_and_escape(payload)
-        Rack::Utils.escape_html(JSON.fast_generate(payload))
+        Rack::Utils.escape_html(JSON.generate(payload))
       end
 
       def preload_backtrace_data

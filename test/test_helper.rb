@@ -1,9 +1,23 @@
 # frozen_string_literal: true
 
 require "minitest"
-require "minitest/unit"
 require "minitest/autorun"
 require "minitest/pride"
+
+module StubSupport
+  def stub(method_name, value_or_callable = nil, &block)
+    original = method(method_name)
+    define_singleton_method(method_name) do |*args, &blk|
+      value_or_callable.respond_to?(:call) ? value_or_callable.call(*args, &blk) : value_or_callable
+    end
+    yield self
+  ensure
+    singleton_class.undef_method(method_name) rescue nil
+    define_singleton_method(method_name, original) rescue nil
+  end
+end
+
+Module.include StubSupport
 require "redis"
 require "logster"
 require "logster/base_store"

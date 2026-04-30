@@ -48,7 +48,7 @@ module Logster
     end
 
     def to_json(opts = nil)
-      JSON.fast_generate(self.to_h, opts)
+      JSON.generate(self.to_h, opts)
     end
 
     def add_message(message)
@@ -109,7 +109,7 @@ module Logster
     GroupWeb =
       Struct.new(*%i[regex count timestamp messages row_id]) do
         def to_json(opts = nil)
-          JSON.fast_generate(self.to_h.merge(severity: -1, group: true), opts)
+          JSON.generate(self.to_h.merge(severity: -1, group: true), opts)
         end
 
         def key
