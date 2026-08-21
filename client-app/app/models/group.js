@@ -8,7 +8,10 @@ export default class Group extends EmberObject {
   showCount = true;
 
   @reads("regex") key;
-  @reads("messages.firstObject.message") displayMessage;
+
+  get displayMessage() {
+    return this.messages[0]?.message;
+  }
 
   init() {
     super.init(...arguments);

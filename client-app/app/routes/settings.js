@@ -15,7 +15,7 @@ export default class SettingsRoute extends Route {
       .map((hash) => Pattern.create(hash));
 
     const customSuppression = suppression
-      .reject((p) => p.hard)
+      .filter((pattern) => !pattern.hard)
       .map((hash) => Pattern.create(hash));
 
     const grouping = model.grouping.map((hash) => Pattern.create(hash));

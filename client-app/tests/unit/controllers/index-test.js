@@ -54,6 +54,25 @@ module("Unit | Controller | index", function (hooks) {
     );
   });
 
+  test("Grouping pattern suggestions fall back to escaped alternatives", function (assert) {
+    const controller = this.owner.lookup("controller:index");
+
+    assert.deepEqual(
+      controller.groupingMessagesForRow({
+        group: true,
+        messages: [{ message: "first [failure]" }, { message: "second (failure)" }],
+      }),
+      ["first [failure]", "second (failure)"]
+    );
+    assert.strictEqual(
+      controller.buildGroupingPatternSuggestion([
+        "Alpha [failure]",
+        "Beta (timeout)",
+      ]),
+      "(?:Alpha \\[failure\\]|Beta \\(timeout\\))"
+    );
+  });
+
   test("Creating inline grouping patterns can handle special characters", function (assert) {
     const controller = this.owner.lookup("controller:index");
     let messages = [

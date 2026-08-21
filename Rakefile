@@ -46,7 +46,7 @@ module DevServer
 
     puts
     puts "Logster is ready at #{frontend_url}"
-    puts "Generate a sample error at #{backend_url}/report_error"
+    puts "Generate rich test data at #{backend_url}/report_error"
     puts "Press Ctrl-C to stop."
     open_browser(frontend_url)
 
@@ -120,7 +120,11 @@ module DevServer
   end
 
   def spawn_backend(port)
-    env = { "BUNDLE_GEMFILE" => File.join(WEBSITE_DIR, "Gemfile"), "LOGSTER_ENV" => "development" }
+    env = {
+      "BUNDLE_GEMFILE" => File.join(WEBSITE_DIR, "Gemfile"),
+      "LOGSTER_ENV" => "development",
+      "LOGSTER_ENABLE_CUSTOM_PATTERNS_VIA_UI" => "1",
+    }
     spawn(
       env,
       "bundle",

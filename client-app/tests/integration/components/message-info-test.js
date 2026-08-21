@@ -3,6 +3,7 @@ import { setupRenderingTest } from "ember-qunit";
 import { click, find, findAll, render } from "@ember/test-helpers";
 import { hbs } from "ember-cli-htmlbars";
 import Message from "client-app/models/message";
+import sinon from "sinon";
 
 const backtrace = "test backtrace:26";
 const messageTitle = "This Is Title";
@@ -118,5 +119,89 @@ module("Integration | Component | message-info", function (hooks) {
       .exists(
         "solve button is shown when there is application_version in env (array)"
       );
+  });
+
+  test("protect and unprotect update the available action immediately", async function (assert) {
+    const currentMessage = Message.create({
+      backtrace,
+      message: messageTitle,
+      env: {},
+      protected: false,
+    });
+    const protect = sinon
+      .stub(currentMessage, "protect")
+      .callsFake(() => currentMessage.set("protected", true));
+    const unprotect = sinon
+      .stub(currentMessage, "unprotect")
+      .callsFake(() => currentMessage.set("protected", false));
+    this.setProperties({ currentMessage, noop: () => {} });
+
+    await render(
+      hbs`<MessageInfo
+        @currentMessage={{this.currentMessage}}
+        @removeMessage={{this.noop}}
+        @solveMessage={{this.noop}}
+        @actionsInMenu={{false}}
+      />`
+    );
+
+    assert.dom("button.protect").exists();
+    await click("button.protect");
+    assert.true(protect.calledOnce);
+    assert.dom("button.protect").doesNotExist();
+    assert.dom("button.unprotect").exists("the action changes without selecting another row");
+
+    await click("button.unprotect");
+    assert.true(unprotect.calledOnce);
+    assert.dom("button.unprotect").doesNotExist();
+    assert.dom("button.protect").exists("the action changes back immediately");
+  });
+
+  test("copy reports success to the user", async function (assert) {
+    const originalClipboard = Object.getOwnPropertyDescriptor(
+      navigator,
+      "clipboard"
+    );
+    const writeText = sinon.stub();
+    writeText.onFirstCall().resolves();
+    writeText.onSecondCall().rejects(new Error("permission denied"));
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+
+    const currentMessage = Message.create({
+      backtrace,
+      message: messageTitle,
+      env: { HTTP_HOST: "forum.example.com" },
+    });
+    this.setProperties({ currentMessage, noop: () => {} });
+
+    try {
+      await render(
+        hbs`<MessageInfo
+          @currentMessage={{this.currentMessage}}
+          @removeMessage={{this.noop}}
+          @solveMessage={{this.noop}}
+          @actionsInMenu={{false}}
+        />`
+      );
+      await click("button.copy");
+
+      assert.true(writeText.calledOnce);
+      assert.dom("button.copy").hasText("Copied!");
+      assert.dom("button.copy").hasClass("copied");
+
+      await click("button.copy");
+      assert.true(writeText.calledTwice);
+      assert.dom("button.copy").hasText("Copy failed");
+      assert.dom("button.copy").hasClass("copy-failed");
+    } finally {
+      if (originalClipboard) {
+        Object.defineProperty(navigator, "clipboard", originalClipboard);
+      } else {
+        delete navigator.clipboard;
+      }
+    }
   });
 });

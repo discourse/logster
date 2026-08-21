@@ -8,10 +8,15 @@ GEM
   specs:
     base64 (0.2.0)
     connection_pool (2.5.0)
+    drb (2.2.3)
     logger (1.6.6)
+    minitest (6.0.6)
+      drb (~> 2.0)
+      prism (~> 1.5)
     mustermann (3.0.3)
       ruby2_keywords (~> 0.0.1)
     nio4r (2.7.4)
+    prism (1.9.0)
     puma (6.6.0)
       nio4r (~> 2.0)
     rack (3.1.14)
@@ -41,6 +46,7 @@ PLATFORMS
 
 DEPENDENCIES
   logster!
+  minitest
   puma
   redis
   sinatra

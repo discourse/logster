@@ -1,3 +1,4 @@
+import moment from "moment";
 import Preload, { getRootPath } from "client-app/lib/preload";
 
 const entityMap = {

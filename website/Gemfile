@@ -6,3 +6,7 @@ gem "sinatra"
 gem "redis"
 gem "logster", path: "../"
 gem "puma"
+
+group :development, :test do
+  gem "minitest"
+end
