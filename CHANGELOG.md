@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- Unreleased
+  - SECURITY: Require explicit HTTP methods and same-origin AJAX headers for mutating endpoints
+  - SECURITY: Add optional request authorization and hardened viewer response headers
+
 - 2026-04-29: 2.21.0
   - FEATURE: Allow editing grouping pattern before submitting
 

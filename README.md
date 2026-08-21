@@ -50,6 +50,8 @@ Logster.set_environments([:development, :staging, :production])
 Logster can be configured using `Logster.config`:
 
 - `Logster.config.application_version`: set to a unique identifier denoting version of your app. The "solve" function takes this version into account when suppressing errors.
+- `Logster.config.authorize_request` : Optional defense-in-depth authorization callback. It receives the Rack environment and must return a truthy value to allow access. The application must still mount Logster behind its normal administrator authentication constraint.
+
 - `Logster.config.enable_js_error_reporting` : enable js error reporting from clients
 - `Logster.config.rate_limit_error_reporting` : controls automatic 1 minute rate limiting for JS error reporting.
 - `Logster.config.web_title` : `<title>` tag for logster error page.
@@ -75,6 +77,10 @@ Logster can be configured using `Logster.config`:
 - `Logster.config.back_to_site_link_path` : Path for the backlink to site.
 
 - `Logster.config.back_to_site_link_text` : Text for the backlink to site.
+
+### HTTP endpoint security
+
+Logster's supplied browser clients send mutating requests with their required HTTP methods and the `X-Requested-With: XMLHttpRequest` header. Custom integrations must do the same. Requests with a cross-site `Origin` or `Sec-Fetch-Site` value are rejected. Mounting `Logster::Web` behind an administrator authentication constraint remains required; `authorize_request` can add a second authorization check inside the Rack application.
 
 ### Tracking Error Rate
 

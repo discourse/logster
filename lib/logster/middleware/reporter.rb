@@ -5,6 +5,12 @@ module Logster
     class Reporter
       PATH_INFO = "PATH_INFO"
       SCRIPT_NAME = "SCRIPT_NAME"
+      REQUEST_METHOD = "REQUEST_METHOD"
+      SECURITY_HEADERS = {
+        "cache-control" => "no-store",
+        "referrer-policy" => "no-referrer",
+        "x-content-type-options" => "nosniff",
+      }.freeze
 
       def initialize(app, config = {})
         @app = app
@@ -20,7 +26,11 @@ module Logster
         path = script_name + path if script_name && script_name.length > 0
 
         if path == @error_path
-          return 403, {}, ["Access Denied"] if !Logster.config.enable_js_error_reporting
+          if env[REQUEST_METHOD] != "POST"
+            return response(405, "Method not allowed", "allow" => "POST")
+          end
+          return response(403, "CSRF validation failed") unless valid_csrf_request?(env)
+          return response(403, "Access Denied") if !Logster.config.enable_js_error_reporting
 
           Logster
             .config
@@ -29,17 +39,35 @@ module Logster
               if Logster.config.rate_limit_error_reporting
                 req = Rack::Request.new(env)
                 if Logster.store.rate_limited?(req.ip, perform: true)
-                  return 429, {}, ["Rate Limited"]
+                  return response(429, "Rate Limited")
                 end
               end
               report_js_error(env)
             end
-          return 200, {}, ["OK"]
+          return response(200, "OK")
         end
 
         @app.call(env)
       ensure
         Thread.current[Logster::Logger::LOGSTER_ENV] = nil
+      end
+
+      def response(status, body, headers = {})
+        [
+          status,
+          SECURITY_HEADERS.merge("content-type" => "text/plain; charset=utf-8").merge(headers),
+          [body],
+        ]
+      end
+
+      def valid_csrf_request?(env)
+        return false unless env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
+
+        fetch_site = env["HTTP_SEC_FETCH_SITE"]
+        return false if fetch_site && !%w[same-origin same-site none].include?(fetch_site)
+
+        origin = env["HTTP_ORIGIN"]
+        !origin || origin == Rack::Request.new(env).base_url
       end
 
       def report_js_error(env)

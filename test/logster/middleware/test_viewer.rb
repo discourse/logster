@@ -12,14 +12,26 @@ class TestViewer < Minitest::Test
     end
   end
 
+  class BrowserRequest < Rack::MockRequest
+    def request(method, uri, opts = {})
+      opts = {
+        "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
+        "HTTP_SEC_FETCH_SITE" => "same-origin",
+      }.merge(opts)
+      super
+    end
+  end
+
   def setup
     Logster.config.subdirectory = "/logsie"
+    Logster.config.authorize_request = nil
     Logster.store = Logster::RedisStore.new
     Logster.store.clear_all
   end
 
   def teardown
     Logster.config.subdirectory = nil
+    Logster.config.authorize_request = nil
     Logster.store.clear_all
     Logster.store = nil
   end
@@ -29,7 +41,11 @@ class TestViewer < Minitest::Test
   end
 
   def request
-    @request ||= Rack::MockRequest.new(Rack::Lint.new(viewer))
+    @request ||= BrowserRequest.new(Rack::Lint.new(viewer))
+  end
+
+  def raw_request
+    @raw_request ||= Rack::MockRequest.new(Rack::Lint.new(viewer))
   end
 
   def test_path_resolution
@@ -39,6 +55,153 @@ class TestViewer < Minitest::Test
     assert_equal("/", viewer.send(:resolve_path, "/logsie"))
     assert_equal("/", viewer.send(:resolve_path, "/logsie/"))
     assert_equal("/hello/world", viewer.send(:resolve_path, "/logsie/hello/world"))
+  end
+
+  def test_mutating_message_endpoints_require_their_declared_methods
+    message =
+      Logster.store.report(
+        Logger::WARN,
+        "test",
+        "mutating message",
+        backtrace: "example.rb:1",
+        env: {
+          "application_version" => "abc123",
+        },
+      )
+    Logster.store.protect(message.key)
+
+    cases = {
+      "/logsie/message/#{message.key}" => "DELETE",
+      "/logsie/protect/#{message.key}" => "PUT",
+      "/logsie/unprotect/#{message.key}" => "DELETE",
+      "/logsie/solve/#{message.key}" => "PUT",
+      "/logsie/clear" => "POST",
+      "/logsie/reset-count.json" => "PUT",
+      "/logsie/solve-group" => "POST",
+    }
+
+    cases.each do |path, allowed_method|
+      response = request.get(path)
+      assert_equal(405, response.status, "GET #{path} should be rejected")
+      assert_equal(allowed_method, response.headers["allow"])
+    end
+
+    assert(Logster.store.get(message.key), "rejected requests must not delete or solve the message")
+    assert(
+      Logster.store.get(message.key).protected,
+      "rejected requests must not unprotect the message",
+    )
+  end
+
+  def test_pattern_endpoint_reports_all_allowed_methods
+    Logster.config.enable_custom_patterns_via_ui = true
+
+    response = request.get("/logsie/patterns/suppression.json")
+
+    assert_equal(405, response.status)
+    assert_equal("POST, PUT, DELETE", response.headers["allow"])
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_mutating_endpoints_require_csrf_header
+    message = Logster.store.report(Logger::WARN, "test", "csrf protected")
+    Logster.store.protect(message.key)
+
+    cases = [
+      ["DELETE", "/logsie/message/#{message.key}"],
+      ["PUT", "/logsie/protect/#{message.key}"],
+      ["DELETE", "/logsie/unprotect/#{message.key}"],
+      ["PUT", "/logsie/solve/#{message.key}"],
+      %w[POST /logsie/clear],
+      %w[PUT /logsie/reset-count.json],
+      %w[POST /logsie/solve-group],
+      %w[POST /logsie/patterns/suppression.json],
+      %w[PUT /logsie/patterns/suppression.json],
+      %w[DELETE /logsie/patterns/suppression.json],
+    ]
+
+    cases.each do |method, path|
+      response = raw_request.request(method, path)
+      assert_equal(403, response.status, "#{method} #{path} should require CSRF protection")
+      assert_equal("CSRF validation failed", response.body)
+    end
+  end
+
+  def test_mutating_endpoints_reject_cross_site_requests
+    message = Logster.store.report(Logger::WARN, "test", "csrf protected")
+
+    response =
+      raw_request.put(
+        "/logsie/protect/#{message.key}",
+        "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
+        "HTTP_SEC_FETCH_SITE" => "cross-site",
+      )
+
+    assert_equal(403, response.status)
+    refute(Logster.store.get(message.key).protected)
+  end
+
+  def test_mutating_endpoints_reject_mismatched_origin
+    message = Logster.store.report(Logger::WARN, "test", "csrf protected")
+
+    response =
+      raw_request.put(
+        "/logsie/protect/#{message.key}",
+        "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
+        "HTTP_SEC_FETCH_SITE" => "same-origin",
+        "HTTP_ORIGIN" => "https://attacker.example.com",
+      )
+
+    assert_equal(403, response.status)
+    refute(Logster.store.get(message.key).protected)
+  end
+
+  def test_protect_accepts_same_origin_ajax_and_uses_see_other_redirect
+    message = Logster.store.report(Logger::WARN, "test", "protect me")
+
+    response = request.put("/logsie/protect/#{message.key}")
+
+    assert_equal(303, response.status)
+    assert_equal("/logsie/show/#{message.key}?protected=true", response.headers["location"])
+    assert(Logster.store.get(message.key).protected)
+  end
+
+  def test_authorization_callback_guards_logster_routes
+    received_env = nil
+    Logster.config.authorize_request =
+      lambda do |env|
+        received_env = env
+        false
+      end
+
+    response = request.get("/logsie/")
+
+    assert_equal(403, response.status)
+    assert_equal("Not authorized", response.body)
+    assert_equal("/logsie/", received_env["PATH_INFO"])
+  end
+
+  def test_authorization_does_not_intercept_downstream_routes
+    Logster.config.authorize_request = ->(_) { false }
+    downstream =
+      Rack::MockRequest.new(Rack::Lint.new(Logster::Middleware::Viewer.new(BrokenApp.new)))
+
+    response = downstream.get("/not-logster")
+
+    assert_equal(500, response.status)
+    assert_equal("broken", response.body)
+  end
+
+  def test_logster_responses_have_security_headers
+    response = request.get("/logsie/")
+
+    assert_equal("no-store", response.headers["cache-control"])
+    assert_equal("nosniff", response.headers["x-content-type-options"])
+    assert_equal("DENY", response.headers["x-frame-options"])
+    assert_equal("no-referrer", response.headers["referrer-policy"])
+    assert_includes(response.headers["content-security-policy"], "default-src 'none'")
+    assert_includes(response.headers["content-security-policy"], "frame-ancestors 'none'")
   end
 
   def test_search_raceguard_s
