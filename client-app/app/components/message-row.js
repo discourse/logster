@@ -1,11 +1,9 @@
-import classic from "ember-classic-decorator";
 import { classNameBindings, tagName } from "@ember-decorators/component";
 import Component from "@ember/component";
 
 let CHECKED_BOTTOM;
 let STICK_TO_BOTTOM;
 
-@classic
 @tagName("div")
 @classNameBindings("model.rowClass", ":message-row", "model.selected:selected")
 export default class MessageRow extends Component {

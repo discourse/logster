@@ -1,10 +1,8 @@
-import classic from "ember-classic-decorator";
 import { reads } from "@ember/object/computed";
 import Message from "client-app/models/message";
 import EmberObject, { computed } from "@ember/object";
 import { ajax } from "client-app/lib/utilities";
 
-@classic
 export default class Group extends EmberObject {
   selected = false;
   showCount = true;

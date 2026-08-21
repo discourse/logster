@@ -5,6 +5,7 @@
     "ember/no-classic-components": "off",
     "ember/no-component-lifecycle-hooks": "off",
     "ember/no-get": "error",
-    "ember/require-tagless-components": "off"
+    "ember/require-tagless-components": "off",
+    "simple-import-sort/imports": "off"
   }
 }

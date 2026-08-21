@@ -1,10 +1,8 @@
-import classic from "ember-classic-decorator";
 import { classNameBindings, classNames } from "@ember-decorators/component";
 import { equal } from "@ember/object/computed";
 import Component from "@ember/component";
 import { action, computed } from "@ember/object";
 
-@classic
 @classNames("nav-controls")
 @classNameBindings("extraClasses")
 export default class PageNav extends Component {

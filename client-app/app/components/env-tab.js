@@ -1,11 +1,9 @@
-import classic from "ember-classic-decorator";
 import { computed } from "@ember/object";
 import Component from "@ember/component";
 import { buildHashString, clone } from "client-app/lib/utilities";
 import Preload from "client-app/lib/preload";
 import { htmlSafe } from "@ember/template";
 
-@classic
 export default class EnvTab extends Component {
   @computed("currentEnvPosition", "isEnvArray", "message.env")
   get currentEnv() {

@@ -1,4 +1,3 @@
-import classic from "ember-classic-decorator";
 import { tagName } from "@ember-decorators/component";
 import { computed } from "@ember/object";
 import Component from "@ember/component";
@@ -7,7 +6,6 @@ import { later } from "@ember/runloop";
 
 const UPDATE_INTERVAL = 60_000;
 
-@classic
 @tagName("")
 export default class TimeFormatter extends Component {
   didInsertElement() {

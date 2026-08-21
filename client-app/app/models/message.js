@@ -1,10 +1,8 @@
-import classic from "ember-classic-decorator";
 import { gt } from "@ember/object/computed";
 import EmberObject, { computed } from "@ember/object";
 import { ajax } from "client-app/lib/utilities";
 import { getRootPath } from "client-app/lib/preload";
 
-@classic
 export default class Message extends EmberObject {
   MAX_LEN = 200;
 
@@ -35,7 +33,7 @@ export default class Message extends EmberObject {
     const appVersion = Array.isArray(this.env)
       ? this.env
           .map((e) => e.application_version)
-          .compact()
+          .filter(Boolean)
           .join("")
       : this.env && this.env.application_version;
     return appVersion && this.backtrace && this.backtrace.length > 0;

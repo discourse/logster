@@ -1,9 +1,7 @@
-import classic from "ember-classic-decorator";
 import Route from "@ember/routing/route";
 import { ajax } from "client-app/lib/utilities";
 import Pattern from "client-app/models/pattern-item";
 
-@classic
 export default class SettingsRoute extends Route {
   model() {
     return ajax("/settings.json");

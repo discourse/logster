@@ -35,15 +35,15 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: client-app/package-lock.json
 
-      - name: Yarn install
+      - name: Install frontend dependencies
         working-directory: client-app
-        run: yarn install
+        run: npm ci
 
       - name: Build JS app
         run: bash build_client_app.sh
@@ -60,19 +60,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: client-app/package-lock.json
 
-      - name: Yarn install
+      - name: Install frontend dependencies
         working-directory: client-app
-        run: yarn install
+        run: npm ci
 
       - name: JS tests
         working-directory: client-app
-        run: yarn test:ember
+        run: npm run test:ember
 
   linting:
     runs-on: ubuntu-latest
@@ -89,17 +89,17 @@ jobs:
       - name: Ruby lint
         run: bundle exec rubocop
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         if: ${{ !cancelled() }}
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: client-app/package-lock.json
 
-      - name: Yarn install
+      - name: Install frontend dependencies
         if: ${{ !cancelled() }}
         working-directory: client-app
-        run: yarn install
+        run: npm ci
 
       - name: Syntax Tree
         if: ${{ !cancelled() }}
@@ -109,7 +109,7 @@ jobs:
       - name: JS linting
         if: ${{ !cancelled() }}
         working-directory: client-app
-        run: yarn lint
+        run: npm run lint
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -119,15 +119,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: client-app/package-lock.json
 
-      - name: Yarn install
+      - name: Install frontend dependencies
         working-directory: client-app
-        run: yarn install
+        run: npm ci
 
       - name: Build JS app
         run: bash build_client_app.sh
