@@ -14,20 +14,20 @@ jobs:
 
     services:
       redis:
-        image: redis
+        image: redis:8.10
         ports:
           - 6379:6379
 
     strategy:
       matrix:
-        ruby: ["3.2", "3.3", "3.4"]
-        rails: ["6.1", "7.0", "7.1", "7.2"]
+        ruby: ["3.3", "3.4", "4.0", "head"]
+        rails: ["8.0", "8.1"]
 
     env:
       BUNDLE_GEMFILE: ${{ github.workspace }}/gemfiles/rails_${{ matrix.rails }}.gemfile
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
@@ -35,7 +35,7 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: npm
@@ -54,13 +54,60 @@ jobs:
       - name: Tests (Railtie)
         run: bundle exec rake test TEST=test/logster/test_railtie.rb
 
+  rack:
+    runs-on: ubuntu-latest
+
+    name: "Ruby ${{ matrix.ruby }} - Rack ${{ matrix.rack }}"
+
+    services:
+      redis:
+        image: redis:8.10
+        ports:
+          - 6379:6379
+
+    strategy:
+      matrix:
+        ruby: ["3.3", "4.0"]
+        rack: ["3.1", "3.2"]
+        include:
+          - ruby: "head"
+            rack: "3.2"
+
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/gemfiles/rack_${{ matrix.rack }}.gemfile
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: client-app/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: client-app
+        run: npm ci
+
+      - name: Build JS app
+        run: bash build_client_app.sh
+
+      - name: Tests
+        run: bundle exec rake test
+
   frontend:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: npm
@@ -78,18 +125,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.2
+          ruby-version: "4.0"
           bundler-cache: true
 
       - name: Ruby lint
         run: bundle exec rubocop
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: ${{ !cancelled() }}
         with:
           node-version-file: .node-version
@@ -113,13 +160,13 @@ jobs:
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [backend, frontend, linting]
+    needs: [backend, rack, frontend, linting]
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: npm

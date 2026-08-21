@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
   spec.homepage = "https://github.com/discourse/logster"
   spec.license = "MIT"
 
-  spec.required_ruby_version = ">= 2.5.0"
+  spec.required_ruby_version = ">= 3.3.0"
 
   files =
     `git ls-files -z --cached --others --exclude-standard`.split("\x0")
@@ -34,13 +34,11 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake"
-  spec.add_development_dependency "rack"
-  spec.add_development_dependency "redis"
+  spec.add_development_dependency "redis", "~> 6.0"
   spec.add_development_dependency "guard"
   spec.add_development_dependency "guard-minitest"
   spec.add_development_dependency "timecop"
-  spec.add_development_dependency "byebug", "~> 11.1.0"
+  spec.add_development_dependency "debug"
   spec.add_development_dependency "rubocop-discourse"
   spec.add_development_dependency "syntax_tree"
-  spec.add_development_dependency "sqlite3"
 end

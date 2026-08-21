@@ -1,12 +1,10 @@
-![logster logo](https://raw.githubusercontent.com/discourse/logster/master/website/images/logo-logster-cropped-small.png)
+![logster logo](https://raw.githubusercontent.com/discourse/logster/main/website/images/logo-logster-cropped-small.png)
 
 Logster is an embedded Ruby "exception reporting service" admins can view on live websites, at `http://example.com/logs`
 
 ## Interface
 
-![Screenshot](https://raw.githubusercontent.com/discourse/logster/master/website/images/logster-screenshot.png)
-
-Play with a live demo at [logster.info/logs](http://logster.info/logs).
+![Screenshot](https://raw.githubusercontent.com/discourse/logster/main/website/images/logster-screenshot.png)
 
 ## Installation
 
@@ -27,7 +25,19 @@ constraints lambda { |req| req.session["admin"] } do
 end
 ```
 
-By default, logster will only run in development and production environments.
+By default, Logster will only run in development and production environments.
+
+## Supported versions
+
+Logster supports maintained release series only:
+
+- Ruby 3.3, 3.4, and 4.0
+- Rails 8.0 and 8.1
+- Rack 3.1 and 3.2
+- redis-rb 6.x
+- Redis Open Source 8.10
+
+Support for a release series ends when its upstream security support ends. Ruby head is also tested proactively, and the CI matrix is the source of truth for the combinations tested by Logster.
 
 To run logster in other environments, in `config/application.rb`
 
@@ -60,7 +70,7 @@ Logster can be configured using `Logster.config`:
 
 - `Logster.config.enable_backtrace_links` : Enable/disable the backtrace links feature.
 
-- `Logster.config.gems_dir` : The value of this config is `Gem.dir + "/gems/"` by default. You probably don't need to change this config, but it's available in case your app gems are installed in a different directory. An example where this config is needed is Logster [demo site](http://logster.info/logs/): [https://github.com/discourse/logster/blob/master/website/sample.rb#L77](https://github.com/discourse/logster/blob/master/website/sample.rb#L77).
+- `Logster.config.gems_dir` : The value of this config is `Gem.dir + "/gems/"` by default. You probably don't need to change this config, but it's available in case your application gems are installed in a different directory.
 
 - `Logster.config.back_to_site_link_path` : Path for the backlink to site.
 
