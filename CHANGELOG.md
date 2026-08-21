@@ -1,8 +1,21 @@
 # CHANGELOG
 
-- Unreleased
-  - SECURITY: Require explicit HTTP methods and same-origin AJAX headers for mutating endpoints
-  - SECURITY: Add optional request authorization and hardened viewer response headers
+- 2027-08-21: 3.0.0
+
+  - BREAKING: Require Ruby 3.3 or newer; support is now focused on maintained Ruby 3.3, 3.4, and 4.0 releases
+  - BREAKING: Drop support for Rails versions before 8.0; Rails 8.0 and 8.1 are now supported
+  - BREAKING: Target Rack 3.1–3.2, redis-rb 6.x, and Redis Open Source 8.10
+  - BREAKING: Require Node.js 24 and npm 11 for frontend development, replace Yarn with npm, and drop Internet Explorer 11 support
+  - SECURITY: Require the documented HTTP method and `X-Requested-With: XMLHttpRequest` header for mutating viewer endpoints and JavaScript error reports; reject cross-site requests using `Origin` and `Sec-Fetch-Site`
+  - SECURITY: Add the optional `Logster.config.authorize_request` defense-in-depth callback for viewer routes
+  - SECURITY: Add no-store, referrer, content-type, and framing response headers, tighten the viewer Content Security Policy, and remove externally hosted Google Fonts
+  - UX: Improve grouping-pattern creation for grouped or unrelated messages, surface submission errors, and prevent duplicate submissions while saving
+  - UX: Add success and failure feedback when copying messages, support messages without environment data, and fall back for browsers without the Clipboard API
+  - FIX: Keep protect and unprotect actions in sync with request results, restoring their previous state when a request fails
+  - FIX: Correct pattern settings state handling for plain JSON arrays and newly created or removed patterns
+  - DEV: Upgrade the client from Ember 3.28 to Ember 7.2 and migrate legacy components and templates to Glimmer GJS
+  - DEV: Add a unified `bundle exec rake dev` workflow that installs dependencies, starts the backend and frontend, waits for readiness, and opens the app
+  - DEV: Expand the Ruby, Rails, and Rack CI matrices and add richer frontend acceptance coverage and development sample data
 
 - 2026-04-29: 2.21.0
   - FEATURE: Allow editing grouping pattern before submitting
