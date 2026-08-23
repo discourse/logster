@@ -26,4 +26,12 @@ module("Acceptance | index", function (hooks) {
 
     assert.dom("button.clear").exists("the clear-logs action is rendered");
   });
+
+  test("a search query reloads exactly once outside rendering", async function (assert) {
+    await visit("/?search=tomtom");
+
+    const controller = this.owner.lookup("controller:index");
+    assert.strictEqual(controller.model.search, "tomtom");
+    assert.strictEqual(this.reloadStub.callCount, 1);
+  });
 });

@@ -157,6 +157,36 @@ module("Integration | Component | message-info", function (hooks) {
     assert.dom("button.protect").exists("the action changes back immediately");
   });
 
+  test("failed protection requests restore the model and row", async function (assert) {
+    const currentMessage = Message.create({
+      backtrace,
+      message: messageTitle,
+      env: {},
+      protected: false,
+    });
+    sinon.stub(currentMessage, "protect").callsFake(async () => {
+      currentMessage.set("protected", true);
+      throw new Error("request failed");
+    });
+    this.setProperties({ currentMessage, noop: () => {} });
+
+    await render(
+      hbs`<MessageInfo
+        @currentMessage={{this.currentMessage}}
+        @removeMessage={{this.noop}}
+        @solveMessage={{this.noop}}
+        @actionsInMenu={{false}}
+      />
+      <MessageRow @model={{this.currentMessage}} @selectRow={{this.noop}} />`
+    );
+
+    await click("button.protect");
+
+    assert.false(currentMessage.protected, "the model returns to its previous state");
+    assert.dom("button.protect").exists("the action returns to its previous state");
+    assert.dom(".message-row .protected svg").doesNotExist("the row does not show a lock");
+  });
+
   test("copy reports success to the user", async function (assert) {
     const originalClipboard = Object.getOwnPropertyDescriptor(
       navigator,

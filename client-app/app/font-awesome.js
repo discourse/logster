@@ -1,4 +1,5 @@
 import { config, library } from "@fortawesome/fontawesome-svg-core";
+import "@fortawesome/fontawesome-svg-core/styles.css";
 import { faClone } from "@fortawesome/free-regular-svg-icons/faClone";
 import { faCopy } from "@fortawesome/free-regular-svg-icons/faCopy";
 import { faSquareCheck as faRegularSquareCheck } from "@fortawesome/free-regular-svg-icons/faSquareCheck";
@@ -24,7 +25,7 @@ import { faSquareUpRight } from "@fortawesome/free-solid-svg-icons/faSquareUpRig
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons/faTrashCan";
 import { faUnlock } from "@fortawesome/free-solid-svg-icons/faUnlock";
 
-config.autoAddCss = true;
+config.autoAddCss = false;
 library.add(
   faArrowLeft,
   faBackward,

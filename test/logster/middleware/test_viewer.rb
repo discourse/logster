@@ -104,6 +104,30 @@ class TestViewer < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = false
   end
 
+  def test_prefixed_paths_cannot_bypass_mutating_route_guards
+    Logster.config.enable_custom_patterns_via_ui = true
+    message = Logster.store.report(Logger::WARN, "test", "must survive prefixed routes")
+
+    clear_response = raw_request.post("/logsie/prefix/clear")
+    solve_response = raw_request.get("/logsie/prefix/solve/#{message.key}")
+    pattern_response =
+      raw_request.post(
+        "/logsie/prefix/patterns/suppression.json",
+        params: {
+          pattern: "hide everything",
+          retroactive: true,
+        },
+      )
+
+    assert_equal(404, clear_response.status)
+    assert_equal(404, solve_response.status)
+    assert_equal(404, pattern_response.status)
+    assert(Logster.store.get(message.key))
+    assert_empty(Logster::SuppressionPattern.find_all)
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
   def test_mutating_endpoints_require_csrf_header
     message = Logster.store.report(Logger::WARN, "test", "csrf protected")
     Logster.store.protect(message.key)
@@ -202,6 +226,57 @@ class TestViewer < Minitest::Test
     assert_equal("no-referrer", response.headers["referrer-policy"])
     assert_includes(response.headers["content-security-policy"], "default-src 'none'")
     assert_includes(response.headers["content-security-policy"], "frame-ancestors 'none'")
+  end
+
+  def test_static_assets_can_be_cached_and_revalidated
+    response = request.get("/logsie/images/icon_64x64.png")
+
+    assert_equal(200, response.status)
+    assert_equal("public, max-age=0, must-revalidate", response.headers["cache-control"])
+    assert_equal("nosniff", response.headers["x-content-type-options"])
+  end
+
+  def test_app_html_uses_the_generated_asset_manifest
+    manifest = {
+      "javascript" => %w[vendor.js chunk.application.js client-app.js],
+      "stylesheets" => %w[vendor.css client-app.css],
+      "config" => {
+        "modulePrefix" => "client-app",
+        "environment" => "production",
+        "rootURL" => "/logs/",
+        "locationType" => "history",
+        "EmberENV" => {
+          "_USE_EMBER_MODULES" => true,
+        },
+      },
+    }
+
+    viewer.instance_variable_set(:@asset_manifest, manifest)
+    response = request.get("/logsie/")
+    nonce = response.headers["content-security-policy"][/script-src 'nonce-([^']+)'/, 1]
+
+    assert(nonce)
+    manifest["javascript"].each do |name|
+      assert_includes(
+        response.body,
+        "<script src='/logsie/javascript/#{name}' nonce='#{nonce}'></script>",
+      )
+    end
+    assert_operator(
+      response.body.index("vendor.js"),
+      :<,
+      response.body.index("chunk.application.js"),
+    )
+    assert_operator(
+      response.body.index("chunk.application.js"),
+      :<,
+      response.body.index("client-app.js"),
+    )
+
+    encoded_config = response.body[%r{name="client-app/config/environment" content="([^"]+)"}, 1]
+    config = JSON.parse(URI.decode_www_form_component(encoded_config))
+    assert_equal("/logsie/", config["rootURL"])
+    assert_equal(true, config.dig("EmberENV", "_USE_EMBER_MODULES"))
   end
 
   def test_search_raceguard_s
@@ -498,20 +573,26 @@ class TestViewer < Minitest::Test
     assert_equal({}, hash)
   end
 
-  def test_linking_to_a_valid_js_files
-    %w[/logsie/javascript/client-app.js /logsie/javascript/vendor.js].each do |path|
-      response = request.get(path)
-      assert_equal(200, response.status)
-      assert %w[text/javascript application/javascript].include?(response.headers["content-type"])
-    end
+  def test_linking_to_valid_javascript_files
+    viewer
+      .send(:asset_manifest)
+      .fetch("javascript")
+      .each do |name|
+        response = request.get("/logsie/javascript/#{name}")
+        assert_equal(200, response.status)
+        assert %w[text/javascript application/javascript].include?(response.headers["content-type"])
+      end
   end
 
-  def test_linking_to_a_valid_css_files
-    %w[/logsie/stylesheets/client-app.css /logsie/stylesheets/vendor.css].each do |path|
-      response = request.get(path)
-      assert_equal(200, response.status)
-      assert_equal("text/css", response.headers["content-type"])
-    end
+  def test_linking_to_valid_stylesheets
+    viewer
+      .send(:asset_manifest)
+      .fetch("stylesheets")
+      .each do |name|
+        response = request.get("/logsie/stylesheets/#{name}")
+        assert_equal(200, response.status)
+        assert_equal("text/css", response.headers["content-type"])
+      end
   end
 
   def test_linking_to_an_invalid_ember_component_or_template

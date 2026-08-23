@@ -18,11 +18,12 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = ">= 3.3.0"
 
   files =
-    `git ls-files -z --cached --others --exclude-standard`.split("\x0")
-      .select { |file| File.file?(file) }
-      .reject { |file| file.start_with?(/website|bin/) }
+    `git ls-files -z`.split("\x0").select { |file| File.file?(file) }.reject do |file|
+      file.start_with?(/website|bin/)
+    end
   files += Dir.glob("assets/javascript/*")
   files += Dir.glob("assets/stylesheets/*")
+  files << "assets/manifest.json" if File.file?("assets/manifest.json")
   spec.files = files
 
   spec.executables = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }

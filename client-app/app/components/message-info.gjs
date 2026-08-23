@@ -190,6 +190,7 @@ export default class MessageInfo extends Component {
     try {
       await message.protect();
     } catch {
+      message.set("protected", previousState);
       this.setProtectionState(message, previousState);
     }
   }
@@ -203,6 +204,7 @@ export default class MessageInfo extends Component {
     try {
       await message.unprotect();
     } catch {
+      message.set("protected", previousState);
       this.setProtectionState(message, previousState);
     }
   }

@@ -56,11 +56,7 @@ export default class IndexController extends Controller {
   }
 
   get searchTerm() {
-    if (this.search) {
-      this.doSearch(this.search);
-      return this.search;
-    }
-    return null;
+    return this.search;
   }
 
   async doSearch(term) {

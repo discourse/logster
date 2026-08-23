@@ -8,7 +8,11 @@ module("Unit | Controller | index", function (hooks) {
   setupTest(hooks);
   const ajaxStub = sinon.stub(utilities, "ajax");
 
-  test("uses search param to filter results", function (assert) {
+  hooks.beforeEach(function () {
+    ajaxStub.resetHistory();
+  });
+
+  test("exposes the search query without reloading during render", function (assert) {
     const controller = this.owner.lookup("controller:index");
     const messages = MessageCollection.create();
     const row1 = { message: "error tomtom", severity: 2, key: "ce1f53b0cc" };
@@ -20,28 +24,10 @@ module("Unit | Controller | index", function (hooks) {
     assert.strictEqual(controller.searchTerm, null, "initial value is null");
     assert.deepEqual(controller.model.rows, [row1, row2], "all rows");
 
-    ajaxStub.callsFake(async () => ({
-      search: "tomtom",
-      filter: [5],
-      messages: [],
-    }));
     controller.set("search", "tomtom");
 
-    assert.strictEqual(
-      controller.searchTerm,
-      "tomtom",
-      "search sets search term"
-    );
-    assert.strictEqual(
-      ajaxStub.firstCall.args[0],
-      "/messages.json",
-      "get messages"
-    );
-    assert.deepEqual(
-      ajaxStub.firstCall.args[1],
-      { data: { filter: "5", search: "tomtom" }, method: "POST" },
-      "with correct terms"
-    );
+    assert.strictEqual(controller.searchTerm, "tomtom", "search term is exposed");
+    assert.true(ajaxStub.notCalled, "reading the getter does not issue a request");
   });
 
   test("Creating inline grouping patterns finds the longest matching prefix between selected messages", function (assert) {

@@ -7,6 +7,33 @@ import MessageInfo from "client-app/components/message-info";
 import MessageRow from "client-app/components/message-row";
 import PageNav from "client-app/components/page-nav";
 import PanelResizer from "client-app/components/panel-resizer";
+import { modifier } from "ember-modifier";
+
+const keepScrolledToBottom = modifier((element) => {
+  const panel = element.parentElement;
+  let shouldStick = true;
+
+  const scrollToBottom = () => {
+    panel.scrollTop = panel.scrollHeight - panel.clientHeight;
+  };
+  const updateStickiness = () => {
+    shouldStick = panel.scrollHeight - panel.clientHeight - panel.scrollTop < 20;
+  };
+  const observer = new MutationObserver(() => {
+    if (shouldStick) {
+      scrollToBottom();
+    }
+  });
+
+  scrollToBottom();
+  panel.addEventListener("scroll", updateStickiness, { passive: true });
+  observer.observe(element, { childList: true });
+
+  return () => {
+    observer.disconnect();
+    panel.removeEventListener("scroll", updateStickiness);
+  };
+});
 
 export default <template>
 {{#if @controller.hasTopMenu}}
@@ -18,7 +45,7 @@ export default <template>
   </div>
 {{/if}}
 <div id="top-panel" class={{if @controller.hasTopMenu "with-top-menu"}}>
-  <div id="log-table">
+  <div id="log-table" {{keepScrolledToBottom}}>
     {{#if @model.moreBefore}}
       <div {{on "click" @controller.showMoreBefore}} class="show-more">
         {{#if @model.hideCountInLoadMore}}

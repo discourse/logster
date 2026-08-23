@@ -16,6 +16,7 @@ export default class IndexRoute extends Route {
       model.set(`show${severity}`, controller[`show${severity}`]);
     }
 
+    model.set("search", controller.search || "");
     model.reload();
 
     let times = 0;
