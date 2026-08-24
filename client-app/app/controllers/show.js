@@ -1,3 +1,4 @@
+import { tracked } from "@glimmer/tracking";
 import Controller, { inject as controller } from "@ember/controller";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
@@ -6,7 +7,7 @@ export default class ShowController extends Controller {
   @service router;
   @controller("index") indexController;
 
-  envPosition = 0;
+  @tracked envPosition = 0;
 
   @action
   protect() {
@@ -32,6 +33,6 @@ export default class ShowController extends Controller {
 
   @action
   envChanged(newPosition) {
-    this.set("envPosition", newPosition);
+    this.envPosition = newPosition;
   }
 }

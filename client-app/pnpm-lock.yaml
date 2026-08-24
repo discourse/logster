@@ -92,12 +92,12 @@ importers:
       ember-cli-htmlbars:
         specifier: ^7.0.1
         version: 7.0.1(@babel/core@7.29.7)(ember-source@7.2.0(@glimmer/component@2.1.1))
-      ember-decorators:
-        specifier: ^7.0.0
-        version: 7.0.0(@babel/core@7.29.7)
       ember-load-initializers:
         specifier: ^3.0.1
         version: 3.0.1(ember-source@7.2.0(@glimmer/component@2.1.1))
+      ember-modifier:
+        specifier: ^4.3.0
+        version: 4.3.0(@babel/core@7.29.7)
       ember-page-title:
         specifier: ^9.0.3
         version: 9.0.3
@@ -113,6 +113,9 @@ importers:
       ember-source:
         specifier: ~7.2.0
         version: 7.2.0(@glimmer/component@2.1.1)
+      ember-template-imports:
+        specifier: ^4.4.0
+        version: 4.4.0
       ember-template-lint:
         specifier: ^5.13.0
         version: 5.13.0
@@ -724,15 +727,6 @@ packages:
 
   '@ember-data/rfc395-data@0.0.4':
     resolution: {integrity: sha512-tGRdvgC9/QMQSuSuJV45xoyhI0Pzjm7A9o/MVVA3HakXIImJbbzx/k/6dO9CUEQXIyS2y0fW6C1XaYOG7rY0FQ==}
-
-  '@ember-decorators/component@7.0.0':
-    resolution: {integrity: sha512-V72AoFMy4CdLaaI/8hhrepSt0hCy6t6VX4fzj/MCSi/QM+shuNNwtXTTN2Vi9+sV0YlyiluFzP5mME1IZdZneg==}
-
-  '@ember-decorators/object@7.0.0':
-    resolution: {integrity: sha512-HusegP0pBVF6XkhEcrHeVB4AwuMndQc+rPIL3Bar7SzBFfrFDuhU3SkQ2pYu8wuw4UPIBORgCF+3HGLqiMf/KQ==}
-
-  '@ember-decorators/utils@7.0.0':
-    resolution: {integrity: sha512-l4gxz6A6uu2IPt0saGgHwTc6wYrZjcOgGkIw9sTGkMevyhDWi3FocQlxRvngk7CKD3m8jTUg4rAnHwQ+BM0lAw==}
 
   '@ember-tooling/blueprint-blueprint@0.3.0':
     resolution: {integrity: sha512-9mwMGda8OC9oEJbvxnXX1DT5ZFR6YQumfmPwV+uUJCbGsaUkgr1UeTkcpgdL+Izvb4kjF/+BWcOtnaSvmR7Yig==}
@@ -2280,14 +2274,14 @@ packages:
     engines: {node: '>= 20.19.0'}
     hasBin: true
 
-  ember-decorators@7.0.0:
-    resolution: {integrity: sha512-bz5M4xK58+kB86oGN4N68KotZOcvCNeJpvqQqcjrmh8RFAAtSrPGnP/pDxcH9hm95tgK4qfPmnNG2U0DsO+A+Q==}
-
   ember-load-initializers@3.0.1:
     resolution: {integrity: sha512-qV3vxJKw5+7TVDdtdLPy8PhVsh58MlK8jwzqh5xeOwJPNP7o0+BlhvwoIlLYTPzGaHdfjEIFCgVSyMRGd74E1g==}
     engines: {node: '>= 18.*'}
     peerDependencies:
       ember-source: '>= 5'
+
+  ember-modifier@4.3.0:
+    resolution: {integrity: sha512-O0rirSLQbGg0VJ/NqoQ4uN1bh2iAekZC/Ykma+FkjCM2ofrO38u+d8n3+AK6uVWeMJmogGX2KL+Is5fofoInJg==}
 
   ember-page-title@9.0.3:
     resolution: {integrity: sha512-fedRHUsvq8tIZgOii8jTrfAyeq+la/9H5eAzhNNwEyzo7nDMmqK2SxsyBUGXprd8fOacsPabLlzlucMi/4mUpA==}
@@ -2325,6 +2319,10 @@ packages:
   ember-template-imports@3.4.2:
     resolution: {integrity: sha512-OS8TUVG2kQYYwP3netunLVfeijPoOKIs1SvPQRTNOQX4Pu8xGGBEZmrv0U1YTnQn12Eg+p6w/0UdGbUnITjyzw==}
     engines: {node: 12.* || >= 14}
+
+  ember-template-imports@4.4.0:
+    resolution: {integrity: sha512-HNOHabTEMbRluci1uScvh3ljMDo9E46dHHNcJAIf5yjOhIQ/zN4Y0DVDWrRfcbihlHvt4v/iF69G+8tffC1YkA==}
+    engines: {node: 16.* || >= 18}
 
   ember-template-lint-plugin-discourse@3.0.0:
     resolution: {integrity: sha512-4zi/qN+vXs0ZpJZrwdMfZ5hMThJbeVCFdof6iek4PmgIJhnlA0lzqIa1BrKpSKhr3ckd5K0rUMNcCAm0uKNOtg==}
@@ -5737,32 +5735,6 @@ snapshots:
 
   '@ember-data/rfc395-data@0.0.4': {}
 
-  '@ember-decorators/component@7.0.0(@babel/core@7.29.7)':
-    dependencies:
-      '@ember-decorators/utils': 7.0.0(@babel/core@7.29.7)
-      '@embroider/addon-shim': 1.10.3
-      decorator-transforms: 2.4.0(@babel/core@7.29.7)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - supports-color
-
-  '@ember-decorators/object@7.0.0(@babel/core@7.29.7)':
-    dependencies:
-      '@ember-decorators/utils': 7.0.0(@babel/core@7.29.7)
-      '@embroider/addon-shim': 1.10.3
-      decorator-transforms: 2.4.0(@babel/core@7.29.7)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - supports-color
-
-  '@ember-decorators/utils@7.0.0(@babel/core@7.29.7)':
-    dependencies:
-      '@embroider/addon-shim': 1.10.3
-      decorator-transforms: 2.4.0(@babel/core@7.29.7)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - supports-color
-
   '@ember-tooling/blueprint-blueprint@0.3.0': {}
 
   '@ember-tooling/blueprint-model@0.7.1':
@@ -7646,19 +7618,17 @@ snapshots:
       - walrus
       - whiskers
 
-  ember-decorators@7.0.0(@babel/core@7.29.7):
-    dependencies:
-      '@ember-decorators/component': 7.0.0(@babel/core@7.29.7)
-      '@ember-decorators/object': 7.0.0(@babel/core@7.29.7)
-      '@ember-decorators/utils': 7.0.0(@babel/core@7.29.7)
-      '@embroider/addon-shim': 1.10.3
-    transitivePeerDependencies:
-      - '@babel/core'
-      - supports-color
-
   ember-load-initializers@3.0.1(ember-source@7.2.0(@glimmer/component@2.1.1)):
     dependencies:
       ember-source: 7.2.0(@glimmer/component@2.1.1)
+
+  ember-modifier@4.3.0(@babel/core@7.29.7):
+    dependencies:
+      '@embroider/addon-shim': 1.10.3
+      decorator-transforms: 2.4.0(@babel/core@7.29.7)
+    transitivePeerDependencies:
+      - '@babel/core'
+      - supports-color
 
   ember-page-title@9.0.3:
     dependencies:
@@ -7735,6 +7705,14 @@ snapshots:
       parse-static-imports: 1.1.0
       string.prototype.matchall: 4.0.12
       validate-peer-dependencies: 1.2.0
+    transitivePeerDependencies:
+      - supports-color
+
+  ember-template-imports@4.4.0:
+    dependencies:
+      broccoli-stew: 3.0.0
+      content-tag: 4.2.0
+      ember-cli-version-checker: 5.1.2
     transitivePeerDependencies:
       - supports-color
 
