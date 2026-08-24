@@ -17,6 +17,8 @@ rm -rf "$client_dir/dist"
 mkdir -p "$temporary_dir/javascript" "$temporary_dir/stylesheets"
 cp "$client_dir"/dist/assets/*.js "$temporary_dir/javascript/"
 cp "$client_dir"/dist/assets/*.css "$temporary_dir/stylesheets/"
+find "$client_dir/dist/assets" -maxdepth 1 -type f -name "*.LICENSE.txt" -exec \
+  cp {} "$temporary_dir/javascript/" \;
 node "$client_dir/scripts/build-logster-manifest.mjs" \
   "$client_dir/dist/index.html" \
   "$temporary_dir/manifest.json"

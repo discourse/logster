@@ -11,7 +11,6 @@ module Logster
       REQUEST_METHOD = "REQUEST_METHOD".freeze
       LOGSTER_RESPONSE = "logster.response".freeze
       STATIC_RESPONSE = "logster.static_response".freeze
-      EMPTY_CONFIG = {}.freeze
       DYNAMIC_SECURITY_HEADERS = {
         "cache-control" => "no-store",
         "referrer-policy" => "no-referrer",
@@ -85,7 +84,8 @@ module Logster
             return not_allowed("CSRF validation failed") unless valid_csrf_request?(env)
           end
 
-          if resource =~ %r{\A/(?:.*\.(?:ico|js|png|handlebars|css|woff|ttf|woff2|svg|otf|eot))\z}
+          if resource =~
+               %r{\A/(?:.*\.(?:ico|js|png|handlebars|css|woff|ttf|woff2|svg|otf|eot|txt))\z}
             serve_file(env, resource)
           elsif resource == "/messages.json" && env[REQUEST_METHOD] == "POST"
             serve_messages(Rack::Request.new(env))
@@ -384,44 +384,15 @@ module Logster
         @asset_manifest ||=
           begin
             path = File.join(@assets_path, "manifest.json")
-            manifest = File.file?(path) ? JSON.parse(File.read(path)) : fallback_asset_manifest
-            validate_asset_manifest(manifest)
-          rescue JSON::ParserError, KeyError, TypeError, Errno::ENOENT
-            fallback_asset_manifest
-          end
-      end
+            unless File.file?(path)
+              raise RuntimeError,
+                    "Logster asset manifest is missing; rebuild the gem with ./build_client_app.sh"
+            end
 
-      def fallback_asset_manifest
-        javascript_chunks =
-          Dir
-            .glob(File.join(@assets_path, "javascript", "chunk.*.js"))
-            .map { |path| File.basename(path) }
-        stylesheet_chunks =
-          Dir
-            .glob(File.join(@assets_path, "stylesheets", "chunk.*.css"))
-            .map { |path| File.basename(path) }
-        {
-          "javascript" => ["vendor.js", *javascript_chunks.sort, "client-app.js"],
-          "stylesheets" => ["vendor.css", *stylesheet_chunks.sort, "client-app.css"],
-          "config" => {
-            "modulePrefix" => "client-app",
-            "environment" => "production",
-            "rootURL" => "/logs/",
-            "locationType" => "history",
-            "EmberENV" => {
-              "FEATURES" => EMPTY_CONFIG,
-              "EXTEND_PROTOTYPES" => {
-                "Date" => false,
-              },
-              "_APPLICATION_TEMPLATE_WRAPPER" => false,
-              "_DEFAULT_ASYNC_OBSERVERS" => true,
-              "_JQUERY_INTEGRATION" => false,
-              "_TEMPLATE_ONLY_GLIMMER_COMPONENTS" => true,
-              "_USE_EMBER_MODULES" => true,
-            },
-            "APP" => EMPTY_CONFIG,
-          },
-        }
+            validate_asset_manifest(JSON.parse(File.read(path)))
+          rescue JSON::ParserError, KeyError, TypeError, Errno::ENOENT => error
+            raise RuntimeError, "Logster asset manifest is invalid: #{error.message}"
+          end
       end
 
       def validate_asset_manifest(manifest)
@@ -442,7 +413,7 @@ module Logster
         config = JSON.parse(JSON.generate(asset_manifest.fetch("config")))
         config["environment"] = "production"
         config["rootURL"] = "#{@logs_path}/"
-        Rack::Utils.escape_html(URI.encode_www_form_component(JSON.generate(config)))
+        Rack::Utils.escape_html(URI.encode_uri_component(JSON.generate(config)))
       end
 
       def to_json_and_escape(payload)

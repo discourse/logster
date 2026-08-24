@@ -2,6 +2,7 @@
 
 require_relative "../../test_helper"
 require "rack"
+require "tmpdir"
 require "logster/redis_store"
 require "logster/middleware/viewer"
 
@@ -248,6 +249,9 @@ class TestViewer < Minitest::Test
         "EmberENV" => {
           "_USE_EMBER_MODULES" => true,
         },
+        "APP" => {
+          "name" => "Logster UI",
+        },
       },
     }
 
@@ -274,9 +278,18 @@ class TestViewer < Minitest::Test
     )
 
     encoded_config = response.body[%r{name="client-app/config/environment" content="([^"]+)"}, 1]
-    config = JSON.parse(URI.decode_www_form_component(encoded_config))
+    config = JSON.parse(URI.decode_uri_component(encoded_config))
     assert_equal("/logsie/", config["rootURL"])
     assert_equal(true, config.dig("EmberENV", "_USE_EMBER_MODULES"))
+    assert_equal("Logster UI", config.dig("APP", "name"))
+  end
+
+  def test_missing_asset_manifest_fails_closed
+    Dir.mktmpdir do |directory|
+      viewer.instance_variable_set(:@assets_path, directory)
+      error = assert_raises(RuntimeError) { viewer.send(:asset_manifest) }
+      assert_includes(error.message, "asset manifest")
+    end
   end
 
   def test_search_raceguard_s
@@ -593,6 +606,18 @@ class TestViewer < Minitest::Test
         assert_equal(200, response.status)
         assert_equal("text/css", response.headers["content-type"])
       end
+  end
+
+  def test_linking_to_third_party_license_notices
+    license =
+      Dir.glob(
+        File.join(viewer.instance_variable_get(:@assets_path), "javascript/*.LICENSE.txt"),
+      ).first
+    assert(license, "the build should copy webpack license notices")
+
+    response = request.get("/logsie/javascript/#{File.basename(license)}")
+    assert_equal(200, response.status)
+    assert_includes(response.body, "Font Awesome Free")
   end
 
   def test_linking_to_an_invalid_ember_component_or_template

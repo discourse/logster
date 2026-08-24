@@ -181,6 +181,12 @@ export default class MessageInfo extends Component {
     this.protectionOverrides = overrides;
   }
 
+  clearProtectionState(message) {
+    const overrides = new Map(this.protectionOverrides);
+    overrides.delete(message);
+    this.protectionOverrides = overrides;
+  }
+
   @action
   async protect() {
     const message = this.args.currentMessage;
@@ -191,7 +197,8 @@ export default class MessageInfo extends Component {
       await message.protect();
     } catch {
       message.set("protected", previousState);
-      this.setProtectionState(message, previousState);
+    } finally {
+      this.clearProtectionState(message);
     }
   }
 
@@ -205,7 +212,8 @@ export default class MessageInfo extends Component {
       await message.unprotect();
     } catch {
       message.set("protected", previousState);
-      this.setProtectionState(message, previousState);
+    } finally {
+      this.clearProtectionState(message);
     }
   }
 

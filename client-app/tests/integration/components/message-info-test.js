@@ -3,6 +3,7 @@ import { setupRenderingTest } from "ember-qunit";
 import { click, find, findAll, render } from "@ember/test-helpers";
 import { hbs } from "ember-cli-htmlbars";
 import Message from "client-app/models/message";
+import MessageInfoComponent from "client-app/components/message-info";
 import sinon from "sinon";
 
 const backtrace = "test backtrace:26";
@@ -185,6 +186,19 @@ module("Integration | Component | message-info", function (hooks) {
     assert.false(currentMessage.protected, "the model returns to its previous state");
     assert.dom("button.protect").exists("the action returns to its previous state");
     assert.dom(".message-row .protected svg").doesNotExist("the row does not show a lock");
+  });
+
+  test("protection overrides release completed message references", async function (assert) {
+    const currentMessage = Message.create({ protected: false });
+    sinon.stub(currentMessage, "protect").callsFake(async () => {
+      currentMessage.set("protected", true);
+    });
+    const component = new MessageInfoComponent(this.owner, { currentMessage });
+
+    await component.protect();
+
+    assert.strictEqual(component.protectionOverrides.size, 0);
+    assert.true(currentMessage.protected);
   });
 
   test("copy reports success to the user", async function (assert) {

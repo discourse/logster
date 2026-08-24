@@ -19,8 +19,9 @@
     "lint:js": "eslint . --cache",
     "lint:js:fix": "eslint . --fix",
     "start": "ember serve",
-    "test": "npm run lint && npm run test:ember",
-    "test:ember": "ember test"
+    "test": "npm run lint && npm run test:manifest && npm run test:ember",
+    "test:ember": "ember test",
+    "test:manifest": "node --test scripts/build-logster-manifest-test.mjs"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

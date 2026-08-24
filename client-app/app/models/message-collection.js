@@ -141,7 +141,7 @@ export default class MessageCollection extends EmberObject {
       this.currentRow?.group &&
       row.key === this.currentRow.key
     ) {
-      messageIndex = row.messages.mapBy("key").indexOf(this.currentMessage.key);
+      messageIndex = row.messages.map((message) => message.key).indexOf(this.currentMessage.key);
       messageIndex = Math.max(0, messageIndex);
     }
 
@@ -283,7 +283,7 @@ export default class MessageCollection extends EmberObject {
   async showMoreBefore() {
     const firstLog = this.rows[0];
     const firstKey = firstLog.group ? firstLog.row_id : firstLog.key;
-    const knownGroups = this.rows.filterBy("group").mapBy("regex");
+    const knownGroups = this.rows.filter((row) => row.group).map((row) => row.regex);
 
     const data = await this.load({
       before: firstKey,

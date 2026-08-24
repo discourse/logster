@@ -17,14 +17,24 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 3.3.0"
 
+  runtime_files = %w[CHANGELOG.md LICENSE.txt README.md]
   files =
-    `git ls-files -z`.split("\x0").select { |file| File.file?(file) }.reject do |file|
-      file.start_with?(/website|bin/)
-    end
+    `git ls-files -z`.split("\x0")
+      .select do |file|
+        File.file?(file) &&
+          (runtime_files.include?(file) || file.start_with?("lib/", "vendor/", "assets/images/"))
+      end
+  required_assets = %w[
+    assets/manifest.json
+    assets/javascript/vendor.js
+    assets/javascript/client-app.js
+    assets/stylesheets/vendor.css
+    assets/stylesheets/client-app.css
+  ]
+  files += required_assets
   files += Dir.glob("assets/javascript/*")
   files += Dir.glob("assets/stylesheets/*")
-  files << "assets/manifest.json" if File.file?("assets/manifest.json")
-  spec.files = files
+  spec.files = files.uniq
 
   spec.executables = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files = spec.files.grep(%r{^(test|spec|features)/})

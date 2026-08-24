@@ -8,12 +8,20 @@ require "rbconfig"
 require "redis"
 require "socket"
 require "uri"
+require_relative "dev_server_process"
 
 Rake::TestTask.new do |t|
   t.test_files = FileList["test/**/test_*"].exclude(%r{test/logster/test_railtie\.rb})
 end
 
 task(default: :test)
+
+desc "Build the frontend assets required by the gem"
+task :build_client_app do
+  sh File.expand_path("build_client_app.sh", __dir__)
+end
+
+task build: :build_client_app
 
 module DevServer
   extend self
@@ -50,7 +58,7 @@ module DevServer
     puts "Press Ctrl-C to stop."
     open_browser(frontend_url)
 
-    name, pid = processes.find { |_, process_pid| process_pid == Process.wait } || ["server", nil]
+    name, pid = DevServerProcess.wait_for_process_exit(processes)
     abort "#{name.capitalize} process #{pid} stopped unexpectedly"
   rescue Interrupt
     puts "\nStopping Logster..."
