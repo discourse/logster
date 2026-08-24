@@ -80,7 +80,7 @@ Logster can be configured using `Logster.config`:
 
 ### HTTP endpoint security
 
-Logster's supplied browser clients send mutating requests with their required HTTP methods and the `X-Requested-With: XMLHttpRequest` header. Custom integrations must do the same. Requests with a cross-site `Origin` or `Sec-Fetch-Site` value are rejected. Mounting `Logster::Web` behind an administrator authentication constraint remains required; `authorize_request` can add a second authorization check inside the Rack application.
+Logster's supplied browser client sends mutating viewer requests with their required HTTP methods and the `X-Requested-With: XMLHttpRequest` header. Custom viewer integrations must do the same. JavaScript error reports may use that header or a browser-verified `Sec-Fetch-Site: same-origin` request, which allows same-origin `navigator.sendBeacon` reporting. Cross-site fetch metadata and mismatching origins from clients without same-origin fetch metadata are rejected. Mounting `Logster::Web` behind an administrator authentication constraint remains required; `authorize_request` can add a second authorization check inside the Rack application.
 
 ### Tracking Error Rate
 

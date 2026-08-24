@@ -174,12 +174,27 @@ class TestViewer < Minitest::Test
       raw_request.put(
         "/logsie/protect/#{message.key}",
         "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
-        "HTTP_SEC_FETCH_SITE" => "same-origin",
         "HTTP_ORIGIN" => "https://attacker.example.com",
       )
 
     assert_equal(403, response.status)
     refute(Logster.store.get(message.key).protected)
+  end
+
+  def test_same_origin_fetch_metadata_survives_an_internal_proxy_url
+    message = Logster.store.report(Logger::WARN, "test", "csrf protected")
+
+    response =
+      raw_request.put(
+        "/logsie/protect/#{message.key}",
+        "HTTP_HOST" => "10.0.0.5:3000",
+        "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
+        "HTTP_SEC_FETCH_SITE" => "same-origin",
+        "HTTP_ORIGIN" => "https://logs.example.com",
+      )
+
+    assert_equal(303, response.status)
+    assert(Logster.store.get(message.key).protected)
   end
 
   def test_mutating_endpoints_accept_an_explicit_matching_origin

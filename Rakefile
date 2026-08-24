@@ -8,6 +8,7 @@ require "redis"
 require "socket"
 require "uri"
 require_relative "dev_server_process"
+require_relative "frontend_assets"
 
 Rake::TestTask.new do |t|
   t.test_files = FileList["test/**/test_*"].exclude(%r{test/logster/test_railtie\.rb})
@@ -18,9 +19,10 @@ task(default: :test)
 desc "Build the frontend assets required by the gem"
 task :build_client_app do
   if ENV["LOGSTER_SKIP_ASSET_BUILD"] == "1"
-    manifest = File.expand_path("assets/manifest.json", __dir__)
-    if !File.file?(manifest)
-      abort "Frontend assets are missing; run build_client_app.sh before releasing"
+    begin
+      FrontendAssets.verify!(File.expand_path(__dir__))
+    rescue FrontendAssets::Error => error
+      abort error.message
     end
     puts "Using pre-built frontend assets"
   else

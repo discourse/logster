@@ -260,6 +260,7 @@ module Logster
 
         fetch_site = env["HTTP_SEC_FETCH_SITE"]
         return false if fetch_site && !%w[same-origin same-site none].include?(fetch_site)
+        return true if fetch_site == "same-origin"
 
         origin = env["HTTP_ORIGIN"]
         !origin || origin == Rack::Request.new(env).base_url

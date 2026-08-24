@@ -102,9 +102,58 @@ class TestReporter < Minitest::Test
     assert_equal(0, Logster.store.count)
   end
 
-  def test_requires_same_origin_ajax
+  def test_rejects_requests_without_csrf_signals
     reporter = Logster::Middleware::Reporter.new(nil)
     env = Rack::MockRequest.env_for("/logs/report_js_error?message=hello", method: "POST")
+
+    status, = reporter.call(env)
+
+    assert_equal(403, status)
+    assert_equal(0, Logster.store.count)
+  end
+
+  def test_accepts_same_origin_beacon_requests
+    reporter = Logster::Middleware::Reporter.new(nil)
+    env =
+      Rack::MockRequest.env_for(
+        "/logs/report_js_error?message=hello",
+        :method => "POST",
+        "HTTP_HOST" => "10.0.0.5:3000",
+        "HTTP_ORIGIN" => "https://logs.example.com",
+        "HTTP_SEC_FETCH_SITE" => "same-origin",
+      )
+
+    status, = reporter.call(env)
+
+    assert_equal(200, status)
+    assert_equal(1, Logster.store.count)
+  end
+
+  def test_rejects_cross_site_beacon_requests
+    reporter = Logster::Middleware::Reporter.new(nil)
+    env =
+      Rack::MockRequest.env_for(
+        "/logs/report_js_error?message=hello",
+        :method => "POST",
+        "HTTP_ORIGIN" => "https://attacker.example.com",
+        "HTTP_SEC_FETCH_SITE" => "cross-site",
+      )
+
+    status, = reporter.call(env)
+
+    assert_equal(403, status)
+    assert_equal(0, Logster.store.count)
+  end
+
+  def test_ajax_requests_without_fetch_metadata_reject_mismatched_origins
+    reporter = Logster::Middleware::Reporter.new(nil)
+    env =
+      Rack::MockRequest.env_for(
+        "/logs/report_js_error?message=hello",
+        :method => "POST",
+        "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
+        "HTTP_ORIGIN" => "https://attacker.example.com",
+      )
 
     status, = reporter.call(env)
 

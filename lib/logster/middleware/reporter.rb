@@ -61,10 +61,13 @@ module Logster
       end
 
       def valid_csrf_request?(env)
-        return false unless env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
-
         fetch_site = env["HTTP_SEC_FETCH_SITE"]
         return false if fetch_site && !%w[same-origin same-site none].include?(fetch_site)
+
+        same_origin_fetch = fetch_site == "same-origin"
+        ajax_request = env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
+        return false unless same_origin_fetch || ajax_request
+        return true if same_origin_fetch
 
         origin = env["HTTP_ORIGIN"]
         !origin || origin == Rack::Request.new(env).base_url
