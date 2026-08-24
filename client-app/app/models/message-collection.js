@@ -1,4 +1,3 @@
-import classic from "ember-classic-decorator";
 import { ajax, increaseTitleCount } from "client-app/lib/utilities";
 import Message from "client-app/models/message";
 import Group from "client-app/models/group";
@@ -9,7 +8,6 @@ import { A } from "@ember/array";
 const BATCH_SIZE = 50;
 export const SEVERITIES = ["Debug", "Info", "Warn", "Err", "Fatal"];
 
-@classic
 export default class MessageCollection extends EmberObject {
   total = 0;
   rows = A();
@@ -143,7 +141,7 @@ export default class MessageCollection extends EmberObject {
       this.currentRow?.group &&
       row.key === this.currentRow.key
     ) {
-      messageIndex = row.messages.mapBy("key").indexOf(this.currentMessage.key);
+      messageIndex = row.messages.map((message) => message.key).indexOf(this.currentMessage.key);
       messageIndex = Math.max(0, messageIndex);
     }
 
@@ -285,7 +283,7 @@ export default class MessageCollection extends EmberObject {
   async showMoreBefore() {
     const firstLog = this.rows[0];
     const firstKey = firstLog.group ? firstLog.row_id : firstLog.key;
-    const knownGroups = this.rows.filterBy("group").mapBy("regex");
+    const knownGroups = this.rows.filter((row) => row.group).map((row) => row.regex);
 
     const data = await this.load({
       before: firstKey,

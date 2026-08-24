@@ -1,14 +1,13 @@
-import classic from "ember-classic-decorator";
+import { tracked } from "@glimmer/tracking";
 import Controller, { inject as controller } from "@ember/controller";
 import { action } from "@ember/object";
-import { inject as service } from "@ember/service";
+import { service } from "@ember/service";
 
-@classic
 export default class ShowController extends Controller {
   @service router;
   @controller("index") indexController;
 
-  envPosition = 0;
+  @tracked envPosition = 0;
 
   @action
   protect() {
@@ -34,6 +33,6 @@ export default class ShowController extends Controller {
 
   @action
   envChanged(newPosition) {
-    this.set("envPosition", newPosition);
+    this.envPosition = newPosition;
   }
 }

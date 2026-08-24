@@ -1,20 +1,23 @@
-import classic from "ember-classic-decorator";
+import { A } from "@ember/array";
 import { reads } from "@ember/object/computed";
 import Message from "client-app/models/message";
 import EmberObject, { computed } from "@ember/object";
 import { ajax } from "client-app/lib/utilities";
 
-@classic
 export default class Group extends EmberObject {
   selected = false;
   showCount = true;
 
   @reads("regex") key;
-  @reads("messages.firstObject.message") displayMessage;
+
+  @computed("messages.[]")
+  get displayMessage() {
+    return this.messages[0]?.message;
+  }
 
   init() {
     super.init(...arguments);
-    const messages = this.messages.map((m) => Message.create(m));
+    const messages = A(this.messages.map((m) => Message.create(m)));
     this.set("messages", messages);
   }
 

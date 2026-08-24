@@ -1,12 +1,10 @@
-![logster logo](https://raw.githubusercontent.com/discourse/logster/master/website/images/logo-logster-cropped-small.png)
+![logster logo](https://raw.githubusercontent.com/discourse/logster/main/website/images/logo-logster-cropped-small.png)
 
 Logster is an embedded Ruby "exception reporting service" admins can view on live websites, at `http://example.com/logs`
 
 ## Interface
 
-![Screenshot](https://raw.githubusercontent.com/discourse/logster/master/website/images/logster-screenshot.png)
-
-Play with a live demo at [logster.info/logs](http://logster.info/logs).
+![Screenshot](https://raw.githubusercontent.com/discourse/logster/main/website/images/logster-screenshot.png)
 
 ## Installation
 
@@ -27,7 +25,19 @@ constraints lambda { |req| req.session["admin"] } do
 end
 ```
 
-By default, logster will only run in development and production environments.
+By default, Logster will only run in development and production environments.
+
+## Supported versions
+
+Logster supports maintained release series only:
+
+- Ruby 3.3, 3.4, and 4.0
+- Rails 8.0 and 8.1
+- Rack 3.1 and 3.2
+- redis-rb 6.x
+- Redis Open Source 8.10
+
+Support for a release series ends when its upstream security support ends. Ruby head is also tested proactively, and the CI matrix is the source of truth for the combinations tested by Logster.
 
 To run logster in other environments, in `config/application.rb`
 
@@ -40,6 +50,8 @@ Logster.set_environments([:development, :staging, :production])
 Logster can be configured using `Logster.config`:
 
 - `Logster.config.application_version`: set to a unique identifier denoting version of your app. The "solve" function takes this version into account when suppressing errors.
+- `Logster.config.authorize_request` : Optional defense-in-depth authorization callback. It receives the Rack environment and must return a truthy value to allow access. The application must still mount Logster behind its normal administrator authentication constraint.
+
 - `Logster.config.enable_js_error_reporting` : enable js error reporting from clients
 - `Logster.config.rate_limit_error_reporting` : controls automatic 1 minute rate limiting for JS error reporting.
 - `Logster.config.web_title` : `<title>` tag for logster error page.
@@ -60,11 +72,15 @@ Logster can be configured using `Logster.config`:
 
 - `Logster.config.enable_backtrace_links` : Enable/disable the backtrace links feature.
 
-- `Logster.config.gems_dir` : The value of this config is `Gem.dir + "/gems/"` by default. You probably don't need to change this config, but it's available in case your app gems are installed in a different directory. An example where this config is needed is Logster [demo site](http://logster.info/logs/): [https://github.com/discourse/logster/blob/master/website/sample.rb#L77](https://github.com/discourse/logster/blob/master/website/sample.rb#L77).
+- `Logster.config.gems_dir` : The value of this config is `Gem.dir + "/gems/"` by default. You probably don't need to change this config, but it's available in case your application gems are installed in a different directory.
 
 - `Logster.config.back_to_site_link_path` : Path for the backlink to site.
 
 - `Logster.config.back_to_site_link_text` : Text for the backlink to site.
+
+### HTTP endpoint security
+
+Logster's supplied browser client sends mutating viewer requests with their required HTTP methods and the `X-Requested-With: XMLHttpRequest` header. Custom viewer integrations must do the same. JavaScript error reports may use that header or a browser-verified `Sec-Fetch-Site: same-origin` request, which allows same-origin `navigator.sendBeacon` reporting. Cross-site fetch metadata and mismatching origins from clients without same-origin fetch metadata are rejected. Mounting `Logster::Web` behind an administrator authentication constraint remains required; `authorize_request` can add a second authorization check inside the Rack application.
 
 ### Tracking Error Rate
 
@@ -144,11 +160,10 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 
 1. Fork it ( https://github.com/discourse/logster/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Run `cd client-app && yarn install`
-4. Run `cd website && bundle install`
-5. In the root directory, run `bundle exec rake client_dev` to start Sinatra server (port 9292) and Ember server (port 4200). Use Ember server for hot reload for client code.
-6. Visit `http://localhost:4200/logs/` (with trailing slash) to test the application. Reload `http://localhost:4200/report_error` to add sample log data.
-7. Once you're done making changes, run `./build_client_app.sh` to make and copy a production build to the assets folder.
-8. Commit your changes (`git commit -am 'Add some feature'`)
-9. Push to the branch (`git push origin my-new-feature`)
-10. Create a new Pull Request
+3. Run `bundle install`
+4. Run `bundle exec rake dev`. This installs any missing frontend and website dependencies, starts both development servers, and opens Logster in your browser.
+5. Visit `http://localhost:9292/report_error` to add sample log data. The Ember app at `http://localhost:4200/logs/` reloads automatically as you make frontend changes.
+6. Once you're done making changes, run `./build_client_app.sh` to make and copy a production build to the assets folder.
+7. Commit your changes (`git commit -am 'Add some feature'`)
+8. Push to the branch (`git push origin my-new-feature`)
+9. Create a new Pull Request

@@ -15,12 +15,26 @@ Gem::Specification.new do |spec|
   spec.homepage = "https://github.com/discourse/logster"
   spec.license = "MIT"
 
-  spec.required_ruby_version = ">= 2.5.0"
+  spec.required_ruby_version = ">= 3.3.0"
 
-  files = `git ls-files -z`.split("\x0").reject { |f| f.start_with?(/website|bin/) }
+  runtime_files = %w[CHANGELOG.md LICENSE.txt README.md]
+  files =
+    `git ls-files -z`.split("\x0")
+      .select do |file|
+        File.file?(file) &&
+          (runtime_files.include?(file) || file.start_with?("lib/", "vendor/", "assets/images/"))
+      end
+  required_assets = %w[
+    assets/manifest.json
+    assets/javascript/vendor.js
+    assets/javascript/client-app.js
+    assets/stylesheets/vendor.css
+    assets/stylesheets/client-app.css
+  ]
+  files += required_assets
   files += Dir.glob("assets/javascript/*")
   files += Dir.glob("assets/stylesheets/*")
-  spec.files = files
+  spec.files = files.uniq
 
   spec.executables = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files = spec.files.grep(%r{^(test|spec|features)/})
@@ -31,13 +45,11 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake"
-  spec.add_development_dependency "rack"
-  spec.add_development_dependency "redis"
+  spec.add_development_dependency "redis", "~> 6.0"
   spec.add_development_dependency "guard"
   spec.add_development_dependency "guard-minitest"
   spec.add_development_dependency "timecop"
-  spec.add_development_dependency "byebug", "~> 11.1.0"
+  spec.add_development_dependency "debug"
   spec.add_development_dependency "rubocop-discourse"
   spec.add_development_dependency "syntax_tree"
-  spec.add_development_dependency "sqlite3"
 end

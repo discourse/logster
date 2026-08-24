@@ -1,3 +1,4 @@
+import moment from "moment";
 import Preload, { getRootPath } from "client-app/lib/preload";
 
 const entityMap = {
@@ -11,6 +12,17 @@ const entityMap = {
 
 export function escapeHtml(string) {
   return String(string).replace(/[&<>"'/]/g, (s) => entityMap[s]);
+}
+
+export function applyRequestHeaders(xhr, settings = {}) {
+  if (settings.headers) {
+    for (const [header, value] of Object.entries(settings.headers)) {
+      xhr.setRequestHeader(header, value);
+    }
+  }
+
+  xhr.setRequestHeader("X-SILENCE-LOGGER", true);
+  xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 }
 
 export function ajax(url, settings) {
@@ -28,13 +40,7 @@ export function ajax(url, settings) {
     }
 
     xhr.open(settings.method || settings.type || "GET", url);
-    xhr.setRequestHeader("X-SILENCE-LOGGER", true);
-
-    if (settings.headers) {
-      for (const [header, value] of Object.entries(settings.headers)) {
-        xhr.setRequestHeader(header, value);
-      }
-    }
+    applyRequestHeaders(xhr, settings);
 
     xhr.onreadystatechange = () => {
       if (xhr.readyState === 4) {
@@ -193,10 +199,10 @@ export function clone(object) {
   return copy;
 }
 
-export function setLocalStorage(key, value) {
+export function setLocalStorage(key, value, prefix = true) {
   try {
     if (window.localStorage) {
-      key = "logster-" + key;
+      key = prefix ? "logster-" + key : key;
       window.localStorage.setItem(key, value);
     }
   } catch {
@@ -204,10 +210,10 @@ export function setLocalStorage(key, value) {
   }
 }
 
-export function getLocalStorage(key, fallback) {
+export function getLocalStorage(key, fallback, prefix = true) {
   try {
     if (window.localStorage) {
-      key = "logster-" + key;
+      key = prefix ? "logster-" + key : key;
       const value = window.localStorage.getItem(key);
       if (value === null) {
         // key doesn't exist

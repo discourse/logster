@@ -2,6 +2,7 @@
 
 require_relative "../../test_helper"
 require "rack"
+require "tmpdir"
 require "logster/redis_store"
 require "logster/middleware/viewer"
 
@@ -12,14 +13,26 @@ class TestViewer < Minitest::Test
     end
   end
 
+  class BrowserRequest < Rack::MockRequest
+    def request(method, uri, opts = {})
+      opts = {
+        "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
+        "HTTP_SEC_FETCH_SITE" => "same-origin",
+      }.merge(opts)
+      super
+    end
+  end
+
   def setup
     Logster.config.subdirectory = "/logsie"
+    Logster.config.authorize_request = nil
     Logster.store = Logster::RedisStore.new
     Logster.store.clear_all
   end
 
   def teardown
     Logster.config.subdirectory = nil
+    Logster.config.authorize_request = nil
     Logster.store.clear_all
     Logster.store = nil
   end
@@ -29,7 +42,11 @@ class TestViewer < Minitest::Test
   end
 
   def request
-    @request ||= Rack::MockRequest.new(Rack::Lint.new(viewer))
+    @request ||= BrowserRequest.new(Rack::Lint.new(viewer))
+  end
+
+  def raw_request
+    @raw_request ||= Rack::MockRequest.new(Rack::Lint.new(viewer))
   end
 
   def test_path_resolution
@@ -39,6 +56,298 @@ class TestViewer < Minitest::Test
     assert_equal("/", viewer.send(:resolve_path, "/logsie"))
     assert_equal("/", viewer.send(:resolve_path, "/logsie/"))
     assert_equal("/hello/world", viewer.send(:resolve_path, "/logsie/hello/world"))
+  end
+
+  def test_mutating_message_endpoints_require_their_declared_methods
+    message =
+      Logster.store.report(
+        Logger::WARN,
+        "test",
+        "mutating message",
+        backtrace: "example.rb:1",
+        env: {
+          "application_version" => "abc123",
+        },
+      )
+    Logster.store.protect(message.key)
+
+    cases = {
+      "/logsie/message/#{message.key}" => "DELETE",
+      "/logsie/protect/#{message.key}" => "PUT",
+      "/logsie/unprotect/#{message.key}" => "DELETE",
+      "/logsie/solve/#{message.key}" => "PUT",
+      "/logsie/clear" => "POST",
+      "/logsie/reset-count.json" => "PUT",
+      "/logsie/solve-group" => "POST",
+    }
+
+    cases.each do |path, allowed_method|
+      response = request.get(path)
+      assert_equal(405, response.status, "GET #{path} should be rejected")
+      assert_equal(allowed_method, response.headers["allow"])
+    end
+
+    assert(Logster.store.get(message.key), "rejected requests must not delete or solve the message")
+    assert(
+      Logster.store.get(message.key).protected,
+      "rejected requests must not unprotect the message",
+    )
+  end
+
+  def test_pattern_endpoint_reports_all_allowed_methods
+    Logster.config.enable_custom_patterns_via_ui = true
+
+    response = request.get("/logsie/patterns/suppression.json")
+
+    assert_equal(405, response.status)
+    assert_equal("POST, PUT, DELETE", response.headers["allow"])
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_prefixed_paths_cannot_bypass_mutating_route_guards
+    Logster.config.enable_custom_patterns_via_ui = true
+    message = Logster.store.report(Logger::WARN, "test", "must survive prefixed routes")
+
+    clear_response = raw_request.post("/logsie/prefix/clear")
+    solve_response = raw_request.get("/logsie/prefix/solve/#{message.key}")
+    pattern_response =
+      raw_request.post(
+        "/logsie/prefix/patterns/suppression.json",
+        params: {
+          pattern: "hide everything",
+          retroactive: true,
+        },
+      )
+
+    assert_equal(404, clear_response.status)
+    assert_equal(404, solve_response.status)
+    assert_equal(404, pattern_response.status)
+    assert(Logster.store.get(message.key))
+    assert_empty(Logster::SuppressionPattern.find_all)
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
+  def test_mutating_endpoints_require_csrf_header
+    message = Logster.store.report(Logger::WARN, "test", "csrf protected")
+    Logster.store.protect(message.key)
+
+    cases = [
+      ["DELETE", "/logsie/message/#{message.key}"],
+      ["PUT", "/logsie/protect/#{message.key}"],
+      ["DELETE", "/logsie/unprotect/#{message.key}"],
+      ["PUT", "/logsie/solve/#{message.key}"],
+      %w[POST /logsie/clear],
+      %w[PUT /logsie/reset-count.json],
+      %w[POST /logsie/solve-group],
+      %w[POST /logsie/patterns/suppression.json],
+      %w[PUT /logsie/patterns/suppression.json],
+      %w[DELETE /logsie/patterns/suppression.json],
+    ]
+
+    cases.each do |method, path|
+      response = raw_request.request(method, path)
+      assert_equal(403, response.status, "#{method} #{path} should require CSRF protection")
+      assert_equal("CSRF validation failed", response.body)
+    end
+  end
+
+  def test_mutating_endpoints_reject_cross_site_requests
+    message = Logster.store.report(Logger::WARN, "test", "csrf protected")
+
+    response =
+      raw_request.put(
+        "/logsie/protect/#{message.key}",
+        "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
+        "HTTP_SEC_FETCH_SITE" => "cross-site",
+      )
+
+    assert_equal(403, response.status)
+    refute(Logster.store.get(message.key).protected)
+  end
+
+  def test_mutating_endpoints_reject_mismatched_origin
+    message = Logster.store.report(Logger::WARN, "test", "csrf protected")
+
+    response =
+      raw_request.put(
+        "/logsie/protect/#{message.key}",
+        "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
+        "HTTP_ORIGIN" => "https://attacker.example.com",
+      )
+
+    assert_equal(403, response.status)
+    refute(Logster.store.get(message.key).protected)
+  end
+
+  def test_same_origin_fetch_metadata_survives_an_internal_proxy_url
+    message = Logster.store.report(Logger::WARN, "test", "csrf protected")
+
+    response =
+      raw_request.put(
+        "/logsie/protect/#{message.key}",
+        "HTTP_HOST" => "10.0.0.5:3000",
+        "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
+        "HTTP_SEC_FETCH_SITE" => "same-origin",
+        "HTTP_ORIGIN" => "https://logs.example.com",
+      )
+
+    assert_equal(303, response.status)
+    assert(Logster.store.get(message.key).protected)
+  end
+
+  def test_mutating_endpoints_accept_an_explicit_matching_origin
+    message = Logster.store.report(Logger::WARN, "test", "csrf protected")
+
+    response =
+      raw_request.put(
+        "/logsie/protect/#{message.key}",
+        "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
+        "HTTP_SEC_FETCH_SITE" => "same-origin",
+        "HTTP_ORIGIN" => "http://example.org",
+      )
+
+    assert_equal(303, response.status)
+    assert(Logster.store.get(message.key).protected)
+  end
+
+  def test_protect_accepts_same_origin_ajax_and_uses_see_other_redirect
+    message = Logster.store.report(Logger::WARN, "test", "protect me")
+
+    response = request.put("/logsie/protect/#{message.key}")
+
+    assert_equal(303, response.status)
+    assert_equal("/logsie/show/#{message.key}?protected=true", response.headers["location"])
+    assert(Logster.store.get(message.key).protected)
+  end
+
+  def test_authorization_callback_guards_logster_routes
+    received_env = nil
+    Logster.config.authorize_request =
+      lambda do |env|
+        received_env = env
+        false
+      end
+
+    response = request.get("/logsie/")
+
+    assert_equal(403, response.status)
+    assert_equal("Not authorized", response.body)
+    assert_equal("/logsie/", received_env["PATH_INFO"])
+  end
+
+  def test_authorization_runs_before_method_and_csrf_checks
+    Logster.config.authorize_request = ->(_) { false }
+
+    wrong_method = raw_request.get("/logsie/clear")
+    missing_csrf = raw_request.post("/logsie/clear")
+
+    [wrong_method, missing_csrf].each do |response|
+      assert_equal(403, response.status)
+      assert_equal("Not authorized", response.body)
+    end
+  end
+
+  def test_authorization_guards_static_assets
+    Logster.config.authorize_request = ->(_) { false }
+
+    response = raw_request.get("/logsie/images/icon_64x64.png")
+
+    assert_equal(403, response.status)
+    assert_equal("Not authorized", response.body)
+  end
+
+  def test_authorization_does_not_intercept_downstream_routes
+    Logster.config.authorize_request = ->(_) { false }
+    downstream =
+      Rack::MockRequest.new(Rack::Lint.new(Logster::Middleware::Viewer.new(BrokenApp.new)))
+
+    response = downstream.get("/not-logster")
+
+    assert_equal(500, response.status)
+    assert_equal("broken", response.body)
+  end
+
+  def test_logster_responses_have_security_headers
+    response = request.get("/logsie/")
+
+    assert_equal("no-store", response.headers["cache-control"])
+    assert_equal("nosniff", response.headers["x-content-type-options"])
+    assert_equal("DENY", response.headers["x-frame-options"])
+    assert_equal("no-referrer", response.headers["referrer-policy"])
+    assert_includes(response.headers["content-security-policy"], "default-src 'none'")
+    assert_includes(response.headers["content-security-policy"], "frame-ancestors 'none'")
+  end
+
+  def test_static_assets_can_be_cached_and_revalidated
+    response = request.get("/logsie/images/icon_64x64.png")
+
+    assert_equal(200, response.status)
+    assert_equal("public, max-age=0, must-revalidate", response.headers["cache-control"])
+    assert_equal("nosniff", response.headers["x-content-type-options"])
+  end
+
+  def test_static_asset_paths_reject_parent_directory_segments
+    response = request.get("/logsie/javascript/../stylesheets/client-app.css")
+
+    assert_equal(404, response.status)
+    assert_equal("Not found", response.body)
+  end
+
+  def test_app_html_uses_the_generated_asset_manifest
+    manifest = {
+      "javascript" => %w[vendor.js chunk.application.js client-app.js],
+      "stylesheets" => %w[vendor.css client-app.css],
+      "config" => {
+        "modulePrefix" => "client-app",
+        "environment" => "production",
+        "rootURL" => "/logs/",
+        "locationType" => "history",
+        "EmberENV" => {
+          "_USE_EMBER_MODULES" => true,
+        },
+        "APP" => {
+          "name" => "Logster UI",
+        },
+      },
+    }
+
+    viewer.instance_variable_set(:@asset_manifest, manifest)
+    response = request.get("/logsie/")
+    nonce = response.headers["content-security-policy"][/script-src 'nonce-([^']+)'/, 1]
+
+    assert(nonce)
+    manifest["javascript"].each do |name|
+      assert_includes(
+        response.body,
+        "<script src='/logsie/javascript/#{name}' nonce='#{nonce}'></script>",
+      )
+    end
+    assert_operator(
+      response.body.index("vendor.js"),
+      :<,
+      response.body.index("chunk.application.js"),
+    )
+    assert_operator(
+      response.body.index("chunk.application.js"),
+      :<,
+      response.body.index("client-app.js"),
+    )
+
+    encoded_config = response.body[%r{name="client-app/config/environment" content="([^"]+)"}, 1]
+    config = JSON.parse(URI.decode_uri_component(encoded_config))
+    assert_equal("/logsie/", config["rootURL"])
+    assert_equal(true, config.dig("EmberENV", "_USE_EMBER_MODULES"))
+    assert_equal("Logster UI", config.dig("APP", "name"))
+  end
+
+  def test_missing_asset_manifest_fails_closed
+    Dir.mktmpdir do |directory|
+      viewer.instance_variable_set(:@assets_path, directory)
+      error = assert_raises(RuntimeError) { viewer.send(:asset_manifest) }
+      assert_includes(error.message, "asset manifest")
+    end
   end
 
   def test_search_raceguard_s
@@ -271,6 +580,28 @@ class TestViewer < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = false
   end
 
+  def test_created_pattern_can_be_deleted_using_the_canonical_value_returned_to_the_ui
+    Logster.config.enable_custom_patterns_via_ui = true
+
+    %w[suppression grouping].each do |set_name|
+      create_response =
+        request.post("/logsie/patterns/#{set_name}.json", params: { pattern: "aaa" })
+      assert_equal(200, create_response.status)
+      canonical_pattern = JSON.parse(create_response.body).fetch("pattern")
+      assert_equal("/aaa/", canonical_pattern)
+
+      delete_response =
+        request.delete("/logsie/patterns/#{set_name}.json", params: { pattern: canonical_pattern })
+      assert_equal(200, delete_response.status)
+
+      repeated_delete =
+        request.delete("/logsie/patterns/#{set_name}.json", params: { pattern: canonical_pattern })
+      assert_equal(404, repeated_delete.status)
+    end
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
   def test_clear_all_button_shouldnt_clear_custom_patterns
     Logster::SuppressionPattern.new("testpattern").save
 
@@ -313,20 +644,38 @@ class TestViewer < Minitest::Test
     assert_equal({}, hash)
   end
 
-  def test_linking_to_a_valid_js_files
-    %w[/logsie/javascript/client-app.js /logsie/javascript/vendor.js].each do |path|
-      response = request.get(path)
-      assert_equal(200, response.status)
-      assert %w[text/javascript application/javascript].include?(response.headers["content-type"])
-    end
+  def test_linking_to_valid_javascript_files
+    viewer
+      .send(:asset_manifest)
+      .fetch("javascript")
+      .each do |name|
+        response = request.get("/logsie/javascript/#{name}")
+        assert_equal(200, response.status)
+        assert %w[text/javascript application/javascript].include?(response.headers["content-type"])
+      end
   end
 
-  def test_linking_to_a_valid_css_files
-    %w[/logsie/stylesheets/client-app.css /logsie/stylesheets/vendor.css].each do |path|
-      response = request.get(path)
-      assert_equal(200, response.status)
-      assert_equal("text/css", response.headers["content-type"])
-    end
+  def test_linking_to_valid_stylesheets
+    viewer
+      .send(:asset_manifest)
+      .fetch("stylesheets")
+      .each do |name|
+        response = request.get("/logsie/stylesheets/#{name}")
+        assert_equal(200, response.status)
+        assert_equal("text/css", response.headers["content-type"])
+      end
+  end
+
+  def test_linking_to_third_party_license_notices
+    license =
+      Dir.glob(
+        File.join(viewer.instance_variable_get(:@assets_path), "javascript/*.LICENSE.txt"),
+      ).first
+    assert(license, "the build should copy webpack license notices")
+
+    response = request.get("/logsie/javascript/#{File.basename(license)}")
+    assert_equal(200, response.status)
+    assert_includes(response.body, "Font Awesome Free")
   end
 
   def test_linking_to_an_invalid_ember_component_or_template

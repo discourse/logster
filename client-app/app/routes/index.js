@@ -1,18 +1,17 @@
-import classic from "ember-classic-decorator";
-import { inject as service } from "@ember/service";
 import Route from "@ember/routing/route";
 import MessageCollection, {
   SEVERITIES,
 } from "client-app/models/message-collection";
 import { isHidden } from "client-app/lib/utilities";
 
-@classic
 export default class IndexRoute extends Route {
-  @service events;
+  queryParams = {
+    search: { refreshModel: true },
+  };
 
-  model() {
+  model({ search }) {
     // TODO from preload json?
-    return MessageCollection.create();
+    return MessageCollection.create({ search: search || "" });
   }
 
   setupController(controller, model) {
@@ -23,6 +22,7 @@ export default class IndexRoute extends Route {
 
     model.reload();
 
+    clearInterval(this.refreshInterval);
     let times = 0;
     let backoff = 1;
 
@@ -52,10 +52,6 @@ export default class IndexRoute extends Route {
         }
       }
     }, 3000);
-
-    this.events.on("panelResized", (amount) => {
-      controller.resizePanels(amount);
-    });
   }
 
   deactivate() {
