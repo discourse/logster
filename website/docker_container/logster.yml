@@ -64,7 +64,7 @@ hooks:
             gzip on;
             gzip_types application/json text/css application/x-javascript;
             gzip_min_length 1000;
-            server_name logster.info;
+            server_name localhost;
             keepalive_timeout 65;
             location ~ ^/logs(?<relative>/[^\?]+).* {
               root /var/www/logster/assets;
