@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "bundler/gem_tasks"
-require "digest"
 require "net/http"
 require "rake/testtask"
 require "rbconfig"
@@ -18,7 +17,15 @@ task(default: :test)
 
 desc "Build the frontend assets required by the gem"
 task :build_client_app do
-  sh File.expand_path("build_client_app.sh", __dir__)
+  if ENV["LOGSTER_SKIP_ASSET_BUILD"] == "1"
+    manifest = File.expand_path("assets/manifest.json", __dir__)
+    if !File.file?(manifest)
+      abort "Frontend assets are missing; run build_client_app.sh before releasing"
+    end
+    puts "Using pre-built frontend assets"
+  else
+    sh File.expand_path("build_client_app.sh", __dir__)
+  end
 end
 
 task build: :build_client_app
@@ -29,7 +36,6 @@ module DevServer
   ROOT = File.expand_path(__dir__)
   CLIENT_DIR = File.join(ROOT, "client-app")
   WEBSITE_DIR = File.join(ROOT, "website")
-  INSTALL_STAMP = File.join(CLIENT_DIR, "node_modules", ".logster-package-lock.sha256")
 
   def run
     backend_port = Integer(ENV.fetch("BACKEND_PORT", 9292))
@@ -99,16 +105,8 @@ module DevServer
   end
 
   def install_frontend_dependencies!
-    lockfile = File.join(CLIENT_DIR, "package-lock.json")
-    expected = Digest::SHA256.file(lockfile).hexdigest
-    current = File.file?(INSTALL_STAMP) ? File.read(INSTALL_STAMP).strip : nil
-    return puts("✓ Frontend dependencies are current") if current == expected
-
-    puts "Installing frontend dependencies..."
-    abort "`npm ci` failed" unless system("npm", "ci", chdir: CLIENT_DIR)
-
-    File.write(INSTALL_STAMP, expected)
-    puts "✓ Frontend dependencies are current"
+    script = File.join(CLIENT_DIR, "scripts", "ensure-dependencies.mjs")
+    abort "Frontend dependency installation failed" unless system("node", script)
   end
 
   def install_website_dependencies!

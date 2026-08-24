@@ -8,6 +8,7 @@ client_dir="$root_dir/client-app"
 temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/logster-assets.XXXXXX")"
 trap 'rm -rf "$temporary_dir"' EXIT
 
+node "$client_dir/scripts/ensure-dependencies.mjs"
 rm -rf "$client_dir/dist"
 (
   cd "$client_dir"
@@ -15,7 +16,8 @@ rm -rf "$client_dir/dist"
 )
 
 mkdir -p "$temporary_dir/javascript" "$temporary_dir/stylesheets"
-cp "$client_dir"/dist/assets/*.js "$temporary_dir/javascript/"
+find "$client_dir/dist/assets" -maxdepth 1 -type f -name "*.js" \
+  ! -name "chunk.tests.*.js" -exec cp {} "$temporary_dir/javascript/" \;
 cp "$client_dir"/dist/assets/*.css "$temporary_dir/stylesheets/"
 find "$client_dir/dist/assets" -maxdepth 1 -type f -name "*.LICENSE.txt" -exec \
   cp {} "$temporary_dir/javascript/" \;

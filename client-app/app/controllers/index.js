@@ -9,6 +9,10 @@ import {
 import Preload from "client-app/lib/preload";
 import { tracked } from "@glimmer/tracking";
 
+const MAX_GROUPING_PATTERN_LENGTH = 480;
+const MAX_GROUPING_PATTERN_INSPECT_SIZE = 490;
+const MAX_GROUPING_ALTERNATIVE_LENGTH = 200;
+
 export default class IndexController extends Controller {
   @tracked loading = false;
   @tracked buildingGroupingPattern = false;
@@ -59,12 +63,8 @@ export default class IndexController extends Controller {
     return this.search;
   }
 
-  async doSearch(term) {
-    this.model.set("search", term);
-    this.loading = true;
-    await this.model.reload();
-    this.loading = false;
-    this.model.updateSelectedRow();
+  doSearch(term) {
+    this.search = term || null;
   }
 
   resizePanels(amount) {
@@ -283,13 +283,75 @@ export default class IndexController extends Controller {
     const commonText = this.findLongestMatchingPrefix(messages);
 
     if (commonText.trim().length >= 3) {
-      return this.escapeRegExp(commonText);
+      return this.escapeRegExpPrefix(
+        commonText,
+        MAX_GROUPING_PATTERN_LENGTH,
+        (pattern) =>
+          this.estimatedRubyRegexpInspectSize(pattern) <=
+          MAX_GROUPING_PATTERN_INSPECT_SIZE
+      );
     }
 
-    const alternatives = messages.map((message) =>
-      this.escapeRegExp(message.trim().slice(0, 200))
-    );
+    const alternatives = [];
+    let patternLength = 4; // `(?:` and `)`
+
+    for (const message of messages) {
+      const separatorLength = alternatives.length > 0 ? 1 : 0;
+      const availableLength =
+        MAX_GROUPING_PATTERN_LENGTH - patternLength - separatorLength;
+      const alternative = this.escapeRegExpPrefix(
+        message.trim().slice(0, MAX_GROUPING_ALTERNATIVE_LENGTH),
+        availableLength,
+        (value) => {
+          const candidate = `(?:${[...alternatives, value].join("|")})`;
+          return (
+            this.estimatedRubyRegexpInspectSize(candidate) <=
+            MAX_GROUPING_PATTERN_INSPECT_SIZE
+          );
+        }
+      );
+
+      if (!alternative.length) {
+        break;
+      }
+
+      alternatives.push(alternative);
+      patternLength += separatorLength + alternative.length;
+    }
+
     return `(?:${alternatives.join("|")})`;
+  }
+
+  escapeRegExpPrefix(string, maximumLength, valid = () => true) {
+    let result = "";
+
+    for (const character of string) {
+      const escapedCharacter = this.escapeRegExp(character);
+      const candidate = result + escapedCharacter;
+      if (candidate.length > maximumLength || !valid(candidate)) {
+        break;
+      }
+      result = candidate;
+    }
+
+    return result;
+  }
+
+  estimatedRubyRegexpInspectSize(pattern) {
+    let size = 2; // leading and trailing `/`
+
+    for (const character of pattern) {
+      const codepoint = character.codePointAt(0);
+      if (character === "\\" || character === "/") {
+        size += 2;
+      } else if (codepoint < 0x20 || codepoint === 0x7f) {
+        size += 4; // conservatively allow for Ruby's `\\xNN` representation
+      } else {
+        size += 1;
+      }
+    }
+
+    return size;
   }
 
   findLongestMatchingPrefix(strings) {

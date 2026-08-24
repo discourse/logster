@@ -59,6 +59,34 @@ module("Unit | Controller | index", function (hooks) {
     );
   });
 
+  test("Grouping pattern suggestions stay below the backend size limit", function (assert) {
+    const controller = this.owner.lookup("controller:index");
+    const suggestion = controller.buildGroupingPatternSuggestion([
+      `Alpha ${"a".repeat(200)}`,
+      `Beta ${"b".repeat(200)}`,
+      `Gamma ${"c".repeat(200)}`,
+    ]);
+    const heavilyEscapedSuggestion = controller.buildGroupingPatternSuggestion([
+      `Alpha ${"/".repeat(200)}`,
+      `Beta ${"\\".repeat(200)}`,
+    ]);
+
+    assert.true(suggestion.length <= 480, "the generated pattern is bounded");
+    assert.true(
+      controller.estimatedRubyRegexpInspectSize(suggestion) <= 490,
+      "the client leaves room for Ruby's Regexp inspection"
+    );
+    assert.true(
+      controller.estimatedRubyRegexpInspectSize(heavilyEscapedSuggestion) <= 490,
+      "escaped characters also stay within the server limit"
+    );
+    assert.true(
+      suggestion.startsWith("(?:Alpha "),
+      "the suggestion retains the first selected message"
+    );
+    assert.true(suggestion.endsWith(")"), "the suggestion remains a complete regexp group");
+  });
+
   test("Creating inline grouping patterns can handle special characters", function (assert) {
     const controller = this.owner.lookup("controller:index");
     let messages = [

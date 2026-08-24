@@ -46,7 +46,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: client-app
-        run: npm ci
+        run: node scripts/ensure-dependencies.mjs
 
       - name: Build JS app
         run: bash build_client_app.sh
@@ -73,7 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby: ["3.3", "4.0"]
+        ruby: ["3.3", "3.4", "4.0"]
         rack: ["3.1", "3.2"]
         include:
           - ruby: "head"
@@ -99,7 +99,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: client-app
-        run: npm ci
+        run: node scripts/ensure-dependencies.mjs
 
       - name: Build JS app
         run: bash build_client_app.sh
@@ -121,12 +121,12 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: client-app
-        run: npm ci
+        run: node scripts/ensure-dependencies.mjs
 
       - name: JS tests
         working-directory: client-app
         run: |
-          npm run test:manifest
+          npm run test:build-scripts
           npm run test:ember
 
   website:
@@ -179,7 +179,7 @@ jobs:
       - name: Install frontend dependencies
         if: ${{ !cancelled() }}
         working-directory: client-app
-        run: npm ci
+        run: node scripts/ensure-dependencies.mjs
 
       - name: Syntax Tree
         if: ${{ !cancelled() }}
@@ -207,14 +207,15 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: client-app
-        run: npm ci
+        run: node scripts/ensure-dependencies.mjs
 
       - name: Build JS app
         run: bash build_client_app.sh
 
       - name: Release Gem
-        uses: discourse/publish-rubygems-action@v2
+        uses: discourse/publish-rubygems-action@v3
         env:
           RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+          LOGSTER_SKIP_ASSET_BUILD: "1"
           GIT_EMAIL: team@discourse.org
           GIT_NAME: discoursebot

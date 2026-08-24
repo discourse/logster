@@ -77,6 +77,8 @@ module Logster
             return not_allowed("Not authorized")
           end
 
+          return not_found if parent_directory_segment?(resource)
+
           if allowed_methods = allowed_methods_for(resource)
             if !allowed_methods.include?(env[REQUEST_METHOD])
               return method_not_allowed(allowed_methods)
@@ -241,6 +243,12 @@ module Logster
       end
 
       protected
+
+      def parent_directory_segment?(resource)
+        Rack::Utils.unescape_path(resource).split("/").include?("..")
+      rescue ArgumentError
+        true
+      end
 
       def allowed_methods_for(resource)
         route = MUTATING_ROUTES.find { |pattern, _| pattern.match?(resource) }

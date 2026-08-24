@@ -49,4 +49,11 @@ class TestGemspec < Minitest::Test
       "webpack-extracted third-party licenses should ship with the gem",
     )
   end
+
+  def test_test_only_webpack_entrypoint_is_not_packaged
+    refute(
+      spec_files.any? { |file| File.basename(file).start_with?("chunk.tests.") },
+      "the test-only webpack entrypoint should not ship with the gem",
+    )
+  end
 end

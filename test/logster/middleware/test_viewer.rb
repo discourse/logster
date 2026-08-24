@@ -182,6 +182,21 @@ class TestViewer < Minitest::Test
     refute(Logster.store.get(message.key).protected)
   end
 
+  def test_mutating_endpoints_accept_an_explicit_matching_origin
+    message = Logster.store.report(Logger::WARN, "test", "csrf protected")
+
+    response =
+      raw_request.put(
+        "/logsie/protect/#{message.key}",
+        "HTTP_X_REQUESTED_WITH" => "XMLHttpRequest",
+        "HTTP_SEC_FETCH_SITE" => "same-origin",
+        "HTTP_ORIGIN" => "http://example.org",
+      )
+
+    assert_equal(303, response.status)
+    assert(Logster.store.get(message.key).protected)
+  end
+
   def test_protect_accepts_same_origin_ajax_and_uses_see_other_redirect
     message = Logster.store.report(Logger::WARN, "test", "protect me")
 
@@ -205,6 +220,27 @@ class TestViewer < Minitest::Test
     assert_equal(403, response.status)
     assert_equal("Not authorized", response.body)
     assert_equal("/logsie/", received_env["PATH_INFO"])
+  end
+
+  def test_authorization_runs_before_method_and_csrf_checks
+    Logster.config.authorize_request = ->(_) { false }
+
+    wrong_method = raw_request.get("/logsie/clear")
+    missing_csrf = raw_request.post("/logsie/clear")
+
+    [wrong_method, missing_csrf].each do |response|
+      assert_equal(403, response.status)
+      assert_equal("Not authorized", response.body)
+    end
+  end
+
+  def test_authorization_guards_static_assets
+    Logster.config.authorize_request = ->(_) { false }
+
+    response = raw_request.get("/logsie/images/icon_64x64.png")
+
+    assert_equal(403, response.status)
+    assert_equal("Not authorized", response.body)
   end
 
   def test_authorization_does_not_intercept_downstream_routes
@@ -235,6 +271,13 @@ class TestViewer < Minitest::Test
     assert_equal(200, response.status)
     assert_equal("public, max-age=0, must-revalidate", response.headers["cache-control"])
     assert_equal("nosniff", response.headers["x-content-type-options"])
+  end
+
+  def test_static_asset_paths_reject_parent_directory_segments
+    response = request.get("/logsie/javascript/../stylesheets/client-app.css")
+
+    assert_equal(404, response.status)
+    assert_equal("Not found", response.body)
   end
 
   def test_app_html_uses_the_generated_asset_manifest
