@@ -5,9 +5,13 @@ import MessageCollection, {
 import { isHidden } from "client-app/lib/utilities";
 
 export default class IndexRoute extends Route {
-  model() {
+  queryParams = {
+    search: { refreshModel: true },
+  };
+
+  model({ search }) {
     // TODO from preload json?
-    return MessageCollection.create();
+    return MessageCollection.create({ search: search || "" });
   }
 
   setupController(controller, model) {
@@ -18,6 +22,7 @@ export default class IndexRoute extends Route {
 
     model.reload();
 
+    clearInterval(this.refreshInterval);
     let times = 0;
     let backoff = 1;
 

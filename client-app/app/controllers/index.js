@@ -1,5 +1,5 @@
 import { debounce } from "@ember/runloop";
-import { action, computed } from "@ember/object";
+import { action } from "@ember/object";
 import Controller from "@ember/controller";
 import {
   ajax,
@@ -9,37 +9,39 @@ import {
 import Preload from "client-app/lib/preload";
 import { tracked } from "@glimmer/tracking";
 
+const MAX_GROUPING_PATTERN_LENGTH = 480;
+const MAX_GROUPING_PATTERN_INSPECT_SIZE = 490;
+const MAX_GROUPING_ALTERNATIVE_LENGTH = 200;
+
 export default class IndexController extends Controller {
   @tracked loading = false;
   @tracked buildingGroupingPattern = false;
   @tracked rowMessagesForGroupingPattern = [];
   @tracked showGroupingPatternDialog = false;
+  @tracked groupingPatternError = null;
+  @tracked groupingPatternSaving = false;
   @tracked groupingPatternValue = "";
 
-  showDebug = getLocalStorage("showDebug", false);
-  showInfo = getLocalStorage("showInfo", false);
-  showWarn = getLocalStorage("showWarn", true);
-  showErr = getLocalStorage("showErr", true);
-  showFatal = getLocalStorage("showFatal", true);
-  search = null;
+  @tracked showDebug = getLocalStorage("showDebug", false);
+  @tracked showInfo = getLocalStorage("showInfo", false);
+  @tracked showWarn = getLocalStorage("showWarn", true);
+  @tracked showErr = getLocalStorage("showErr", true);
+  @tracked showFatal = getLocalStorage("showFatal", true);
+  @tracked search = null;
   queryParams = ["search"];
 
-  @computed
   get showSettings() {
     return Preload.get("patterns_enabled");
   }
 
-  @computed
   get backToSiteLinkText() {
     return Preload.get("back_to_site_link_text");
   }
 
-  @computed
   get backToSiteLinkPath() {
     return Preload.get("back_to_site_link_path");
   }
 
-  @computed
   get hasTopMenu() {
     return this.backToSiteLinkText && this.backToSiteLinkPath;
   }
@@ -57,21 +59,12 @@ export default class IndexController extends Controller {
     );
   }
 
-  @computed("search")
   get searchTerm() {
-    if (this.search) {
-      this.doSearch(this.search);
-      return this.search;
-    }
-    return null;
+    return this.search;
   }
 
-  async doSearch(term) {
-    this.model.set("search", term);
-    this.loading = true;
-    await this.model.reload();
-    this.loading = false;
-    this.model.updateSelectedRow();
+  doSearch(term) {
+    this.search = term || null;
   }
 
   resizePanels(amount) {
@@ -79,6 +72,10 @@ export default class IndexController extends Controller {
     const topPanel = document.getElementById("top-panel");
     bottomPanel.style.height = `${amount - 13}px`;
     topPanel.style.bottom = `${amount + 12}px`;
+  }
+
+  request(url, settings) {
+    return ajax(url, settings);
   }
 
   @action
@@ -93,14 +90,17 @@ export default class IndexController extends Controller {
 
   @action
   handleCheckboxChange(row, event) {
+    const messages = this.groupingMessagesForRow(row);
+
     if (event.target.checked) {
       this.rowMessagesForGroupingPattern = [
-        ...this.rowMessagesForGroupingPattern,
-        row.message,
+        ...new Set([...this.rowMessagesForGroupingPattern, ...messages]),
       ];
     } else {
       this.rowMessagesForGroupingPattern =
-        this.rowMessagesForGroupingPattern.filter((i) => i !== row.message);
+        this.rowMessagesForGroupingPattern.filter(
+          (message) => !messages.includes(message)
+        );
     }
   }
 
@@ -184,7 +184,7 @@ export default class IndexController extends Controller {
 
   @action
   async updateFilter(name) {
-    this.toggleProperty(name);
+    this[name] = !this[name];
     this.model.set(name, this[name]);
     setLocalStorage(name, this[name]);
     this.loading = true;
@@ -216,51 +216,149 @@ export default class IndexController extends Controller {
 
   @action
   createGroupingPatternFromSelectedRows() {
-    let match = this.findLongestMatchingPrefix(
+    this.groupingPatternValue = this.buildGroupingPatternSuggestion(
       this.rowMessagesForGroupingPattern
     );
-    match = this.escapeRegExp(match);
-
-    if (!match.trim().length) {
-      // eslint-disable-next-line no-alert
-      alert("Can not create a grouping pattern with the given rows");
-      return;
-    }
-
-    this.groupingPatternValue = match;
+    this.groupingPatternError = null;
     this.showGroupingPatternDialog = true;
   }
 
   @action
   updateGroupingPatternValue(event) {
     this.groupingPatternValue = event.target.value;
+    this.groupingPatternError = null;
   }
 
   @action
   async confirmGroupingPattern() {
     const pattern = this.groupingPatternValue.trim();
-    if (!pattern.length) {
+    if (!pattern.length || this.groupingPatternSaving) {
       return;
     }
 
-    await ajax("/patterns/grouping.json", {
-      method: "POST",
-      data: { pattern },
-    });
-    this.showGroupingPatternDialog = false;
-    this.groupingPatternValue = "";
-    this.rowMessagesForGroupingPattern = [];
-    this.buildingGroupingPattern = false;
-    this.model.reload();
+    this.groupingPatternSaving = true;
+    this.groupingPatternError = null;
+
+    try {
+      await this.request("/patterns/grouping.json", {
+        method: "POST",
+        data: { pattern },
+      });
+      this.showGroupingPatternDialog = false;
+      this.groupingPatternValue = "";
+      this.rowMessagesForGroupingPattern = [];
+      this.buildingGroupingPattern = false;
+      this.model.reload();
+    } catch (response) {
+      this.groupingPatternError =
+        response.responseText ||
+        response.message ||
+        "Unable to create the grouping pattern.";
+    } finally {
+      this.groupingPatternSaving = false;
+    }
   }
 
   @action
   cancelGroupingPattern() {
     this.showGroupingPatternDialog = false;
+    this.groupingPatternError = null;
     this.groupingPatternValue = "";
   }
 
+  groupingMessagesForRow(row) {
+    const messages = row.group
+      ? row.messages.map((message) => message.message)
+      : [row.message || row.displayMessage];
+
+    return messages.filter(
+      (message) => typeof message === "string" && message.trim().length > 0
+    );
+  }
+
+  buildGroupingPatternSuggestion(strings) {
+    const messages = [...new Set(strings)].filter(
+      (message) => typeof message === "string" && message.trim().length > 0
+    );
+    const commonText = this.findLongestMatchingPrefix(messages);
+
+    if (commonText.trim().length >= 3) {
+      return this.escapeRegExpPrefix(
+        commonText,
+        MAX_GROUPING_PATTERN_LENGTH,
+        (pattern) =>
+          this.estimatedRubyRegexpInspectSize(pattern) <=
+          MAX_GROUPING_PATTERN_INSPECT_SIZE
+      );
+    }
+
+    const alternatives = [];
+    let patternLength = 4; // `(?:` and `)`
+
+    for (const message of messages) {
+      const separatorLength = alternatives.length > 0 ? 1 : 0;
+      const availableLength =
+        MAX_GROUPING_PATTERN_LENGTH - patternLength - separatorLength;
+      const alternative = this.escapeRegExpPrefix(
+        message.trim().slice(0, MAX_GROUPING_ALTERNATIVE_LENGTH),
+        availableLength,
+        (value) => {
+          const candidate = `(?:${[...alternatives, value].join("|")})`;
+          return (
+            this.estimatedRubyRegexpInspectSize(candidate) <=
+            MAX_GROUPING_PATTERN_INSPECT_SIZE
+          );
+        }
+      );
+
+      if (!alternative.length) {
+        break;
+      }
+
+      alternatives.push(alternative);
+      patternLength += separatorLength + alternative.length;
+    }
+
+    return `(?:${alternatives.join("|")})`;
+  }
+
+  escapeRegExpPrefix(string, maximumLength, valid = () => true) {
+    let result = "";
+
+    for (const character of string) {
+      const escapedCharacter = this.escapeRegExp(character);
+      const candidate = result + escapedCharacter;
+      if (candidate.length > maximumLength || !valid(candidate)) {
+        break;
+      }
+      result = candidate;
+    }
+
+    return result;
+  }
+
+  estimatedRubyRegexpInspectSize(pattern) {
+    let size = 2; // leading and trailing `/`
+
+    for (const character of pattern) {
+      const codepoint = character.codePointAt(0);
+      if (character === "\\" || character === "/") {
+        size += 2;
+      } else if (codepoint < 0x20 || codepoint === 0x7f) {
+        size += 4; // conservatively allow for Ruby's `\\xNN` representation
+      } else {
+        size += 1;
+      }
+    }
+
+    return size;
+  }
+
   findLongestMatchingPrefix(strings) {
+    if (strings.length === 0) {
+      return "";
+    }
+
     const shortestString = strings.reduce(
       (shortest, str) => (str.length < shortest.length ? str : shortest),
       strings[0]

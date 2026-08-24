@@ -237,6 +237,16 @@ tbody tr {
   margin-left: 5px;
 }
 
+.message-actions button.copied {
+  background: #d5f5e3;
+  color: #176b3a;
+}
+
+.message-actions button.copy-failed {
+  background: #fde2e2;
+  color: #9b1c1c;
+}
+
 .divider {
   position: fixed;
   bottom: 310px;
@@ -684,7 +694,8 @@ label span {
   font-family: Consolas, "Roboto Mono", Monaco, Ubuntu Mono, monospace;
   width: 600px;
   font-size: inherit;
-  padding: 5px 0 5px 0;
+  padding: 5px 8px;
+  box-sizing: border-box;
   height: 100%;
   box-sizing: border-box;
   vertical-align: middle;
@@ -773,6 +784,12 @@ label span {
   border: 1px solid #ccc;
   border-radius: 3px;
   margin-bottom: 14px;
+}
+
+.grouping-pattern-dialog .api-error {
+  margin: 0 0 14px;
+  color: #c62828;
+  white-space: pre-wrap;
 }
 
 .grouping-pattern-dialog-buttons {
