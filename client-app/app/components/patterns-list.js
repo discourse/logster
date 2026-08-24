@@ -1,11 +1,10 @@
-import classic from "ember-classic-decorator";
+import { A } from "@ember/array";
 import { equal, not } from "@ember/object/computed";
 import Component from "@ember/component";
 import { action, computed } from "@ember/object";
 import Pattern from "client-app/models/pattern-item";
 import { ajax } from "client-app/lib/utilities";
 
-@classic
 export default class PatternsList extends Component {
   @not("mutable") immutable;
   @equal("key", "suppression") showCounter;
@@ -54,7 +53,7 @@ export default class PatternsList extends Component {
   @action
   create() {
     if (!this.newPatterns) {
-      this.set("newPatterns", []);
+      this.set("newPatterns", A());
     }
     this.newPatterns.pushObject(Pattern.create({ isNew: true }));
   }

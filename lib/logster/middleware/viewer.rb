@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "uri"
 
 module Logster
   module Middleware
@@ -307,6 +308,42 @@ module Logster
         "<script src='#{@logs_path}/javascript/#{name}' nonce='#{csp_nonce}'></script>"
       end
 
+      def asset_manifest
+        @asset_manifest ||=
+          begin
+            path = File.join(@assets_path, "manifest.json")
+            unless File.file?(path)
+              raise RuntimeError,
+                    "Logster asset manifest is missing; rebuild the gem with ./build_client_app.sh"
+            end
+
+            validate_asset_manifest(JSON.parse(File.read(path)))
+          rescue JSON::ParserError, KeyError, TypeError, Errno::ENOENT => error
+            raise RuntimeError, "Logster asset manifest is invalid: #{error.message}"
+          end
+      end
+
+      def validate_asset_manifest(manifest)
+        %w[javascript stylesheets].each do |type|
+          names = manifest.fetch(type)
+          unless names.is_a?(Array) && names.all? { |name| name.match?(/\A[a-zA-Z0-9._-]+\z/) }
+            raise JSON::ParserError, "Invalid #{type} asset manifest"
+          end
+        end
+        unless manifest["config"].is_a?(Hash)
+          raise JSON::ParserError, "Invalid client application config"
+        end
+
+        manifest
+      end
+
+      def encoded_client_app_config
+        config = JSON.parse(JSON.generate(asset_manifest.fetch("config")))
+        config["environment"] = "production"
+        config["rootURL"] = "#{@logs_path}/"
+        Rack::Utils.escape_html(URI.encode_uri_component(JSON.generate(config)))
+      end
+
       def to_json_and_escape(payload)
         Rack::Utils.escape_html(JSON.generate(payload))
       end
@@ -344,8 +381,10 @@ module Logster
       def js_app(preload = {})
         csp_nonce = SecureRandom.hex
         preload = preloaded_data.merge(preload)
-        root_url = @logs_path
-        root_url += "/" if root_url[-1] != "/"
+        stylesheets =
+          asset_manifest.fetch("stylesheets").map { |name| css(name, csp_nonce) }.join("\n")
+        javascript =
+          asset_manifest.fetch("javascript").map { |name| script(name, csp_nonce) }.join("\n")
         body = <<~HTML
           <!doctype html>
           <html>
@@ -357,14 +396,12 @@ module Logster
               <link href='//fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css' nonce='#{csp_nonce}'>
               <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=yes">
               <meta name="color-scheme" content="dark light">
-              #{css("vendor.css", csp_nonce)}
-              #{css("client-app.css", csp_nonce)}
-              #{script("vendor.js", csp_nonce)}
+              #{stylesheets}
               <meta id="preloaded-data" data-root-path="#{@logs_path}" data-preloaded="#{to_json_and_escape(preload)}">
-              <meta name="client-app/config/environment" content="%7B%22modulePrefix%22%3A%22client-app%22%2C%22environment%22%3A%22production%22%2C%22rootURL%22%3A%22#{root_url}%22%2C%22locationType%22%3A%22history%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%2C%22EXTEND_PROTOTYPES%22%3A%7B%22Date%22%3Afalse%7D%2C%22_APPLICATION_TEMPLATE_WRAPPER%22%3Afalse%2C%22_DEFAULT_ASYNC_OBSERVERS%22%3Atrue%2C%22_JQUERY_INTEGRATION%22%3Afalse%2C%22_TEMPLATE_ONLY_GLIMMER_COMPONENTS%22%3Atrue%7D%2C%22APP%22%3A%7B%22name%22%3A%22client-app%22%2C%22version%22%3A%220.0.0%2B7a424002%22%7D%2C%22exportApplicationGlobal%22%3Afalse%7D" />
+              <meta name="client-app/config/environment" content="#{encoded_client_app_config}" />
             </head>
             <body>
-              #{script("client-app.js", csp_nonce)}
+              #{javascript}
             </body>
           </html>
         HTML

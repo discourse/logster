@@ -1,4 +1,3 @@
-import classic from "ember-classic-decorator";
 import { ajax, increaseTitleCount } from "client-app/lib/utilities";
 import Message from "client-app/models/message";
 import Group from "client-app/models/group";
@@ -9,7 +8,6 @@ import { A } from "@ember/array";
 const BATCH_SIZE = 50;
 export const SEVERITIES = ["Debug", "Info", "Warn", "Err", "Fatal"];
 
-@classic
 export default class MessageCollection extends EmberObject {
   total = 0;
   rows = A();

@@ -1,4 +1,5 @@
 Gemfile.lock
 /log/
+/assets/manifest.json
 assets/javascript/*.js
 assets/stylesheets/*.css

@@ -1,9 +1,7 @@
-import classic from "ember-classic-decorator";
 import Controller, { inject as controller } from "@ember/controller";
 import { action } from "@ember/object";
-import { inject as service } from "@ember/service";
+import { service } from "@ember/service";
 
-@classic
 export default class ShowController extends Controller {
   @service router;
   @controller("index") indexController;
