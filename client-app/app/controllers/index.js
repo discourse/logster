@@ -1,4 +1,3 @@
-import classic from "ember-classic-decorator";
 import { debounce } from "@ember/runloop";
 import { action, computed } from "@ember/object";
 import Controller from "@ember/controller";
@@ -10,7 +9,6 @@ import {
 import Preload from "client-app/lib/preload";
 import { tracked } from "@glimmer/tracking";
 
-@classic
 export default class IndexController extends Controller {
   @tracked loading = false;
   @tracked buildingGroupingPattern = false;

@@ -1,10 +1,8 @@
-import classic from "ember-classic-decorator";
 import { tagName } from "@ember-decorators/component";
 import Component from "@ember/component";
 import { bound } from "client-app/lib/decorators";
 import { action } from "@ember/object";
 
-@classic
 @tagName("span")
 export default class ActionsMenu extends Component {
   showMenu = false;

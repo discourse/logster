@@ -1,6 +1,5 @@
-import classic from "ember-classic-decorator";
 import { classNames } from "@ember-decorators/component";
-import { inject as service } from "@ember/service";
+import { service } from "@ember/service";
 import Component from "@ember/component";
 import { scheduleOnce, throttle } from "@ember/runloop";
 import { bound } from "client-app/lib/decorators";
@@ -9,7 +8,6 @@ const MOVE_EVENTS = ["touchmove", "mousemove"];
 const UP_EVENTS = ["touchend", "mouseup"];
 const DOWN_EVENTS = ["touchstart", "mousedown"];
 
-@classic
 @classNames("divider")
 export default class PanelResizer extends Component {
   @service events;

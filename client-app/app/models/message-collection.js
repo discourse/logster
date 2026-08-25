@@ -1,4 +1,3 @@
-import classic from "ember-classic-decorator";
 import { ajax, increaseTitleCount } from "client-app/lib/utilities";
 import Message from "client-app/models/message";
 import Group from "client-app/models/group";
@@ -9,7 +8,6 @@ import { A } from "@ember/array";
 const BATCH_SIZE = 50;
 export const SEVERITIES = ["Debug", "Info", "Warn", "Err", "Fatal"];
 
-@classic
 export default class MessageCollection extends EmberObject {
   total = 0;
   rows = A();
@@ -168,6 +166,10 @@ export default class MessageCollection extends EmberObject {
     }
   }
 
+  request(url, settings) {
+    return ajax(url, settings);
+  }
+
   async load(opts) {
     opts ||= {};
 
@@ -197,7 +199,7 @@ export default class MessageCollection extends EmberObject {
     this.set("loading", true);
 
     try {
-      const response = await ajax("/messages.json", {
+      const response = await this.request("/messages.json", {
         data,
         method: "POST",
       });

@@ -1,4 +1,3 @@
-import classic from "ember-classic-decorator";
 import { computed } from "@ember/object";
 import Component from "@ember/component";
 import Preloaded from "client-app/lib/preload";
@@ -39,7 +38,6 @@ function shortenLine(line) {
   }
 }
 
-@classic
 export default class BackTrace extends Component {
   @computed("env.application_version")
   get commitSha() {
@@ -83,7 +81,7 @@ export default class BackTrace extends Component {
     const gemsData = Preloaded.get("gems_data");
     const match = gemsData
       .filter((g) => gemWithVersion.startsWith(`${g.name}-`))
-      .sortBy("name.length")
+      .sort((a, b) => a.name.length - b.name.length)
       .reverse()[0];
 
     if (!match) {
@@ -101,7 +99,7 @@ export default class BackTrace extends Component {
     const projectDirs = Preloaded.get("directories");
     const match = projectDirs
       .filter((dir) => line.startsWith(dir.path))
-      .sortBy("path.length")
+      .sort((a, b) => a.path.length - b.path.length)
       .reverse()[0];
 
     if (!match) {

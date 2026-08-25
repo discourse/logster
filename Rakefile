@@ -13,7 +13,7 @@ desc "Starts Sinatra and Ember servers"
 task :client_dev do
   begin
     pid = spawn("cd website && LOGSTER_ENV=development BUNDLE_GEMFILE=Gemfile bundle exec puma")
-    pid2 = spawn("cd client-app && npx ember s --proxy http://localhost:9292")
+    pid2 = spawn("cd client-app && pnpm start --port 4200")
     Process.wait pid
     Process.wait pid2
   rescue Interrupt => e

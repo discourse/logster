@@ -1,10 +1,8 @@
-import classic from "ember-classic-decorator";
 import { bool } from "@ember/object/computed";
 import Component from "@ember/component";
 import { action, computed } from "@ember/object";
 import Preload from "client-app/lib/preload";
 
-@classic
 export default class MessageInfo extends Component {
   @bool("currentRow.group") showSolveAllButton;
 

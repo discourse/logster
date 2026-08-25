@@ -1,9 +1,7 @@
-import Component from "@ember/component";
-import { computed } from "@ember/object";
+import Component from "@glimmer/component";
 
 export default class BackToSiteLink extends Component {
-  @computed("attrs.text", "attrs.path")
   get shouldDisplay() {
-    return this.text && this.path;
+    return this.args.text && this.args.path;
   }
 }

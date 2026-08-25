@@ -1,12 +1,10 @@
-import classic from "ember-classic-decorator";
-import { inject as service } from "@ember/service";
+import { service } from "@ember/service";
 import Route from "@ember/routing/route";
 import MessageCollection, {
   SEVERITIES,
 } from "client-app/models/message-collection";
 import { isHidden } from "client-app/lib/utilities";
 
-@classic
 export default class IndexRoute extends Route {
   @service events;
 

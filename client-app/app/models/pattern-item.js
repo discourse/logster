@@ -1,8 +1,6 @@
-import classic from "ember-classic-decorator";
 import { lte } from "@ember/object/computed";
 import EmberObject, { computed } from "@ember/object";
 
-@classic
 export default class PatternItem extends EmberObject {
   isNew = false;
   value = "";

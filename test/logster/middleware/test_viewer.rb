@@ -2,6 +2,7 @@
 
 require_relative "../../test_helper"
 require "rack"
+require "tmpdir"
 require "logster/redis_store"
 require "logster/middleware/viewer"
 
@@ -313,20 +314,96 @@ class TestViewer < Minitest::Test
     assert_equal({}, hash)
   end
 
-  def test_linking_to_a_valid_js_files
-    %w[/logsie/javascript/client-app.js /logsie/javascript/vendor.js].each do |path|
-      response = request.get(path)
+  def test_app_html_uses_the_generated_asset_manifest
+    manifest = {
+      "scripts" => %w[vendor.js],
+      "module" => "main-abc123.js",
+      "modulepreload" => %w[runtime-def456.js],
+      "stylesheets" => %w[main-ghi789.css],
+      "config" => {
+        "modulePrefix" => "client-app",
+        "environment" => "production",
+        "rootURL" => "/logs/",
+        "locationType" => "history",
+        "EmberENV" => {
+          "_USE_EMBER_MODULES" => true,
+        },
+        "APP" => {
+          "name" => "Logster UI",
+        },
+      },
+    }
+
+    viewer.instance_variable_set(:@asset_manifest, manifest)
+    response = request.get("/logsie/")
+    nonce = response.headers["content-security-policy"][/script-src 'nonce-([^']+)'/, 1]
+
+    assert(nonce)
+    assert_includes(
+      response.body,
+      "<script src='/logsie/javascript/vendor.js' nonce='#{nonce}'></script>",
+    )
+    assert_includes(
+      response.body,
+      "<script type='module' src='/logsie/javascript/main-abc123.js' nonce='#{nonce}'></script>",
+    )
+    assert_includes(
+      response.body,
+      "<link rel='modulepreload' href='/logsie/javascript/runtime-def456.js' nonce='#{nonce}'>",
+    )
+    assert_includes(
+      response.body,
+      "<link rel='stylesheet' type='text/css' href='/logsie/stylesheets/main-ghi789.css' nonce='#{nonce}'>",
+    )
+
+    assert_operator(
+      response.body.index("vendor.js"),
+      :<,
+      response.body.index("main-abc123.js"),
+      "EmberENV has to be set before the module entry runs",
+    )
+
+    encoded_config = response.body[%r{name="client-app/config/environment" content="([^"]+)"}, 1]
+    config = JSON.parse(URI.decode_uri_component(encoded_config))
+    assert_equal("/logsie/", config["rootURL"])
+    assert_equal(true, config.dig("EmberENV", "_USE_EMBER_MODULES"))
+    assert_equal("Logster UI", config.dig("APP", "name"))
+  end
+
+  def test_module_imports_are_permitted_by_the_content_security_policy
+    policy = request.get("/logsie/").headers["content-security-policy"]
+
+    assert_includes(policy, "'strict-dynamic'")
+  end
+
+  def test_missing_asset_manifest_fails_closed
+    Dir.mktmpdir do |directory|
+      viewer.instance_variable_set(:@assets_path, directory)
+      error = assert_raises(RuntimeError) { viewer.send(:asset_manifest) }
+      assert_includes(error.message, "asset manifest")
+    end
+  end
+
+  def test_linking_to_valid_javascript_files
+    manifest = viewer.send(:asset_manifest)
+    names = manifest.fetch("scripts") + manifest.fetch("modulepreload") + [manifest.fetch("module")]
+
+    names.each do |name|
+      response = request.get("/logsie/javascript/#{name}")
       assert_equal(200, response.status)
       assert %w[text/javascript application/javascript].include?(response.headers["content-type"])
     end
   end
 
-  def test_linking_to_a_valid_css_files
-    %w[/logsie/stylesheets/client-app.css /logsie/stylesheets/vendor.css].each do |path|
-      response = request.get(path)
-      assert_equal(200, response.status)
-      assert_equal("text/css", response.headers["content-type"])
-    end
+  def test_linking_to_valid_stylesheets
+    viewer
+      .send(:asset_manifest)
+      .fetch("stylesheets")
+      .each do |name|
+        response = request.get("/logsie/stylesheets/#{name}")
+        assert_equal(200, response.status)
+        assert_equal("text/css", response.headers["content-type"])
+      end
   end
 
   def test_linking_to_an_invalid_ember_component_or_template

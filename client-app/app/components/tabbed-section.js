@@ -1,9 +1,7 @@
-import classic from "ember-classic-decorator";
 import Component from "@ember/component";
 import { A } from "@ember/array";
 import { action } from "@ember/object";
 
-@classic
 export default class TabbedSection extends Component {
   tabs = A();
   selected = null;

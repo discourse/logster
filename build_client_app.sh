@@ -1,10 +1,29 @@
 #!/bin/bash
 
-(cd client-app && yarn && yarn ember build --environment=${1:-production})
+set -euo pipefail
 
-rm -f assets/javascript/*
-rm -f assets/stylesheets/client-app.css
-rm -f assets/stylesheets/vendor.css
+environment="${1:-production}"
+root_dir="$(cd "$(dirname "$0")" && pwd)"
+client_dir="$root_dir/client-app"
 
-cp client-app/dist/assets/*.js assets/javascript/
-cp client-app/dist/assets/*.css assets/stylesheets/
+# pnpm writes the lockfile it installed from into node_modules, so comparing the
+# two says whether the install is current. A wiped node_modules loses the copy.
+if ! cmp -s "$client_dir/node_modules/.pnpm/lock.yaml" "$client_dir/pnpm-lock.yaml"; then
+  pnpm install --dir "$client_dir"
+fi
+rm -rf "$client_dir/dist"
+(
+  cd "$client_dir"
+  pnpm exec vite build --mode "$environment"
+)
+
+find "$root_dir/assets/javascript" -maxdepth 1 -type f ! -name .gitkeep -delete
+find "$root_dir/assets/stylesheets" -maxdepth 1 -type f ! -name .gitkeep -delete
+cp "$client_dir"/dist/assets/*.js "$root_dir/assets/javascript/"
+cp "$client_dir"/dist/assets/*.css "$root_dir/assets/stylesheets/"
+# The EmberENV script classicEmberSupport emits lives outside dist/assets.
+cp "$client_dir"/dist/@embroider/virtual/vendor.js "$root_dir/assets/javascript/"
+# The viewer renders its own HTML from Vite's build manifest and the
+# application config the build emits beside it.
+cp "$client_dir/dist/.vite/manifest.json" "$root_dir/assets/manifest.json"
+cp "$client_dir/dist/logster-config.json" "$root_dir/assets/logster-config.json"

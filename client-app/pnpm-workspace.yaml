@@ -1,0 +1,8 @@
+strictPeerDependencies: true
+
+# Without these the build tooling drags in versions with published advisories:
+# tmp through broccoli, diff, and @babel/runtime through ember-cli-babel.
+overrides:
+  tmp: ^0.2.6
+  diff: ^8.0.3
+  "@babel/runtime": ^7.29.7

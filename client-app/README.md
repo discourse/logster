@@ -8,19 +8,18 @@ A short introduction of this app could easily go here.
 You will need the following things properly installed on your computer.
 
 * [Git](https://git-scm.com/)
-* [Node.js](https://nodejs.org/) (with yarn)
-* [Ember CLI](https://ember-cli.com/)
+* [Node.js](https://nodejs.org/) and [pnpm](https://pnpm.io/)
 * [Google Chrome](https://google.com/chrome/)
 
 ## Installation
 
 * `git clone <repository-url>` this repository
 * `cd client-app`
-* `yarn install`
+* `pnpm install`
 
 ## Running / Development
 
-* `ember serve`
+* `pnpm start`
 * Visit your app at [http://localhost:4200/logs](http://localhost:4200).
 * Visit your tests at [http://localhost:4200/logs/tests](http://localhost:4200/tests).
 
@@ -30,18 +29,18 @@ Make use of the many generators for code, try `ember help generate` for more det
 
 ### Running Tests
 
-* `ember test`
-* `ember test --server`
+* `pnpm run test:ember`
+* `pnpm run test:ember --server`
 
 ### Linting
 
-* `yarn lint`
-* `yarn lint:fix`
+* `pnpm run lint`
+* `pnpm run lint:fix`
 
 ### Building
 
-* `ember build` (development)
-* `ember build --environment production` (production)
+* `pnpm exec vite build --mode development` (development)
+* `pnpm run build` (production)
 
 ### Deploying
 

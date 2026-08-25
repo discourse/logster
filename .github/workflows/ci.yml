@@ -38,15 +38,19 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
-      - uses: actions/setup-node@v3
+      - uses: pnpm/action-setup@v5
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          package_json_file: client-app/package.json
 
-      - name: Yarn install
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: client-app/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
         working-directory: client-app
-        run: yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Build JS app
         run: bash build_client_app.sh
@@ -91,15 +95,19 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
-      - uses: actions/setup-node@v3
+      - uses: pnpm/action-setup@v5
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          package_json_file: client-app/package.json
 
-      - name: Yarn install
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: client-app/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
         working-directory: client-app
-        run: yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Build JS app
         run: bash build_client_app.sh
@@ -113,19 +121,23 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v3
+      - uses: pnpm/action-setup@v5
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          package_json_file: client-app/package.json
 
-      - name: Yarn install
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: client-app/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
         working-directory: client-app
-        run: yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: JS tests
         working-directory: client-app
-        run: yarn test:ember
+        run: pnpm run test:ember
 
   linting:
     runs-on: ubuntu-latest
@@ -142,17 +154,22 @@ jobs:
       - name: Ruby lint
         run: bundle exec rubocop
 
-      - uses: actions/setup-node@v3
+      - uses: pnpm/action-setup@v5
         if: ${{ !cancelled() }}
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          package_json_file: client-app/package.json
 
-      - name: Yarn install
+      - uses: actions/setup-node@v7
+        if: ${{ !cancelled() }}
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: client-app/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
         if: ${{ !cancelled() }}
         working-directory: client-app
-        run: yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Syntax Tree
         if: ${{ !cancelled() }}
@@ -162,7 +179,7 @@ jobs:
       - name: JS linting
         if: ${{ !cancelled() }}
         working-directory: client-app
-        run: yarn lint
+        run: pnpm run lint
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -172,15 +189,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v3
+      - uses: pnpm/action-setup@v5
         with:
-          node-version: 18
-          cache: yarn
-          cache-dependency-path: client-app/yarn.lock
+          package_json_file: client-app/package.json
 
-      - name: Yarn install
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: client-app/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
         working-directory: client-app
-        run: yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Build JS app
         run: bash build_client_app.sh
