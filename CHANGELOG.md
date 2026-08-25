@@ -1,6 +1,6 @@
 # CHANGELOG
 
-- Unreleased
+- 2026-08-24: 3.0.0
 
   - BREAKING: Require Ruby 3.3 or newer; support is now focused on maintained Ruby 3.3, 3.4, and 4.0 releases
   - BREAKING: Drop support for Rails versions before 8.0; Rails 8.0 and 8.1 are now supported
