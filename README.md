@@ -160,11 +160,10 @@ Logster UI is built using [Ember.js](http://emberjs.com/)
 
 1. Fork it ( https://github.com/discourse/logster/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Run `cd client-app && pnpm install`
-4. Run `cd website && bundle install`
-5. In the root directory, run `bundle exec rake client_dev` to start the Sinatra server (port 9292) and the Vite dev server (port 4200). Use the Vite server for hot reload of client code. It forwards the viewer's endpoints to Sinatra; set `LOGSTER_BACKEND` if the backend is not on `http://127.0.0.1:9292`.
-6. Visit `http://localhost:4200/logs/` (with trailing slash) to test the application. Reload `http://localhost:4200/report_error` to add sample log data.
-7. Once you're done making changes, run `./build_client_app.sh` to make and copy a production build to the assets folder.
-8. Commit your changes (`git commit -am 'Add some feature'`)
-9. Push to the branch (`git push origin my-new-feature`)
-10. Create a new Pull Request
+3. Run `bundle install`
+4. Run `bundle exec rake dev`. This installs any missing frontend and website dependencies, starts both development servers, and opens Logster in your browser.
+5. Visit `http://localhost:9292/report_error` to add sample log data. The Ember app at `http://localhost:4200/logs/` reloads automatically as you make frontend changes.
+6. Once you're done making changes, run `./build_client_app.sh` to make and copy a production build to the assets folder.
+7. Commit your changes (`git commit -am 'Add some feature'`)
+8. Push to the branch (`git push origin my-new-feature`)
+9. Create a new Pull Request
