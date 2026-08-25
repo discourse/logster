@@ -7,9 +7,6 @@ import { babel } from "@rollup/plugin-babel";
 const require = createRequire(import.meta.url);
 const Project = require("ember-cli/lib/models/project");
 
-// The viewer renders its own HTML, so it needs the application config that the
-// build would otherwise only write into index.html as a meta tag. Emitting it
-// as JSON saves the viewer from reading that markup back.
 function emitClientConfig() {
   return {
     name: "logster-client-config",
@@ -24,12 +21,6 @@ function emitClientConfig() {
   };
 }
 
-// Vite has no equivalent of ember-cli's --proxy, which forwarded anything it
-// could not serve itself. Under the mount point the app's routes are the only
-// reads without a file extension: every viewer endpoint is either a .json path,
-// a request that changes something, or a built asset. So there is no list of
-// routes or endpoints to keep in sync, and it holds however the request was
-// made, including typing an endpoint into the browser's address bar.
 const BACKEND = { target: process.env.LOGSTER_BACKEND || "http://127.0.0.1:9292" };
 
 function appRoute(request) {
