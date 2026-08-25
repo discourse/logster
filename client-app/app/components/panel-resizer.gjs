@@ -2,6 +2,10 @@ import Component from "@glimmer/component";
 import { action } from "@ember/object";
 import { scheduleOnce, throttle } from "@ember/runloop";
 import { modifier } from "ember-modifier";
+import {
+  getLocalStorage,
+  setLocalStorage,
+} from "client-app/lib/utilities";
 
 const MOVE_EVENTS = ["touchmove", "mousemove"];
 const UP_EVENTS = ["touchend", "mouseup"];
@@ -36,7 +40,7 @@ export default class PanelResizer extends Component {
   }
 
   initialDivideView() {
-    const amount = (localStorage && localStorage.logster_divider_bottom) || 300;
+    const amount = getLocalStorage("logster_divider_bottom", 300, false);
     this.divideView(window.innerHeight - parseInt(amount, 10));
   }
 
@@ -77,10 +81,11 @@ export default class PanelResizer extends Component {
     document.getElementById("overlay")?.remove();
     this.resizing = false;
 
-    if (localStorage && this.divider?.style.bottom) {
-      localStorage.logster_divider_bottom = parseInt(
-        this.divider.style.bottom,
-        10
+    if (this.divider?.style.bottom) {
+      setLocalStorage(
+        "logster_divider_bottom",
+        parseInt(this.divider.style.bottom, 10),
+        false
       );
     }
 

@@ -179,8 +179,11 @@ export default <template>
           </LinkTo>
 
           <button
-            class="settings btn no-text"
+            class="settings btn no-text {{if @controller.buildingGroupingPattern 'active'}}"
             type="button"
+            title="Select rows to create a grouping pattern"
+            aria-label="Select rows to create a grouping pattern"
+            aria-pressed={{@controller.buildingGroupingPattern}}
             {{on "click" @controller.toggleGroupingPatternFromSelectedRows}}
           >
             <FaIcon @icon="list" />
@@ -211,17 +214,24 @@ export default <template>
         value={{@controller.groupingPatternValue}}
         {{on "input" @controller.updateGroupingPatternValue}}
       />
+      {{#if @controller.groupingPatternError}}
+        <pre class="api-error">{{@controller.groupingPatternError}}</pre>
+      {{/if}}
       <div class="grouping-pattern-dialog-buttons">
         <button
           class="btn danger"
           type="button"
+          disabled={{@controller.groupingPatternSaving}}
           {{on "click" @controller.cancelGroupingPattern}}
         >Cancel</button>
         <button
           class="btn"
           type="button"
+          disabled={{@controller.groupingPatternSaving}}
           {{on "click" @controller.confirmGroupingPattern}}
-        >Create</button>
+        >
+          {{if @controller.groupingPatternSaving "Creating…" "Create"}}
+        </button>
       </div>
     </div>
   </div>
