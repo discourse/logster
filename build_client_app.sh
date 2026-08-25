@@ -6,11 +6,15 @@ environment="${1:-production}"
 root_dir="$(cd "$(dirname "$0")" && pwd)"
 client_dir="$root_dir/client-app"
 
-node "$client_dir/scripts/ensure-dependencies.mjs"
+# pnpm writes the lockfile it installed from into node_modules, so comparing the
+# two says whether the install is current. A wiped node_modules loses the copy.
+if ! cmp -s "$client_dir/node_modules/.pnpm/lock.yaml" "$client_dir/pnpm-lock.yaml"; then
+  pnpm install --dir "$client_dir"
+fi
 rm -rf "$client_dir/dist"
 (
   cd "$client_dir"
-  ./node_modules/.bin/vite build --mode "$environment"
+  pnpm exec vite build --mode "$environment"
 )
 
 find "$root_dir/assets/javascript" -maxdepth 1 -type f ! -name .gitkeep -delete
