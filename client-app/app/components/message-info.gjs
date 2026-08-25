@@ -1,4 +1,5 @@
 import Component from "@glimmer/component";
+import { registerDestructor } from "@ember/destroyable";
 import { eq, fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
@@ -16,8 +17,23 @@ const TABS = [
 ];
 
 export default class MessageInfo extends Component {
+  @tracked copyState = "idle";
+  @tracked protectionOverrides = new Map();
   @tracked selectedTab = "backtrace";
+  copyResetTimer = null;
   tabs = TABS;
+
+  constructor() {
+    super(...arguments);
+    registerDestructor(this, () => clearTimeout(this.copyResetTimer));
+  }
+
+  get isProtected() {
+    const message = this.args.currentMessage;
+    return this.protectionOverrides.has(message)
+      ? this.protectionOverrides.get(message)
+      : Boolean(message.protected);
+  }
 
   get showSolveAllButton() {
     return Boolean(this.args.currentRow?.group);
@@ -27,8 +43,6 @@ export default class MessageInfo extends Component {
     if (this.showSolveAllButton) {
       return false;
     }
-    // env isn't loaded until you switch to the env tab, so without it fall back
-    // to whether the config supplies an application version
     return this.args.currentMessage.env
       ? this.args.currentMessage.canSolve
       : Boolean(Preload.get("application_version"));
@@ -36,7 +50,7 @@ export default class MessageInfo extends Component {
 
   get buttons() {
     const buttons = [];
-    const isProtected = this.args.currentMessage.protected;
+    const isProtected = this.isProtected;
 
     if (!isProtected && this.showSolveButton) {
       buttons.push({
@@ -88,12 +102,15 @@ export default class MessageInfo extends Component {
       );
     }
 
+    const copySucceeded = this.copyState === "copied";
+    const copyFailed = this.copyState === "failed";
     buttons.push({
-      klass: "copy",
+      klass: `copy${copySucceeded ? " copied" : ""}${copyFailed ? " copy-failed" : ""}`,
       action: this.copy,
-      icon: "copy",
-      prefix: "far",
-      label: "Copy",
+      icon: copySucceeded ? "check" : copyFailed ? "exclamation-circle" : "copy",
+      prefix: copySucceeded || copyFailed ? "fas" : "far",
+      label: copySucceeded ? "Copied!" : copyFailed ? "Copy failed" : "Copy",
+      live: true,
     });
 
     return buttons;
@@ -107,7 +124,7 @@ export default class MessageInfo extends Component {
   }
 
   @action
-  copy() {
+  async copy() {
     const currentMessage = this.args.currentMessage;
     const header = currentMessage.showCount
       ? `Message (${currentMessage.count} copies reported)`
@@ -119,26 +136,85 @@ export default class MessageInfo extends Component {
       ? [...new Set(env.map((item) => item.HTTP_HOST).filter(Boolean))].join(
           ", "
         )
-      : env.HTTP_HOST;
+      : env?.HTTP_HOST;
     const envText = httpHosts ? `Env\n\nHTTP HOSTS: ${httpHosts}` : "";
     const text = [message, backtrace, envText].filter(Boolean).join("\n\n");
+
+    try {
+      await this.writeToClipboard(text);
+      this.showCopyStatus("copied");
+    } catch {
+      this.showCopyStatus("failed");
+    }
+  }
+
+  async writeToClipboard(text) {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
 
     const textarea = document.createElement("textarea");
     document.body.appendChild(textarea);
     textarea.value = text;
     textarea.select();
-    document.execCommand("copy");
+    const copied = document.execCommand("copy");
     textarea.remove();
+
+    if (!copied) {
+      throw new Error("Clipboard copy failed");
+    }
+  }
+
+  showCopyStatus(state) {
+    clearTimeout(this.copyResetTimer);
+    this.copyState = state;
+    this.copyResetTimer = setTimeout(() => {
+      this.copyState = "idle";
+      this.copyResetTimer = null;
+    }, 2_000);
+  }
+
+  setProtectionState(message, isProtected) {
+    const overrides = new Map(this.protectionOverrides);
+    overrides.set(message, isProtected);
+    this.protectionOverrides = overrides;
+  }
+
+  clearProtectionState(message) {
+    const overrides = new Map(this.protectionOverrides);
+    overrides.delete(message);
+    this.protectionOverrides = overrides;
   }
 
   @action
-  protect() {
-    this.args.currentMessage.protect();
+  async protect() {
+    const message = this.args.currentMessage;
+    const previousState = this.isProtected;
+    this.setProtectionState(message, true);
+
+    try {
+      await message.protect();
+    } catch {
+      message.set("protected", previousState);
+    } finally {
+      this.clearProtectionState(message);
+    }
   }
 
   @action
-  unprotect() {
-    this.args.currentMessage.unprotect();
+  async unprotect() {
+    const message = this.args.currentMessage;
+    const previousState = this.isProtected;
+    this.setProtectionState(message, false);
+
+    try {
+      await message.unprotect();
+    } catch {
+      message.set("protected", previousState);
+    } finally {
+      this.clearProtectionState(message);
+    }
   }
 
   @action
@@ -235,7 +311,9 @@ export default class MessageInfo extends Component {
                   @icon={{actionButton.icon}}
                   @prefix={{actionButton.prefix}}
                 />
-                <span>{{actionButton.label}}</span>
+                <span aria-live={{if actionButton.live "polite"}}>
+                  {{actionButton.label}}
+                </span>
               </button>
             {{/each}}
           </ActionsMenu>

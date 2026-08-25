@@ -525,6 +525,28 @@ class TestViewer < Minitest::Test
     Logster.config.enable_custom_patterns_via_ui = false
   end
 
+  def test_created_pattern_can_be_deleted_using_the_canonical_value_returned_to_the_ui
+    Logster.config.enable_custom_patterns_via_ui = true
+
+    %w[suppression grouping].each do |set_name|
+      create_response =
+        request.post("/logsie/patterns/#{set_name}.json", params: { pattern: "aaa" })
+      assert_equal(200, create_response.status)
+      canonical_pattern = JSON.parse(create_response.body).fetch("pattern")
+      assert_equal("/aaa/", canonical_pattern)
+
+      delete_response =
+        request.delete("/logsie/patterns/#{set_name}.json", params: { pattern: canonical_pattern })
+      assert_equal(200, delete_response.status)
+
+      repeated_delete =
+        request.delete("/logsie/patterns/#{set_name}.json", params: { pattern: canonical_pattern })
+      assert_equal(404, repeated_delete.status)
+    end
+  ensure
+    Logster.config.enable_custom_patterns_via_ui = false
+  end
+
   def test_clear_all_button_shouldnt_clear_custom_patterns
     Logster::SuppressionPattern.new("testpattern").save
 

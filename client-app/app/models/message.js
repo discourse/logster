@@ -114,13 +114,13 @@ export default class Message extends EmberObject {
     return ajax(`/message/${this.key}`, { type: "DELETE" });
   }
 
-  protect() {
+  async protect() {
+    await ajax(`/protect/${this.key}`, { type: "PUT" });
     this.set("protected", true);
-    return ajax(`/protect/${this.key}`, { type: "PUT" });
   }
 
-  unprotect() {
+  async unprotect() {
+    await ajax(`/unprotect/${this.key}`, { type: "DELETE" });
     this.set("protected", false);
-    return ajax(`/unprotect/${this.key}`, { type: "DELETE" });
   }
 }
