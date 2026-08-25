@@ -14,6 +14,17 @@ export function escapeHtml(string) {
   return String(string).replace(/[&<>"'/]/g, (s) => entityMap[s]);
 }
 
+export function applyRequestHeaders(xhr, settings = {}) {
+  if (settings.headers) {
+    for (const [header, value] of Object.entries(settings.headers)) {
+      xhr.setRequestHeader(header, value);
+    }
+  }
+
+  xhr.setRequestHeader("X-SILENCE-LOGGER", true);
+  xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+}
+
 export function ajax(url, settings) {
   // eslint-disable-next-line no-restricted-globals
   return new Promise((resolve, reject) => {
@@ -29,13 +40,7 @@ export function ajax(url, settings) {
     }
 
     xhr.open(settings.method || settings.type || "GET", url);
-    xhr.setRequestHeader("X-SILENCE-LOGGER", true);
-
-    if (settings.headers) {
-      for (const [header, value] of Object.entries(settings.headers)) {
-        xhr.setRequestHeader(header, value);
-      }
-    }
+    applyRequestHeaders(xhr, settings);
 
     xhr.onreadystatechange = () => {
       if (xhr.readyState === 4) {
