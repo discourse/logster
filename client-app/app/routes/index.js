@@ -1,4 +1,3 @@
-import { service } from "@ember/service";
 import Route from "@ember/routing/route";
 import MessageCollection, {
   SEVERITIES,
@@ -6,8 +5,6 @@ import MessageCollection, {
 import { isHidden } from "client-app/lib/utilities";
 
 export default class IndexRoute extends Route {
-  @service events;
-
   model() {
     // TODO from preload json?
     return MessageCollection.create();
@@ -50,10 +47,6 @@ export default class IndexRoute extends Route {
         }
       }
     }, 3000);
-
-    this.events.on("panelResized", (amount) => {
-      controller.resizePanels(amount);
-    });
   }
 
   deactivate() {
