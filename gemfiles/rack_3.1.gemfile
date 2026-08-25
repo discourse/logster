@@ -2,8 +2,5 @@
 
 source "https://rubygems.org"
 
-group :test do
-  gem "rails", "~> 7.1.0"
-end
-
+gem "rack", "~> 3.1.0"
 gemspec path: "../"

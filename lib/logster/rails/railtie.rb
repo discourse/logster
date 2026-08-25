@@ -25,13 +25,7 @@ module Logster::Rails
       logger.level = ::Rails.logger.level
 
       Logster.logger = config.logger = logger
-
-      if rails_71?
-        ::Rails.logger.broadcast_to(logger)
-      else
-        logger.chain(::Rails.logger)
-        ::Rails.logger = logger
-      end
+      ::Rails.logger.broadcast_to(logger)
     end
 
     def initialize!(app)
@@ -42,14 +36,9 @@ module Logster::Rails
         app.middleware.insert_before ActionDispatch::ShowExceptions, Logster::Middleware::Reporter
       end
 
-      if Rails::VERSION::MAJOR == 3
-        app.middleware.insert_before ActionDispatch::DebugExceptions,
-                                     Logster::Middleware::DebugExceptions
-      else
-        app.middleware.insert_before ActionDispatch::DebugExceptions,
-                                     Logster::Middleware::DebugExceptions,
-                                     Rails.application
-      end
+      app.middleware.insert_before ActionDispatch::DebugExceptions,
+                                   Logster::Middleware::DebugExceptions,
+                                   Rails.application
 
       app.middleware.delete ActionDispatch::DebugExceptions
       app.config.colorize_logging = false
@@ -63,12 +52,7 @@ module Logster::Rails
     private
 
     def logster_enabled?
-      return ::Rails.logger == Logster.logger unless rails_71?
       ::Rails.logger.broadcasts.include?(Logster.logger)
-    end
-
-    def rails_71?
-      ::Rails.version >= "7.1"
     end
   end
 

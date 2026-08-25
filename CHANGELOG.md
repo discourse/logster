@@ -1,5 +1,11 @@
 # CHANGELOG
 
+- Unreleased
+
+  - BREAKING: Require Ruby 3.3 or newer; support is now focused on maintained Ruby 3.3, 3.4, and 4.0 releases
+  - BREAKING: Drop support for Rails versions before 8.0; Rails 8.0 and 8.1 are now supported
+  - BREAKING: Target Rack 3.1–3.2, redis-rb 6.x, and Redis Open Source 8.10
+
 - 2026-04-29: 2.21.0
   - FEATURE: Allow editing grouping pattern before submitting
 

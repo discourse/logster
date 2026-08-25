@@ -1,3 +1,4 @@
 Gemfile.lock
+/log/
 assets/javascript/*.js
 assets/stylesheets/*.css

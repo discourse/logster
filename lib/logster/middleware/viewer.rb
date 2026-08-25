@@ -40,7 +40,7 @@ module Logster
             return 404, {}, ["Message not found"] unless message
 
             Logster.store.delete(message)
-            [301, { "Location" => "#{@logs_path}/" }, []]
+            [301, { "location" => "#{@logs_path}/" }, []]
           elsif resource =~ %r{/(un)?protect/([0-9a-f]+)$}
             off = $1 == "un"
             key = $2
@@ -50,13 +50,13 @@ module Logster
 
             if off
               if Logster.store.unprotect(key)
-                [301, { "Location" => "#{@logs_path}/show/#{key}?protected=false" }, []]
+                [301, { "location" => "#{@logs_path}/show/#{key}?protected=false" }, []]
               else
                 [500, {}, ["Failed"]]
               end
             else
               if Logster.store.protect(key)
-                [301, { "Location" => "#{@logs_path}/show/#{key}?protected=true" }, []]
+                [301, { "location" => "#{@logs_path}/show/#{key}?protected=true" }, []]
               else
                 [500, {}, ["Failed"]]
               end
@@ -69,7 +69,7 @@ module Logster
 
             Logster.store.solve(key)
 
-            [301, { "Location" => "#{@logs_path}" }, []]
+            [301, { "location" => "#{@logs_path}" }, []]
           elsif resource =~ %r{/clear$}
             return method_not_allowed("POST") if env[REQUEST_METHOD] != "POST"
             Logster.store.clear
