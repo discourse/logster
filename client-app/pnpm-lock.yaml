@@ -117,8 +117,8 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0
       ember-template-lint:
-        specifier: ^5.13.0
-        version: 5.13.0
+        specifier: ^7.9.3
+        version: 7.9.3
       ember-template-lint-plugin-discourse:
         specifier: ^3.0.0
         version: 3.0.0
@@ -2028,6 +2028,9 @@ packages:
     resolution: {integrity: sha512-5jRCH9Z/+DRP7rkvY83B+yGIGX96OYdJmzngqnw2SBSxqCFPd0w2km3s5iawpGX8krnwSGmF0FW5Nhr0Hfai3g==}
     engines: {node: '>=18'}
 
+  content-tag@3.1.3:
+    resolution: {integrity: sha512-4Kiv9mEroxuMXfWUNUHcljVJgxThCNk7eEswdHMXdzJnkBBaYDqDwzHkoh3F74JJhfU3taJOsgpR6oEGIDg17g==}
+
   content-tag@4.2.0:
     resolution: {integrity: sha512-f/o+F3qSa4gg23I7RWy6cMDxP2nPo99YWusxw2bjne7ZC6Acqqf4uB/+87AekOq1ehTocHH7b7nMd2X4S3NHVw==}
 
@@ -2330,6 +2333,11 @@ packages:
   ember-template-lint@5.13.0:
     resolution: {integrity: sha512-AYxz9S9fVZfHPmTsymc7NwsD7FVmDUZyfC+KYpxDlK0wic7JSQx2FNQNqQSBFRLOuzn7VQ0/+1pX6DGqKDGswg==}
     engines: {node: ^14.18.0 || ^16.0.0 || >= 18.0.0}
+    hasBin: true
+
+  ember-template-lint@7.9.3:
+    resolution: {integrity: sha512-iqC4rv/oVlXViGuf7hlOA/bC550ZqacZKAc8WvQV0ueeCtIYPkYYK+Tc7FwpM8qGx3jiwu/ZsTuNfPInI5pL7Q==}
+    engines: {node: ^18.18.0 || >= 20.9.0}
     hasBin: true
 
   ember-template-recast@6.1.5:
@@ -7221,6 +7229,8 @@ snapshots:
 
   content-disposition@1.1.0: {}
 
+  content-tag@3.1.3: {}
+
   content-tag@4.2.0: {}
 
   content-type@1.0.5: {}
@@ -7740,6 +7750,11 @@ snapshots:
       yargs: 17.7.3
     transitivePeerDependencies:
       - supports-color
+
+  ember-template-lint@7.9.3:
+    dependencies:
+      '@lint-todo/utils': 13.1.1
+      content-tag: 3.1.3
 
   ember-template-recast@6.1.5:
     dependencies:

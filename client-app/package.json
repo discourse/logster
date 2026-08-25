@@ -56,7 +56,7 @@
     "ember-sinon-qunit": "^7.5.0",
     "ember-source": "~7.2.0",
     "ember-template-imports": "^4.4.0",
-    "ember-template-lint": "^5.13.0",
+    "ember-template-lint": "^7.9.3",
     "ember-template-lint-plugin-discourse": "^3.0.0",
     "eslint": "^8.57.1",
     "eslint-config-discourse": "^5.1.0",
