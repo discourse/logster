@@ -1,5 +1,11 @@
 {
   "extends": "eslint-config-discourse",
+  "parserOptions": {
+    "babelOptions": {
+      "configFile": false,
+      "babelrc": false
+    }
+  },
   "rules": {
     "ember/no-get": "error",
     "simple-import-sort/imports": "off"

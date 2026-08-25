@@ -9,6 +9,8 @@ module Logster
       PATH_INFO = "PATH_INFO".freeze
       SCRIPT_NAME = "SCRIPT_NAME".freeze
       REQUEST_METHOD = "REQUEST_METHOD".freeze
+      ASSET_NAME = /\A[a-zA-Z0-9._-]+\z/
+      LEGACY_SCRIPTS = %w[vendor.js].freeze
 
       def initialize(app)
         @app = app
@@ -308,27 +310,78 @@ module Logster
         "<script src='#{@logs_path}/javascript/#{name}' nonce='#{csp_nonce}'></script>"
       end
 
+      def module_script(name, csp_nonce)
+        "<script type='module' src='#{@logs_path}/javascript/#{name}' nonce='#{csp_nonce}'></script>"
+      end
+
+      def modulepreload(name, csp_nonce)
+        "<link rel='modulepreload' href='#{@logs_path}/javascript/#{name}' nonce='#{csp_nonce}'>"
+      end
+
+      # Vite's own build manifest, plus the application config the build emits
+      # alongside it.
       def asset_manifest
         @asset_manifest ||=
           begin
-            path = File.join(@assets_path, "manifest.json")
-            unless File.file?(path)
-              raise RuntimeError,
-                    "Logster asset manifest is missing; rebuild the gem with ./build_client_app.sh"
-            end
+            vite = JSON.parse(read_asset("manifest.json"))
+            entry = vite.values.find { |chunk| chunk.is_a?(Hash) && chunk["isEntry"] }
+            raise KeyError, "the Vite build emitted no entry chunk" unless entry
 
-            validate_asset_manifest(JSON.parse(File.read(path)))
+            validate_asset_manifest(
+              "scripts" => plain_scripts,
+              "module" => asset_basename(entry.fetch("file")),
+              "modulepreload" => preloaded_chunks(vite, entry),
+              "stylesheets" => Array(entry["css"]).map { |href| asset_basename(href) },
+              "config" => JSON.parse(read_asset("logster-config.json")),
+            )
           rescue JSON::ParserError, KeyError, TypeError, Errno::ENOENT => error
             raise RuntimeError, "Logster asset manifest is invalid: #{error.message}"
           end
       end
 
+      def read_asset(name)
+        path = File.join(@assets_path, name)
+        unless File.file?(path)
+          raise RuntimeError,
+                "Logster asset manifest is missing; rebuild the gem with ./build_client_app.sh"
+        end
+        File.read(path)
+      end
+
+      def asset_basename(path)
+        File.basename(path.to_s)
+      end
+
+      # classicEmberSupport emits this to set EmberENV before the deferred
+      # module entry runs. It is absent once the app no longer needs the shim.
+      def plain_scripts
+        LEGACY_SCRIPTS.select { |name| File.file?(File.join(@assets_path, "javascript", name)) }
+      end
+
+      # Every chunk the entry pulls in eagerly, once each, in discovery order.
+      def preloaded_chunks(vite, chunk, names = [], seen = {})
+        Array(chunk["imports"]).each do |key|
+          next if seen[key]
+          seen[key] = true
+
+          imported = vite[key]
+          raise KeyError, "the Vite manifest is missing chunk #{key}" unless imported
+
+          names << asset_basename(imported.fetch("file"))
+          preloaded_chunks(vite, imported, names, seen)
+        end
+        names
+      end
+
       def validate_asset_manifest(manifest)
-        %w[javascript stylesheets].each do |type|
+        %w[modulepreload stylesheets].each do |type|
           names = manifest.fetch(type)
-          unless names.is_a?(Array) && names.all? { |name| name.match?(/\A[a-zA-Z0-9._-]+\z/) }
+          unless names.is_a?(Array) && names.all? { |name| ASSET_NAME.match?(name.to_s) }
             raise JSON::ParserError, "Invalid #{type} asset manifest"
           end
+        end
+        unless ASSET_NAME.match?(manifest.fetch("module").to_s)
+          raise JSON::ParserError, "Invalid module asset manifest"
         end
         unless manifest["config"].is_a?(Hash)
           raise JSON::ParserError, "Invalid client application config"
@@ -381,10 +434,14 @@ module Logster
       def js_app(preload = {})
         csp_nonce = SecureRandom.hex
         preload = preloaded_data.merge(preload)
-        stylesheets =
-          asset_manifest.fetch("stylesheets").map { |name| css(name, csp_nonce) }.join("\n")
-        javascript =
-          asset_manifest.fetch("javascript").map { |name| script(name, csp_nonce) }.join("\n")
+        manifest = asset_manifest
+        stylesheets = manifest.fetch("stylesheets").map { |name| css(name, csp_nonce) }.join("\n")
+        javascript = [
+          # The plain scripts set up EmberENV, so they run before the module entry.
+          *manifest.fetch("scripts").map { |name| script(name, csp_nonce) },
+          *manifest.fetch("modulepreload").map { |name| modulepreload(name, csp_nonce) },
+          module_script(manifest.fetch("module"), csp_nonce),
+        ].join("\n")
         body = <<~HTML
           <!doctype html>
           <html>
@@ -411,7 +468,7 @@ module Logster
           {
             "content-type" => "text/html; charset=utf-8",
             "content-security-policy" =>
-              "script-src 'nonce-#{csp_nonce}'; style-src 'nonce-#{csp_nonce}'; object-src 'none'; base-uri 'none';",
+              "script-src 'nonce-#{csp_nonce}' 'strict-dynamic'; style-src 'nonce-#{csp_nonce}'; object-src 'none'; base-uri 'none';",
           },
           [body],
         ]

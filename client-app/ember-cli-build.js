@@ -2,12 +2,20 @@
 
 const EmberApp = require("ember-cli/lib/broccoli/ember-app");
 
-module.exports = function (defaults) {
+const {
+  compatBuild
+} = require("@embroider/compat");
+
+module.exports = async function(defaults) {
+  const {
+    buildOnce
+  } = await import("@embroider/vite");
+
   const app = new EmberApp(defaults, {
     fingerprint: {
       enabled: false,
     },
   });
 
-  return app.toTree();
+  return compatBuild(app, buildOnce);
 };

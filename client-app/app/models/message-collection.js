@@ -166,6 +166,10 @@ export default class MessageCollection extends EmberObject {
     }
   }
 
+  request(url, settings) {
+    return ajax(url, settings);
+  }
+
   async load(opts) {
     opts ||= {};
 
@@ -195,7 +199,7 @@ export default class MessageCollection extends EmberObject {
     this.set("loading", true);
 
     try {
-      const response = await ajax("/messages.json", {
+      const response = await this.request("/messages.json", {
         data,
         method: "POST",
       });
