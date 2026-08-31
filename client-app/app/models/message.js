@@ -1,9 +1,12 @@
 import { gt } from "@ember/object/computed";
 import EmberObject, { computed } from "@ember/object";
+import { tracked } from "@glimmer/tracking";
 import { ajax } from "client-app/lib/utilities";
 import { getRootPath } from "client-app/lib/preload";
 
 export default class Message extends EmberObject {
+  @tracked protected = false;
+
   MAX_LEN = 200;
 
   @gt("count", 1) showCount;
