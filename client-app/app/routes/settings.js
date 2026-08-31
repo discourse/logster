@@ -1,4 +1,4 @@
-import { A } from "@ember/array";
+import { trackedArray } from "@ember/reactive/collections";
 import Route from "@ember/routing/route";
 import { ajax } from "client-app/lib/utilities";
 import Pattern from "client-app/models/pattern-item";
@@ -11,15 +11,17 @@ export default class SettingsRoute extends Route {
   setupController(controller, model) {
     super.setupController(...arguments);
     const suppression = model.suppression;
-    const codedSuppression = A(
+    const codedSuppression = trackedArray(
       suppression.filter((p) => p.hard).map((hash) => Pattern.create(hash))
     );
 
-    const customSuppression = A(
+    const customSuppression = trackedArray(
       suppression.filter((p) => !p.hard).map((hash) => Pattern.create(hash))
     );
 
-    const grouping = A(model.grouping.map((hash) => Pattern.create(hash)));
+    const grouping = trackedArray(
+      model.grouping.map((hash) => Pattern.create(hash))
+    );
     const showCodedSuppression = codedSuppression.length > 0;
     controller.setProperties({
       showCodedSuppression,

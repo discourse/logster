@@ -1,14 +1,14 @@
 import Component from "@glimmer/component";
-import { A } from "@ember/array";
 import { and, fn, or } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
+import { trackedArray } from "@ember/reactive/collections";
 import FaIcon from "@fortawesome/ember-fontawesome/components/fa-icon";
 import Pattern from "client-app/models/pattern-item";
 import { ajax } from "client-app/lib/utilities";
 
 export default class PatternsList extends Component {
-  newPatterns = A();
+  newPatterns = trackedArray();
 
   constructor() {
     super(...arguments);
@@ -28,8 +28,8 @@ export default class PatternsList extends Component {
 
   get allPatterns() {
     return [
-      ...[...this.newPatterns].reverse(),
-      ...[...this.args.patterns].reverse(),
+      ...this.newPatterns.slice().reverse(),
+      ...this.args.patterns.slice().reverse(),
     ];
   }
 
@@ -45,6 +45,13 @@ export default class PatternsList extends Component {
     pattern.setProperties({ saving: true, error: null });
   }
 
+  removePattern(patterns, pattern) {
+    const index = patterns.indexOf(pattern);
+    if (index > -1) {
+      patterns.splice(index, 1);
+    }
+  }
+
   catchBlock(pattern, response) {
     pattern.set(
       "error",
@@ -54,7 +61,7 @@ export default class PatternsList extends Component {
 
   @action
   create() {
-    this.newPatterns.pushObject(Pattern.create({ isNew: true }));
+    this.newPatterns.push(Pattern.create({ isNew: true }));
   }
 
   @action
@@ -65,7 +72,7 @@ export default class PatternsList extends Component {
   @action
   async trash(pattern) {
     if (pattern.isNew) {
-      this.newPatterns.removeObject(pattern);
+      this.removePattern(this.newPatterns, pattern);
       pattern.destroy();
       return;
     }
@@ -74,7 +81,7 @@ export default class PatternsList extends Component {
 
     try {
       await this.makeAPICall({ method: "DELETE", pattern: pattern.value });
-      this.args.patterns.removeObject(pattern);
+      this.removePattern(this.args.patterns, pattern);
       pattern.destroy();
     } catch (response) {
       this.catchBlock(pattern, response);
@@ -97,8 +104,8 @@ export default class PatternsList extends Component {
 
         pattern.updateValue(response.pattern);
         pattern.set("isNew", false);
-        this.args.patterns.pushObject(pattern);
-        this.newPatterns.removeObject(pattern);
+        this.args.patterns.push(pattern);
+        this.removePattern(this.newPatterns, pattern);
       } else {
         const response = await this.makeAPICall({
           method: "PUT",
