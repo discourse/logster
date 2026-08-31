@@ -102,8 +102,8 @@ module("Integration | Component | message-info", function (hooks) {
         "no solve button when there is no application_version in env"
       );
 
-    message.set("env.application_version", "fddfsdfdsf");
-    this.set("message", message);
+    message.set("env", { ...message.env, application_version: "fddfsdfdsf" });
+    await settled();
     assert
       .dom(".message-actions button.solve")
       .exists("solve button is shown when there is application_version in env");
@@ -112,7 +112,7 @@ module("Integration | Component | message-info", function (hooks) {
       { sd: "dx", application_version: "fsfdsf" },
       { vcv: "dxc" },
     ]);
-    this.set("message", message);
+    await settled();
     assert
       .dom(".message-actions button.solve")
       .exists(
@@ -138,5 +138,29 @@ module("Integration | Component | message-info", function (hooks) {
     target.set("protected", false);
     await settled();
     assert.deepEqual(buttons(), ["remove", "protect", "copy"], "and back again");
+  });
+
+  test("the solve button waits for env to arrive", async function (assert) {
+    const target = Message.create({ backtrace, message: messageTitle });
+    this.set("message", target);
+    await render(
+      hbs`<MessageInfo @currentMessage={{this.message}} @actionsInMenu={{false}} />`
+    );
+
+    assert
+      .dom(".message-actions button.solve")
+      .doesNotExist("hidden while env is still loading");
+
+    target.set("env", { application_version: "abc123" });
+    await settled();
+    assert
+      .dom(".message-actions button.solve")
+      .exists("shown once env arrives with an application version");
+
+    target.set("env", { HTTP_HOST: "example.com" });
+    await settled();
+    assert
+      .dom(".message-actions button.solve")
+      .doesNotExist("hidden again when env has no application version");
   });
 });

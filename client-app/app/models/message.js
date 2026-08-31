@@ -5,6 +5,7 @@ import { ajax } from "client-app/lib/utilities";
 import { getRootPath } from "client-app/lib/preload";
 
 export default class Message extends EmberObject {
+  @tracked env = null;
   @tracked protected = false;
 
   MAX_LEN = 200;
@@ -31,7 +32,6 @@ export default class Message extends EmberObject {
     return message;
   }
 
-  @computed("backtrace.length", "env.{application_version,length}")
   get canSolve() {
     const appVersion = Array.isArray(this.env)
       ? this.env
