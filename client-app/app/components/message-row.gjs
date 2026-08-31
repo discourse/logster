@@ -27,12 +27,15 @@ export default class MessageRow extends Component {
 
       <div class="message-body">{{@model.displayMessage}}</div>
 
-      <div class="protected">
+      <div
+        class="protected"
+        title={{if
+          @model.protected
+          "message is protected, clearing will not remove it"
+        }}
+      >
         {{#if @model.protected}}
-          <FaIcon
-            @icon="lock"
-            aria-label="message is protected, clearing will not remove it"
-          />
+          <FaIcon @icon="lock" />
         {{/if}}
       </div>
 
