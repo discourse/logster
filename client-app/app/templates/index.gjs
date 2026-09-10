@@ -19,18 +19,29 @@ const keepScrolledToBottom = modifier((element) => {
   const updateStickiness = () => {
     shouldStick = panel.scrollHeight - panel.clientHeight - panel.scrollTop < 20;
   };
-  const observer = new MutationObserver(() => {
-    if (shouldStick) {
+  const addsRow = (mutation) =>
+    Array.from(mutation.addedNodes).some(
+      (node) =>
+        node.nodeType === Node.ELEMENT_NODE &&
+        node.matches(".message-row-wrapper")
+    );
+  const observer = new MutationObserver((mutations) => {
+    if (shouldStick && mutations.some(addsRow)) {
       scrollToBottom();
     }
   });
+  // The panel changing size does not fire a scroll event, so stickiness has to
+  // be remeasured separately or it goes stale.
+  const resizeObserver = new ResizeObserver(updateStickiness);
 
   scrollToBottom();
   panel.addEventListener("scroll", updateStickiness, { passive: true });
   observer.observe(element, { childList: true });
+  resizeObserver.observe(panel);
 
   return () => {
     observer.disconnect();
+    resizeObserver.disconnect();
     panel.removeEventListener("scroll", updateStickiness);
   };
 });
