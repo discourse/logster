@@ -1,7 +1,14 @@
 import { module, test } from "qunit";
 import { setupRenderingTest } from "ember-qunit";
 import { hbs } from "ember-cli-htmlbars";
-import { fillIn, findAll, render } from "@ember/test-helpers";
+import {
+  click,
+  fillIn,
+  findAll,
+  render,
+  settled,
+} from "@ember/test-helpers";
+import { trackedArray } from "@ember/reactive/collections";
 import Pattern from "client-app/models/pattern-item";
 
 module("Integration | Component | patterns-list", function (hooks) {
@@ -72,5 +79,45 @@ module("Integration | Component | patterns-list", function (hooks) {
     assert
       .dom(".btn.trash")
       .doesNotExist("Trash buttons are not shown when the list is immutable");
+  });
+
+  test("adding and removing rows", async function (assert) {
+    const patterns = trackedArray([Pattern.create({ value: "/somepattern/" })]);
+    this.set("patterns", patterns);
+    await render(
+      hbs`<PatternsList @patterns={{this.patterns}} @mutable={{true}} @key="suppression" />`
+    );
+
+    assert.strictEqual(findAll(".pattern-input").length, 1);
+
+    await click(".btn.new-pattern");
+    assert.strictEqual(
+      findAll(".pattern-input").length,
+      2,
+      "New adds a row"
+    );
+
+    await click(".btn.trash");
+    assert.strictEqual(
+      findAll(".pattern-input").length,
+      1,
+      "Trash removes the new row"
+    );
+
+    patterns.push(Pattern.create({ value: "/anotherpattern/" }));
+    await settled();
+    assert.strictEqual(
+      findAll(".pattern-input").length,
+      2,
+      "Rows appear when the passed patterns change"
+    );
+
+    patterns.splice(0, 1);
+    await settled();
+    assert.strictEqual(
+      findAll(".pattern-input").length,
+      1,
+      "Rows disappear when the passed patterns change"
+    );
   });
 });

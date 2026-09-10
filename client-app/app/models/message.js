@@ -1,9 +1,13 @@
 import { gt } from "@ember/object/computed";
 import EmberObject, { computed } from "@ember/object";
+import { tracked } from "@glimmer/tracking";
 import { ajax } from "client-app/lib/utilities";
 import { getRootPath } from "client-app/lib/preload";
 
 export default class Message extends EmberObject {
+  @tracked env = null;
+  @tracked protected = false;
+
   MAX_LEN = 200;
 
   @gt("count", 1) showCount;
@@ -28,7 +32,6 @@ export default class Message extends EmberObject {
     return message;
   }
 
-  @computed("backtrace.length", "env.{application_version,length}")
   get canSolve() {
     const appVersion = Array.isArray(this.env)
       ? this.env

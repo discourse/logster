@@ -1,9 +1,14 @@
+import { LinkTo } from "@ember/routing";
+import PatternsList from "client-app/components/patterns-list";
+import logsterUrl from "client-app/helpers/logster-url";
+
+export default <template>
 <div class="settings-page">
   <LinkTo @route="index">Home</LinkTo>
 
   <div class="settings-header">
     <h1 class="header-title">Settings</h1>
-    <img class="header-logo" src={{logster-url "images/icon_144x144.png"}} />
+    <img class="header-logo" src={{logsterUrl "images/icon_144x144.png"}} />
   </div>
 
   <div class="settings-section suppression-patterns">
@@ -13,19 +18,19 @@
       suppressed. Checking Apply retroactively will remove all existing messages
       that match the patterns.</div>
 
-    {{#if this.showCodedSuppression}}
+    {{#if @controller.showCodedSuppression}}
       <h3 class="subsection-title">Hard-coded patterns:</h3>
 
       <div class="tip">These patterns can't be removed via the UI because they
         are commited to the source code of your app.</div>
 
-      <PatternsList @patterns={{this.codedSuppression}} @mutable={{false}} />
+      <PatternsList @patterns={{@controller.codedSuppression}} @mutable={{false}} />
     {{/if}}
 
     <h3 class="subsection-title">Custom patterns:</h3>
 
     <PatternsList
-      @patterns={{this.customSuppression}}
+      @patterns={{@controller.customSuppression}}
       @key="suppression"
       @applyRetroactivelyCheckbox={{true}}
       @mutable={{true}}
@@ -39,9 +44,10 @@
       into a single row when viewing the logs.</div>
 
     <PatternsList
-      @patterns={{this.grouping}}
+      @patterns={{@controller.grouping}}
       @key="grouping"
       @mutable={{true}}
     />
   </div>
 </div>
+</template>;
