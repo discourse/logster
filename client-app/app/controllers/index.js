@@ -74,6 +74,7 @@ export default class IndexController extends Controller {
     this.model.updateSelectedRow();
   }
 
+  @action
   resizePanels(amount) {
     const bottomPanel = document.getElementById("bottom-panel");
     const topPanel = document.getElementById("top-panel");
