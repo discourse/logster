@@ -2,12 +2,30 @@
 
 require "bundler/gem_tasks"
 require "rake/testtask"
+require_relative "frontend_assets"
 
 Rake::TestTask.new do |t|
   t.test_files = FileList["test/**/test_*"].exclude(%r{test/logster/test_railtie\.rb})
 end
 
 task(default: :test)
+
+desc "Build the frontend assets required by the gem"
+task :build_client_app do
+  if ENV["LOGSTER_SKIP_ASSET_BUILD"] == "1"
+    puts "Using pre-built frontend assets"
+  else
+    sh File.expand_path("build_client_app.sh", __dir__)
+  end
+
+  begin
+    FrontendAssets.verify!(File.expand_path(__dir__))
+  rescue FrontendAssets::Error => error
+    abort error.message
+  end
+end
+
+task build: :build_client_app
 
 desc "Starts Sinatra and Ember servers"
 task :client_dev do
