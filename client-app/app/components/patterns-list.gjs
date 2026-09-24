@@ -2,20 +2,22 @@ import Component from "@glimmer/component";
 import { and, fn, or } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
-import { trackedArray } from "@ember/reactive/collections";
+import { tracked } from "@glimmer/tracking";
 import FaIcon from "@fortawesome/ember-fontawesome/components/fa-icon";
 import Pattern from "client-app/models/pattern-item";
 import { ajax } from "client-app/lib/utilities";
 
 export default class PatternsList extends Component {
-  newPatterns = trackedArray();
+  @tracked createdPatterns = [];
+  @tracked newPatterns;
+  @tracked removedPatterns = [];
 
   constructor() {
     super(...arguments);
-
-    if (this.args.patterns.length < 1 && this.args.mutable) {
-      this.create();
-    }
+    this.newPatterns =
+      this.args.mutable && this.args.patterns.length === 0
+        ? [Pattern.create({ isNew: true })]
+        : [];
   }
 
   get immutable() {
@@ -27,15 +29,23 @@ export default class PatternsList extends Component {
   }
 
   get allPatterns() {
-    return [
-      ...this.newPatterns.slice().reverse(),
-      ...this.args.patterns.slice().reverse(),
-    ];
+    const persistedPatterns = [
+      ...this.createdPatterns,
+      ...this.args.patterns,
+    ].filter((pattern) => !this.removedPatterns.includes(pattern));
+
+    return [...this.newPatterns]
+      .reverse()
+      .concat(persistedPatterns.reverse());
+  }
+
+  request(url, settings) {
+    return ajax(url, settings);
   }
 
   makeAPICall(data = {}) {
     const { method, ...requestData } = data;
-    return ajax(`/patterns/${this.args.key}.json`, {
+    return this.request(`/patterns/${this.args.key}.json`, {
       method,
       data: requestData,
     });
@@ -43,13 +53,6 @@ export default class PatternsList extends Component {
 
   requestInit(pattern) {
     pattern.setProperties({ saving: true, error: null });
-  }
-
-  removePattern(patterns, pattern) {
-    const index = patterns.indexOf(pattern);
-    if (index > -1) {
-      patterns.splice(index, 1);
-    }
   }
 
   catchBlock(pattern, response) {
@@ -61,7 +64,7 @@ export default class PatternsList extends Component {
 
   @action
   create() {
-    this.newPatterns.push(Pattern.create({ isNew: true }));
+    this.newPatterns = [...this.newPatterns, Pattern.create({ isNew: true })];
   }
 
   @action
@@ -72,16 +75,18 @@ export default class PatternsList extends Component {
   @action
   async trash(pattern) {
     if (pattern.isNew) {
-      this.removePattern(this.newPatterns, pattern);
+      this.newPatterns = this.newPatterns.filter((item) => item !== pattern);
       pattern.destroy();
       return;
     }
 
     this.requestInit(pattern);
-
     try {
       await this.makeAPICall({ method: "DELETE", pattern: pattern.value });
-      this.removePattern(this.args.patterns, pattern);
+      this.createdPatterns = this.createdPatterns.filter(
+        (item) => item !== pattern
+      );
+      this.removedPatterns = [...this.removedPatterns, pattern];
       pattern.destroy();
     } catch (response) {
       this.catchBlock(pattern, response);
@@ -93,7 +98,6 @@ export default class PatternsList extends Component {
   @action
   async save(pattern) {
     this.requestInit(pattern);
-
     try {
       if (pattern.isNew) {
         const response = await this.makeAPICall({
@@ -101,18 +105,16 @@ export default class PatternsList extends Component {
           pattern: pattern.valueBuffer,
           retroactive: Boolean(pattern.retroactive),
         });
-
         pattern.updateValue(response.pattern);
         pattern.set("isNew", false);
-        this.args.patterns.push(pattern);
-        this.removePattern(this.newPatterns, pattern);
+        this.createdPatterns = [...this.createdPatterns, pattern];
+        this.newPatterns = this.newPatterns.filter((item) => item !== pattern);
       } else {
         const response = await this.makeAPICall({
           method: "PUT",
           pattern: pattern.value,
           new_pattern: pattern.valueBuffer,
         });
-
         pattern.updateValue(response.pattern);
         pattern.set("count", 0);
       }
@@ -126,13 +128,11 @@ export default class PatternsList extends Component {
   @action
   async resetCount(pattern) {
     pattern.set("saving", true);
-
     try {
-      await ajax("/reset-count.json", {
+      await this.request("/reset-count.json", {
         method: "PUT",
         data: { pattern: pattern.value, hard: Boolean(pattern.hard) },
       });
-
       pattern.set("count", 0);
     } catch (response) {
       this.catchBlock(pattern, response);

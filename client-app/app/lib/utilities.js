@@ -199,10 +199,10 @@ export function clone(object) {
   return copy;
 }
 
-export function setLocalStorage(key, value) {
+export function setLocalStorage(key, value, prefix = true) {
   try {
     if (window.localStorage) {
-      key = "logster-" + key;
+      key = prefix ? "logster-" + key : key;
       window.localStorage.setItem(key, value);
     }
   } catch {
@@ -210,10 +210,10 @@ export function setLocalStorage(key, value) {
   }
 }
 
-export function getLocalStorage(key, fallback) {
+export function getLocalStorage(key, fallback, prefix = true) {
   try {
     if (window.localStorage) {
-      key = "logster-" + key;
+      key = prefix ? "logster-" + key : key;
       const value = window.localStorage.getItem(key);
       if (value === null) {
         // key doesn't exist
