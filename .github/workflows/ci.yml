@@ -52,8 +52,8 @@ jobs:
         working-directory: client-app
         run: pnpm install --frozen-lockfile
 
-      - name: Build JS app
-        run: bash build_client_app.sh
+      - name: Build and verify JS app
+        run: bundle exec rake build_client_app
 
       - name: Tests (no Rails)
         run: bundle exec rake test
@@ -210,5 +210,6 @@ jobs:
         uses: discourse/publish-rubygems-action@v3
         env:
           RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+          LOGSTER_SKIP_ASSET_BUILD: "1"
           GIT_EMAIL: team@discourse.org
           GIT_NAME: discoursebot
