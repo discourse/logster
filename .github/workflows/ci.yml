@@ -139,6 +139,31 @@ jobs:
         working-directory: client-app
         run: pnpm run test:ember
 
+  website:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:8.10
+        ports:
+          - 6379:6379
+
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/website/Gemfile
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+
+      - name: Website tests
+        working-directory: website
+        run: bundle exec rake test
+
   linting:
     runs-on: ubuntu-latest
 
@@ -183,7 +208,7 @@ jobs:
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [backend, rack, frontend, linting]
+    needs: [backend, rack, frontend, website, linting]
     runs-on: ubuntu-latest
 
     steps:
