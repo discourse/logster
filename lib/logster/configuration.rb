@@ -5,6 +5,7 @@ module Logster
     attr_accessor(
       :allow_grouping,
       :application_version,
+      :authorize_request,
       :current_context,
       :env_expandable_keys,
       :enable_custom_patterns_via_ui,
