@@ -1,11 +1,11 @@
 # CHANGELOG
 
-- Unreleased
+- 2026-09-24: 3.0.0
 
   - BREAKING: Require Ruby 3.3 or newer; support is now focused on maintained Ruby 3.3, 3.4, and 4.0 releases
   - BREAKING: Drop support for Rails versions before 8.0; Rails 8.0 and 8.1 are now supported
   - BREAKING: Target Rack 3.1–3.2, redis-rb 6.x, and Redis Open Source 8.10
-  - BREAKING: Require Node.js 24 and npm 11 for frontend development, replace Yarn with npm, and drop Internet Explorer 11 support
+  - BREAKING: Require Node.js 24 and pnpm 10 for frontend development, replace Yarn with pnpm, and drop Internet Explorer 11 support
   - SECURITY: Require the documented HTTP method and `X-Requested-With: XMLHttpRequest` header for mutating viewer endpoints; JavaScript error reports additionally accept browser-verified same-origin requests so `navigator.sendBeacon` remains supported; reject cross-site requests using `Origin` and `Sec-Fetch-Site`
   - SECURITY: Add the optional `Logster.config.authorize_request` defense-in-depth callback for viewer routes
   - SECURITY: Add no-store, referrer, content-type, and framing response headers, tighten the viewer Content Security Policy, and remove externally hosted Google Fonts
