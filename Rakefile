@@ -161,6 +161,8 @@ module DevServer
       { "LOGSTER_BACKEND" => backend_url },
       "pnpm",
       "start",
+      "--host",
+      "127.0.0.1",
       "--port",
       port.to_s,
       chdir: CLIENT_DIR,
