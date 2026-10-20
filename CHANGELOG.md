@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- 2026-10-20: 3.0.1
+
+  - FIX: Show log rows in the sans-serif body font, which fell back to the browser default serif font where Roboto was not installed
+
 - 2026-10-19: 3.0.0
 
   - BREAKING: Require Ruby 3.3 or newer; support is now focused on maintained Ruby 3.3, 3.4, and 4.0 releases

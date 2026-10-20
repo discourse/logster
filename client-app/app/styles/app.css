@@ -9,7 +9,7 @@ body.mobile .message {
 }
 
 pre {
-  font-family: "Roboto Mono", Consolas, Monaco, Ubuntu Mono, monospace;
+  font-family: Consolas, Monaco, Ubuntu Mono, monospace;
 }
 
 table.env-table tbody tr td {
@@ -62,7 +62,6 @@ tbody tr {
 }
 
 .message-row {
-  font-family: "Roboto";
   display: flex;
   width: inherit;
 }
@@ -685,13 +684,13 @@ label span {
 }
 
 .settings-section .api-error {
-  font-family: Consolas, "Roboto Mono", Monaco, Ubuntu Mono, monospace;
+  font-family: Consolas, Monaco, Ubuntu Mono, monospace;
   margin-top: 5px;
   color: red;
 }
 
 .pattern-wrapper .pattern-input {
-  font-family: Consolas, "Roboto Mono", Monaco, Ubuntu Mono, monospace;
+  font-family: Consolas, Monaco, Ubuntu Mono, monospace;
   width: 600px;
   font-size: inherit;
   padding: 5px 8px;
